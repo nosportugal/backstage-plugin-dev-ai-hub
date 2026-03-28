@@ -6,7 +6,9 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import IconButton from '@mui/material/IconButton';
+import Switch from '@mui/material/Switch';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Tooltip from '@mui/material/Tooltip';
@@ -75,6 +77,7 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
   const [tab, setTab] = useState(0);
   const [baseUrl, setBaseUrl] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<string>('');
+  const [proactiveEnabled, setProactiveEnabled] = useState(false);
 
   const { providers } = useProviders();
   const showProviderFilter = providers.length > 1;
@@ -92,6 +95,7 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
     const params = new URLSearchParams();
     params.set('tool', cfg.tool);
     if (selectedProvider) params.set('provider', selectedProvider);
+    if (proactiveEnabled) params.set('proactive', 'true');
     return `${baseUrl}/mcp?${params.toString()}`;
   };
 
@@ -181,6 +185,29 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
           </Box>
         )}
 
+        {/* Proactive suggestions toggle */}
+        <Box sx={{ mb: 2 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={proactiveEnabled}
+                onChange={e => setProactiveEnabled(e.target.checked)}
+              />
+            }
+            label={
+              <Box>
+                <Typography variant="body2" fontWeight={600}>Proactive suggestions</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  The AI will automatically suggest relevant assets based on your project context.
+                  Disable if you prefer to search manually.
+                </Typography>
+              </Box>
+            }
+            sx={{ alignItems: 'flex-start', ml: 0, gap: 1 }}
+          />
+        </Box>
+
         {/* MCP URL */}
         <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
           MCP Endpoint
@@ -261,6 +288,8 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
         <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 1.5 }}>
           💡 Omit <code>?tool=</code> from the URL to receive assets for all AI tools.
           {showProviderFilter && ' Omit ?provider= to receive assets from all repositories.'}
+          {' '}Proactive suggestions add <code>?proactive=true</code> and register the{' '}
+          <code>suggest_assets</code> tool and <code>check_for_assets</code> prompt.
         </Typography>
       </DialogContent>
 

@@ -21,6 +21,7 @@ export class AiAssetStore {
       id: input.id,
       provider_id: input.providerId,
       name: input.name,
+      label: input.label ?? null,
       description: input.description,
       type: input.type,
       tools: JSON.stringify(input.tools),
@@ -28,13 +29,12 @@ export class AiAssetStore {
       author: input.author,
       icon: input.icon ?? null,
       version: input.version,
-      apply_to: input.applyTo ?? null,
-      model: input.model ?? null,
       install_path: input.installPath ?? null,
       install_paths: input.installPaths ? JSON.stringify(input.installPaths) : null,
       content: input.content,
       yaml_raw: input.yamlRaw,
       metadata: input.metadata ? JSON.stringify(input.metadata) : null,
+      resources_content: input.resourcesContent ? JSON.stringify(input.resourcesContent) : null,
       yaml_path: input.yamlPath,
       md_path: input.mdPath,
       repo_url: input.repoUrl,
@@ -68,12 +68,18 @@ export class AiAssetStore {
       query = query.where('provider_id', filter.providerId);
     }
     if (filter.search) {
-      const term = `%${filter.search}%`;
-      query = query.where(function searchFilter() {
-        this.where('name', 'like', term)
-          .orWhere('description', 'like', term)
-          .orWhere('content', 'like', term);
-      });
+      // Split into words so "Python linting" matches items containing both words
+      const words = filter.search.trim().split(/\s+/).filter(Boolean);
+      for (const word of words) {
+        const term = `%${word}%`;
+        query = query.where(function searchFilter() {
+          this.where('name', 'like', term)
+            .orWhere('label', 'like', term)
+            .orWhere('description', 'like', term)
+            .orWhere('tags', 'like', term)
+            .orWhere('content', 'like', term);
+        });
+      }
     }
     if (filter.tags && filter.tags.length > 0) {
       for (const tag of filter.tags) {
@@ -88,7 +94,7 @@ export class AiAssetStore {
     const pageSize = Math.min(100, Math.max(1, filter.pageSize ?? 20));
 
     const rows = await query
-      .select('id', 'provider_id', 'name', 'description', 'type', 'tools', 'tags',
+      .select('id', 'provider_id', 'name', 'label', 'description', 'type', 'tools', 'tags',
               'author', 'icon', 'version', 'install_count', 'synced_at', 'created_at', 'updated_at')
       .orderBy('name', 'asc')
       .limit(pageSize)
@@ -196,6 +202,7 @@ export class AiAssetStore {
       id: row.id as string,
       providerId: row.provider_id as string,
       name: row.name as string,
+      label: (row.label as string | null) ?? undefined,
       description: row.description as string,
       type: row.type as AssetType,
       tools: JSON.parse((row.tools as string) || '[]'),
@@ -215,6 +222,7 @@ export class AiAssetStore {
       id: row.id as string,
       providerId: row.provider_id as string,
       name: row.name as string,
+      label: (row.label as string | null) ?? undefined,
       description: row.description as string,
       type: row.type as AssetType,
       tools: JSON.parse((row.tools as string) || '[]'),
@@ -222,8 +230,6 @@ export class AiAssetStore {
       author: row.author as string,
       icon: (row.icon as string | null) ?? undefined,
       version: row.version as string,
-      applyTo: (row.apply_to as string | null) ?? undefined,
-      model: (row.model as string | null) ?? undefined,
       installPath: (row.install_path as string | null) ?? undefined,
       installPaths: row.install_paths
         ? JSON.parse(row.install_paths as string)
@@ -232,6 +238,9 @@ export class AiAssetStore {
       yamlRaw: row.yaml_raw as string,
       metadata: row.metadata
         ? JSON.parse(row.metadata as string)
+        : undefined,
+      resourcesContent: row.resources_content
+        ? JSON.parse(row.resources_content as string)
         : undefined,
       yamlPath: row.yaml_path as string,
       mdPath: row.md_path as string,

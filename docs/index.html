@@ -1074,7 +1074,7 @@
           <div class="mcp-tools">
             <div class="mcp-tool">
               <span class="mcp-tool-name">search_assets</span>
-              <span class="mcp-tool-desc">Full-text search across name, description and content</span>
+              <span class="mcp-tool-desc">Full-text search across name, description and tags</span>
             </div>
             <div class="mcp-tool">
               <span class="mcp-tool-name">list_assets</span>
@@ -1087,6 +1087,22 @@
             <div class="mcp-tool">
               <span class="mcp-tool-name">install_asset</span>
               <span class="mcp-tool-desc">Get content + install path; model creates the file</span>
+            </div>
+            <div class="mcp-tool">
+              <span class="mcp-tool-name">get_popular</span>
+              <span class="mcp-tool-desc">Returns the most-installed assets, optionally by type</span>
+            </div>
+            <div class="mcp-tool">
+              <span class="mcp-tool-name">list_providers</span>
+              <span class="mcp-tool-desc">Lists configured repositories with sync status and counts</span>
+            </div>
+            <div class="mcp-tool">
+              <span class="mcp-tool-name">suggest_assets</span>
+              <span class="mcp-tool-desc">Proactively suggests assets based on project context — opt-in via <code style="font-family:'JetBrains Mono',monospace;font-size:0.75em;background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px">?proactive=true</code></span>
+            </div>
+            <div class="mcp-tool">
+              <span class="mcp-tool-name">check_for_assets</span>
+              <span class="mcp-tool-desc">Prompt: triggers asset discovery before starting work — opt-in via <code style="font-family:'JetBrains Mono',monospace;font-size:0.75em;background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px">?proactive=true</code></span>
             </div>
           </div>
         </div>
@@ -1205,7 +1221,7 @@
           <div class="stat-label">AI tools supported</div>
         </div>
         <div class="stat-card">
-          <div class="stat-num">4</div>
+          <div class="stat-num">7</div>
           <div class="stat-label">MCP tools</div>
         </div>
         <div class="stat-card">

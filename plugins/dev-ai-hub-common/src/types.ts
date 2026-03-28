@@ -7,6 +7,8 @@ export interface AiAssetSummary {
   id: string;
   providerId: string;
   name: string;
+  /** Human-readable display name. Falls back to `name` when not set. */
+  label?: string;
   description: string;
   type: AssetType;
   tools: AiTool[];
@@ -24,6 +26,8 @@ export interface AiAsset {
   id: string;
   providerId: string;
   name: string;
+  /** Human-readable display name. Falls back to `name` when not set. */
+  label?: string;
   description: string;
   type: AssetType;
   tools: AiTool[];
@@ -31,10 +35,6 @@ export interface AiAsset {
   author: string;
   icon?: string;
   version: string;
-  /** Glob pattern for files the instruction applies to (instructions only) */
-  applyTo?: string;
-  /** Recommended model (agents only) */
-  model?: string;
   /** Override the install path for all tools */
   installPath?: string;
   /** Override the install path per tool */
@@ -43,8 +43,13 @@ export interface AiAsset {
   content: string;
   /** Raw YAML of the metadata file */
   yamlRaw: string;
-  /** Extra fields: mcpServers (agents), steps (workflows), resources (skills) */
+  /** Extra metadata stored from the envelope (e.g. resources for skills) */
   metadata?: Record<string, unknown>;
+  /**
+   * Content of bundled resource files for skills (path → file content).
+   * Only populated for assets of type `skill` that declare `resources` in the envelope.
+   */
+  resourcesContent?: Record<string, string>;
   /** Path of the .yaml file in the repository */
   yamlPath: string;
   /** Path of the .md file in the repository */

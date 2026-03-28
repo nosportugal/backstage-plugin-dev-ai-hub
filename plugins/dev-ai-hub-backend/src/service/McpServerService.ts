@@ -13,16 +13,18 @@ function providerLabel(target: string): string {
 /**
  * Creates an McpServer instance connected to the AiAssetStore.
  *
- * @param store        - Asset store
- * @param toolFilter   - Captured from `?tool=` at session init; filters assets by tool compatibility
- * @param providerFilter - Captured from `?provider=` at session init; scopes assets to a single provider
- * @param providers    - Full provider config list (for `list_providers` and label resolution)
+ * @param store            - Asset store
+ * @param toolFilter       - Captured from `?tool=` at session init; filters assets by tool compatibility
+ * @param providerFilter   - Captured from `?provider=` at session init; scopes assets to a single provider
+ * @param providers        - Full provider config list (for `list_providers` and label resolution)
+ * @param proactiveEnabled - When false, the `check_for_assets` prompt and `suggest_assets` tool are not registered
  */
 export function createMcpServer(
   store: AiAssetStore,
   toolFilter: string,
   providerFilter: string,
   providers: ProviderConfig[],
+  proactiveEnabled = false,
 ): McpServer {
   const server = new McpServer({ name: 'dev-ai-hub', version: '0.1.0' });
 
@@ -35,82 +37,108 @@ export function createMcpServer(
   const resolveProviderLabel = (id: string) =>
     providerLabel(providers.find(p => p.id === id)?.target ?? id);
 
+  /** Returns the human-readable display name for an asset. */
+  const displayName = (a: { name: string; label?: string }) => a.label ?? a.name;
+
+  /**
+   * Resolves an asset by name: tries exact match on name/label first,
+   * then label/name contains match, then falls back to first search result.
+   */
+  const resolveByName = async (name: string) => {
+    const { items } = await store.listAssets({ ...sessionFilter, search: name, pageSize: 20 });
+    const lower = name.toLowerCase();
+    return (
+      items.find(a => a.name.toLowerCase() === lower) ??
+      items.find(a => (a.label ?? '').toLowerCase() === lower) ??
+      items.find(a => a.name.toLowerCase().includes(lower)) ??
+      items.find(a => (a.label ?? '').toLowerCase().includes(lower)) ??
+      items[0] ??
+      null
+    );
+  };
+
   // ── MCP Prompt: check_for_assets ─────────────────────────────────────────
   //
   // Teaches the model to proactively check the hub when it detects project
   // context. Supported by Claude Code (/mcp), and other MCP-compatible tools.
+  // Only registered when proactiveEnabled=true (default).
 
-  server.prompt(
-    'check_for_assets',
-    'Check Dev AI Hub for relevant instructions, agents, or skills before starting work on a project.',
-    {
-      context: z.string().describe(
-        'Describe what you are about to work on (e.g. "Python FastAPI REST API", "React TypeScript frontend")',
-      ),
-    },
-    ({ context }) => ({
-      messages: [
-        {
-          role: 'user' as const,
-          content: {
-            type: 'text' as const,
-            text: [
-              `I'm about to work on: ${context}`,
-              '',
-              'Before starting, call suggest_assets with this context to find relevant assets from Dev AI Hub.',
-              'If you find relevant instructions, agents, or skills, briefly describe each and offer to install them.',
-              'When the user confirms, call install_asset and write the file to the recommended_path for your tool.',
-              'After installing, check related_assets in the response and offer those too.',
-            ].join('\n'),
+  if (proactiveEnabled) {
+    server.prompt(
+      'check_for_assets',
+      'Check Dev AI Hub for relevant instructions, agents, or skills before starting work on a project.',
+      {
+        context: z.string().describe(
+          'Describe what you are about to work on (e.g. "Python FastAPI REST API", "React TypeScript frontend")',
+        ),
+      },
+      ({ context }) => ({
+        messages: [
+          {
+            role: 'user' as const,
+            content: {
+              type: 'text' as const,
+              text: [
+                `I'm about to work on: ${context}`,
+                '',
+                'Before starting, call suggest_assets with this context to find relevant assets from Dev AI Hub.',
+                'If you find relevant instructions, agents, or skills, briefly describe each and offer to install them.',
+                'When the user confirms, call install_asset and then immediately write the "content" field to "recommended_path", creating parent directories if needed.',
+                'After installing, check related_assets in the response and offer those too.',
+              ].join('\n'),
+            },
           },
-        },
-      ],
-    }),
-  );
+        ],
+      }),
+    );
+  }
 
   // ── suggest_assets ────────────────────────────────────────────────────────
+  // Only registered when proactiveEnabled=true (default).
 
-  server.tool(
-    'suggest_assets',
-    [
-      'Proactively suggests relevant assets based on project context (language, framework, task).',
-      'Use this at the start of a session or when the user describes what they are building.',
-      'Prefer this over search_assets for proactive recommendations.',
-    ].join(' '),
-    {
-      context: z.string().describe(
-        'Describe the project or task (e.g. "Python FastAPI REST API", "React TypeScript frontend with testing")',
-      ),
-      limit: z.number().int().positive().max(10).default(5),
-    },
-    async ({ context, limit }) => {
-      const { items } = await store.listAssets({
-        ...sessionFilter,
-        search: context,
-        pageSize: limit,
-        page: 1,
-      });
+  if (proactiveEnabled) {
+    server.tool(
+      'suggest_assets',
+      [
+        'Proactively suggests relevant assets based on project context (language, framework, task).',
+        'Use this at the start of a session or when the user describes what they are building.',
+        'Prefer this over search_assets for proactive recommendations.',
+      ].join(' '),
+      {
+        context: z.string().describe(
+          'Describe the project or task (e.g. "Python FastAPI REST API", "React TypeScript frontend with testing")',
+        ),
+        limit: z.number().int().positive().max(10).default(5),
+      },
+      async ({ context, limit }) => {
+        const { items } = await store.listAssets({
+          ...sessionFilter,
+          search: context,
+          pageSize: limit,
+          page: 1,
+        });
 
-      return {
-        content: [{
-          type: 'text' as const,
-          text: JSON.stringify({
-            context,
-            suggestions: items.map(a => ({
-              id: a.id,
-              name: a.name,
-              type: a.type,
-              description: a.description,
-              tags: a.tags,
-              installCount: a.installCount,
-              provider: { id: a.providerId, label: resolveProviderLabel(a.providerId) },
-              install_hint: `install_asset(name: "${a.name}")`,
-            })),
-          }, null, 2),
-        }],
-      };
-    },
-  );
+        return {
+          content: [{
+            type: 'text' as const,
+            text: JSON.stringify({
+              context,
+              suggestions: items.map(a => ({
+                id: a.id,
+                name: displayName(a),
+                type: a.type,
+                description: a.description,
+                tags: a.tags,
+                installCount: a.installCount,
+                provider: { id: a.providerId, label: resolveProviderLabel(a.providerId) },
+                install_hint: `install_asset(id: "${a.id}")`,
+              })),
+            }, null, 2),
+          }],
+        };
+      },
+    );
+  }
 
   // ── search_assets ─────────────────────────────────────────────────────────
 
@@ -147,7 +175,7 @@ export function createMcpServer(
             pageSize,
             results: items.map(a => ({
               id: a.id,
-              name: a.name,
+              name: displayName(a),
               type: a.type,
               description: a.description,
               tools: a.tools,
@@ -195,7 +223,7 @@ export function createMcpServer(
             totalPages: Math.ceil(totalCount / pageSize),
             items: items.map(a => ({
               id: a.id,
-              name: a.name,
+              name: displayName(a),
               type: a.type,
               description: a.description,
               tags: a.tags,
@@ -229,8 +257,7 @@ export function createMcpServer(
       if (id) {
         asset = await store.getAsset(id);
       } else if (name) {
-        const { items } = await store.listAssets({ ...sessionFilter, search: name, pageSize: 10 });
-        const summary = items.find(a => a.name.toLowerCase() === name.toLowerCase()) ?? items[0] ?? null;
+        const summary = await resolveByName(name);
         asset = summary ? await store.getAsset(summary.id) : null;
       }
 
@@ -251,15 +278,13 @@ export function createMcpServer(
           type: 'text' as const,
           text: JSON.stringify({
             id: asset.id,
-            name: asset.name,
+            name: displayName(asset),
             type: asset.type,
             description: asset.description,
             tools: asset.tools,
             tags: asset.tags,
             version: asset.version,
             author: asset.author,
-            applyTo: asset.applyTo,
-            model: asset.model,
             metadata: asset.metadata,
             provider: { id: asset.providerId, label: resolveProviderLabel(asset.providerId) },
             installPaths,
@@ -292,7 +317,7 @@ export function createMcpServer(
         .slice(0, limit)
         .map(a => ({
           id: a.id,
-          name: a.name,
+          name: displayName(a),
           type: a.type,
           description: a.description,
           installCount: a.installCount,
@@ -344,14 +369,18 @@ export function createMcpServer(
   server.tool(
     'install_asset',
     [
-      'Fetches asset content and the correct install path, then writes the file to the workspace.',
-      'Accepts asset ID or name. Automatically tracks the install.',
-      'Use recommended_path to determine where to write the file for the current tool.',
+      'Fetches asset content and the recommended install path for this tool.',
+      'Accepts asset ID or name (partial match supported).',
+      'IMPORTANT: After calling this tool you MUST write the file yourself:',
+      '1. Use recommended_path as the destination.',
+      '2. Create all parent directories if they do not exist.',
+      '3. Write the value of "content" verbatim to that path.',
+      'Calling this tool alone does NOT write any file — you must perform the write.',
       'After installing, offer the assets listed in related_assets to complement the installation.',
     ].join(' '),
     {
-      id:   z.string().optional().describe('Asset ID'),
-      name: z.string().optional().describe('Asset name — case-insensitive, partial match'),
+      id:   z.string().optional().describe('Exact asset ID (preferred — avoids ambiguity)'),
+      name: z.string().optional().describe('Asset name or label — case-insensitive, partial match'),
     },
     async ({ id, name }) => {
       let asset = null;
@@ -359,8 +388,7 @@ export function createMcpServer(
       if (id) {
         asset = await store.getAsset(id);
       } else if (name) {
-        const { items } = await store.listAssets({ ...sessionFilter, search: name, pageSize: 10 });
-        const summary = items.find(a => a.name.toLowerCase() === name.toLowerCase()) ?? items[0] ?? null;
+        const summary = await resolveByName(name);
         asset = summary ? await store.getAsset(summary.id) : null;
       }
 
@@ -395,21 +423,36 @@ export function createMcpServer(
         .filter(a => asset!.tags.length === 0 || a.tags.some(t => asset!.tags.includes(t)))
         .sort((a, b) => b.installCount - a.installCount)
         .slice(0, 3)
-        .map(a => ({ id: a.id, name: a.name, type: a.type, description: a.description }));
+        .map(a => ({ id: a.id, name: displayName(a), type: a.type, description: a.description }));
+
+      const resources = asset.resourcesContent
+        ? Object.entries(asset.resourcesContent).map(([filePath, fileContent]) => ({
+            path: filePath,
+            content: fileContent,
+          }))
+        : undefined;
 
       return {
         content: [{
           type: 'text' as const,
           text: JSON.stringify({
+            action_required: [
+              'Write the "content" field to "recommended_path". Create parent directories if needed.',
+              resources?.length
+                ? 'Also write each file in "resources" to its "path" relative to the skill directory.'
+                : null,
+            ].filter(Boolean).join(' '),
             installed: {
               id: asset.id,
-              name: asset.name,
+              name: displayName(asset),
               type: asset.type,
               provider: { id: asset.providerId, label: resolveProviderLabel(asset.providerId) },
             },
             recommended_path: recommendedPath,
             all_install_paths: installPaths,
+            path_override_hint: 'Paths can be customised per-tool in the asset YAML: installPaths: { claude-code: ".claude/rules/custom.md" }',
             content: asset.content,
+            resources,
             related_assets: related,
           }, null, 2),
         }],

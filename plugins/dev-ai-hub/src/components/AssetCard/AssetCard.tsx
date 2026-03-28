@@ -85,7 +85,7 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
               <Box
                 component="img"
                 src={asset.icon}
-                alt={asset.name}
+                alt={asset.label ?? asset.name}
                 sx={{ width: 20, height: 20, objectFit: 'contain' }}
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
@@ -96,8 +96,8 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
 
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.2 }}>
-              <Typography variant="body2" fontWeight={700} noWrap title={asset.name} sx={{ lineHeight: 1.2, flex: 1 }}>
-                {asset.name}
+              <Typography variant="body2" fontWeight={700} noWrap title={asset.label ?? asset.name} sx={{ lineHeight: 1.2, flex: 1 }}>
+                {asset.label ?? asset.name}
               </Typography>
               {isNew && (
                 <Chip

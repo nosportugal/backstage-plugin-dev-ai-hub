@@ -56,19 +56,21 @@ export class AssetParser {
     repoUrl: string,
     branch: string,
     yamlFilePath: string,
+    resourcesContent?: Record<string, string>,
   ): AiAssetInput {
     const { meta } = parsed;
 
-    // Extract type-specific extra fields into metadata
+    // Store extra fields in metadata (used for display/reference)
     const metadata: Record<string, unknown> = {};
-    if (meta.mcpServers) metadata.mcpServers = meta.mcpServers;
-    if (meta.steps) metadata.steps = meta.steps;
     if (meta.resources) metadata.resources = meta.resources;
+    if ((meta as any).mcpServers) metadata.mcpServers = (meta as any).mcpServers;
+    if ((meta as any).steps) metadata.steps = (meta as any).steps;
 
     return {
       id: AssetParser.buildId(providerId, yamlFilePath),
       providerId,
       name: meta.name,
+      label: meta.label,
       description: meta.description,
       type: meta.type,
       tools: meta.tools,
@@ -76,13 +78,12 @@ export class AssetParser {
       author: meta.author ?? 'Unknown',
       icon: meta.icon,
       version: meta.version ?? '1.0.0',
-      applyTo: meta.applyTo,
-      model: meta.model,
       installPath: meta.installPath,
       installPaths: meta.installPaths,
       content: mdContent,
       yamlRaw: parsed.yamlRaw,
       metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+      resourcesContent,
       yamlPath: yamlFilePath,
       mdPath: parsed.mdPath,
       repoUrl,
