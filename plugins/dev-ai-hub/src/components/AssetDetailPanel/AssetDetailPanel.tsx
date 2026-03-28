@@ -203,12 +203,6 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                     )}
                     <MetaRow label="Last synced" value={new Date(asset.syncedAt).toLocaleString()} />
                     <MetaRow label="Branch" value={asset.branch} />
-                    {asset.applyTo && (
-                      <MetaRow label="Apply to" value={asset.applyTo} />
-                    )}
-                    {asset.model && (
-                      <MetaRow label="Model" value={asset.model} />
-                    )}
 
                     <Divider />
 

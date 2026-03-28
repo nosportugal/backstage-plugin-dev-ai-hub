@@ -25,6 +25,8 @@ export const AiAssetFrontmatterSchema = z
      *  If omitted, the parser falls back to <same-name>.md by convention. */
     content: z.string().optional(),
     name: z.string().min(1).max(200),
+    /** Human-readable display label shown in the UI. Falls back to `name` when omitted. */
+    label: z.string().min(1).max(200).optional(),
     description: z.string().min(1).max(500),
     type: AssetTypeEnum,
     tools: z.array(AiToolEnum).min(1),
@@ -36,17 +38,8 @@ export const AiAssetFrontmatterSchema = z
     // install path overrides
     installPath: z.string().optional(),
     installPaths: z.record(z.string()).optional(),
-    // instruction-specific
-    applyTo: z.string().optional(),
-    // agent-specific
-    model: z.string().optional(),
-    mcpServers: z.record(z.unknown()).optional(),
     // skill-specific
     resources: z.array(z.string()).optional(),
-    // workflow-specific
-    steps: z
-      .array(z.object({ name: z.string(), action: z.string() }))
-      .optional(),
   })
   .passthrough();
 

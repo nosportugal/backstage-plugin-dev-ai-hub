@@ -59,16 +59,15 @@ export class AssetParser {
   ): AiAssetInput {
     const { meta } = parsed;
 
-    // Extract type-specific extra fields into metadata
+    // Store resources list in metadata for skill zip downloads
     const metadata: Record<string, unknown> = {};
-    if (meta.mcpServers) metadata.mcpServers = meta.mcpServers;
-    if (meta.steps) metadata.steps = meta.steps;
     if (meta.resources) metadata.resources = meta.resources;
 
     return {
       id: AssetParser.buildId(providerId, yamlFilePath),
       providerId,
       name: meta.name,
+      label: meta.label,
       description: meta.description,
       type: meta.type,
       tools: meta.tools,
@@ -76,8 +75,6 @@ export class AssetParser {
       author: meta.author ?? 'Unknown',
       icon: meta.icon,
       version: meta.version ?? '1.0.0',
-      applyTo: meta.applyTo,
-      model: meta.model,
       installPath: meta.installPath,
       installPaths: meta.installPaths,
       content: mdContent,

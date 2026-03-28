@@ -79,21 +79,17 @@ describe('upsertAsset + getAsset', () => {
   it('persists optional fields correctly', async () => {
     await store.upsertAsset(
       makeInput({
-        applyTo: '**/*.ts',
-        model: 'claude-opus-4',
         installPath: 'custom/path.md',
         installPaths: { 'claude-code': 'custom/claude.md' },
-        metadata: { mcpServers: { test: {} } },
+        metadata: { resources: ['scripts/setup.sh'] },
         commitSha: 'abc123',
       }),
     );
 
     const asset = await store.getAsset('test-id');
-    expect(asset!.applyTo).toBe('**/*.ts');
-    expect(asset!.model).toBe('claude-opus-4');
     expect(asset!.installPath).toBe('custom/path.md');
     expect(asset!.installPaths).toEqual({ 'claude-code': 'custom/claude.md' });
-    expect(asset!.metadata?.mcpServers).toBeDefined();
+    expect(asset!.metadata?.resources).toBeDefined();
     expect(asset!.commitSha).toBe('abc123');
   });
 });

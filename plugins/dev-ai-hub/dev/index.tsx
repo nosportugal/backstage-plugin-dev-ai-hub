@@ -41,7 +41,6 @@ const MOCK_ASSETS: AiAsset[] = [
     tags: ['code-review', 'quality'],
     author: 'Platform Team',
     version: '1.2.0',
-    model: 'claude-sonnet-4-6',
     content: '# Code Review Agent\n\nYou are an expert code reviewer. Focus on correctness, performance, security, and maintainability.',
     yamlRaw: 'name: Code Review Agent\ntype: agent',
     yamlPath: 'agents/code-review.yaml',
