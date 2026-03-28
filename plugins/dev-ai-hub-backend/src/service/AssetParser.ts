@@ -56,10 +56,11 @@ export class AssetParser {
     repoUrl: string,
     branch: string,
     yamlFilePath: string,
+    resourcesContent?: Record<string, string>,
   ): AiAssetInput {
     const { meta } = parsed;
 
-    // Store resources list in metadata for skill zip downloads
+    // Store resources path list in metadata (used for display/reference)
     const metadata: Record<string, unknown> = {};
     if (meta.resources) metadata.resources = meta.resources;
 
@@ -80,6 +81,7 @@ export class AssetParser {
       content: mdContent,
       yamlRaw: parsed.yamlRaw,
       metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+      resourcesContent,
       yamlPath: yamlFilePath,
       mdPath: parsed.mdPath,
       repoUrl,

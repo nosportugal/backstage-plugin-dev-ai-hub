@@ -133,6 +133,29 @@ export class AiAssetSyncService {
         }
 
         const mdContent = (await mdFile.content()).toString('utf-8');
+
+        // For skills: read bundled resource files and store their content
+        let resourcesContent: Record<string, string> | undefined;
+        const resourcePaths = parsed.meta.resources;
+        if (resourcePaths && resourcePaths.length > 0) {
+          resourcesContent = {};
+          const yamlDir = filePath.split('/').slice(0, -1).join('/');
+          for (const resourcePath of resourcePaths) {
+            const fullPath = normalizePath(
+              yamlDir ? `${yamlDir}/${resourcePath}` : resourcePath,
+            );
+            const resourceFile = fileMap.get(fullPath);
+            if (resourceFile) {
+              resourcesContent[resourcePath] = (await resourceFile.content()).toString('utf-8');
+            } else {
+              logger.warn(
+                `dev-ai-hub: resource file not found: ${fullPath} (asset ${filePath})`,
+              );
+            }
+          }
+          if (Object.keys(resourcesContent).length === 0) resourcesContent = undefined;
+        }
+
         const asset = AssetParser.buildAsset(
           parsed,
           mdContent,
@@ -140,6 +163,7 @@ export class AiAssetSyncService {
           provider.target,
           provider.branch,
           filePath,
+          resourcesContent,
         );
 
         await store.upsertAsset(asset);

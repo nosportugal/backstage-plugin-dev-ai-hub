@@ -425,11 +425,23 @@ export function createMcpServer(
         .slice(0, 3)
         .map(a => ({ id: a.id, name: displayName(a), type: a.type, description: a.description }));
 
+      const resources = asset.resourcesContent
+        ? Object.entries(asset.resourcesContent).map(([filePath, fileContent]) => ({
+            path: filePath,
+            content: fileContent,
+          }))
+        : undefined;
+
       return {
         content: [{
           type: 'text' as const,
           text: JSON.stringify({
-            action_required: 'Write the "content" field to "recommended_path". Create parent directories if needed.',
+            action_required: [
+              'Write the "content" field to "recommended_path". Create parent directories if needed.',
+              resources?.length
+                ? 'Also write each file in "resources" to its "path" relative to the skill directory.'
+                : null,
+            ].filter(Boolean).join(' '),
             installed: {
               id: asset.id,
               name: displayName(asset),
@@ -440,6 +452,7 @@ export function createMcpServer(
             all_install_paths: installPaths,
             path_override_hint: 'Paths can be customised per-tool in the asset YAML: installPaths: { claude-code: ".claude/rules/custom.md" }',
             content: asset.content,
+            resources,
             related_assets: related,
           }, null, 2),
         }],

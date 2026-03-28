@@ -34,6 +34,7 @@ export class AiAssetStore {
       content: input.content,
       yaml_raw: input.yamlRaw,
       metadata: input.metadata ? JSON.stringify(input.metadata) : null,
+      resources_content: input.resourcesContent ? JSON.stringify(input.resourcesContent) : null,
       yaml_path: input.yamlPath,
       md_path: input.mdPath,
       repo_url: input.repoUrl,
@@ -237,6 +238,9 @@ export class AiAssetStore {
       yamlRaw: row.yaml_raw as string,
       metadata: row.metadata
         ? JSON.parse(row.metadata as string)
+        : undefined,
+      resourcesContent: row.resources_content
+        ? JSON.parse(row.resources_content as string)
         : undefined,
       yamlPath: row.yaml_path as string,
       mdPath: row.md_path as string,

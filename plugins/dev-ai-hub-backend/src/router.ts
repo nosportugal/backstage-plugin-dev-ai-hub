@@ -100,6 +100,11 @@ export function createRouter(options: RouterOptions): express.Router {
         archive.pipe(res);
         archive.append(asset.content, { name: 'SKILL.md' });
         archive.append(asset.yamlRaw, { name: `${filename}.yaml` });
+        if (asset.resourcesContent) {
+          for (const [resourcePath, resourceContent] of Object.entries(asset.resourcesContent)) {
+            archive.append(resourceContent, { name: resourcePath });
+          }
+        }
         await archive.finalize();
       } else {
         res.setHeader('Content-Type', 'text/markdown; charset=utf-8');

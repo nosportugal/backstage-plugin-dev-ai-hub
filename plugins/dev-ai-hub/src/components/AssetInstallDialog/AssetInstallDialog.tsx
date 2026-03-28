@@ -49,16 +49,25 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
     api.trackInstall(asset.id).catch(() => {});
   };
 
-  const handleDownload = (_tool: string, installPath: string) => {
+  const handleDownload = async (_tool: string, installPath: string) => {
     if (!asset) return;
-    const filename = installPath.split('/').pop() ?? `${asset.name}.md`;
-    const blob = new Blob([asset.content], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (asset.type === 'skill') {
+      // Skills may have bundled resource files — use the backend zip endpoint
+      const url = await api.getDownloadUrl(asset.id);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${asset.name.replace(/\s+/g, '-').toLowerCase()}.zip`;
+      a.click();
+    } else {
+      const filename = installPath.split('/').pop() ?? `${asset.name}.md`;
+      const blob = new Blob([asset.content], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
     api.trackInstall(asset.id).catch(() => {});
   };
 

@@ -213,6 +213,8 @@ createDevApp()
         const asset = MOCK_ASSETS.find(a => a.id === id);
         return asset?.content ?? '';
       },
+      getDownloadUrl: async (id: string): Promise<string> =>
+        `/api/dev-ai-hub/assets/${encodeURIComponent(id)}/download`,
       trackInstall: async (_id: string): Promise<void> => { },
       listProviders: async (): Promise<AiHubProvider[]> => [MOCK_PROVIDER],
       getProviderStatus: async (_id: string): Promise<AiHubProvider> => MOCK_PROVIDER,
