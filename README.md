@@ -129,11 +129,11 @@ workflows/
 ### YAML envelope (`<name>.yaml`)
 
 ```yaml
-name: Product Manager Agent
+name: product-manager-agent
+label: Product Manager Agent
 description: AI agent specialized in product management tasks
 type: agent                          # instruction | agent | skill | workflow
 tools:
-  - claude-code
   - github-copilot
 tags:
   - product
@@ -146,17 +146,15 @@ version: 1.0.0
 # installPaths:
 #   claude-code: ".claude/agents/product-manager.md"
 #   github-copilot: ".github/agents/product-manager.agent.md"
-
-# Agent-specific
-model: claude-opus-4-6
-
-# Instruction-specific
-# applyTo: "src/**/*.ts"
 ```
 
 If `content` is omitted, the parser looks for `<same-name>.md` in the same directory. For skills, it defaults to `SKILL.md`.
 
 Use `tools: [all]` for tool-agnostic assets that should appear for every tool.
+
+For more information about YAML envelope fields, see [YAML Envelope Reference](examples/envelop-manual.md).
+
+You can use assets in examples folder to see how to use assets in your project or as a base for your own assets.
 
 ### Default install paths (auto-resolved per tool)
 
@@ -182,6 +180,8 @@ The MCP server runs **embedded** in the Backstage backend — no separate proces
 **URL:** `http://<backstage-host>:7007/api/dev-ai-hub/mcp`
 
 The `?tool=` query parameter filters which assets the AI tool receives. Omit it to receive all assets.
+The `?provider=` query parameter filters which assets the AI tool receives. Omit it to receive all assets.
+The `?proactive=true` query parameter enable proactive mode. This mode is used to provide assets to the AI tool automatically when it is needed.
 
 ### Claude Code
 
@@ -247,10 +247,21 @@ In `.cursor/mcp.json`:
 
 | Tool | Description |
 |------|-------------|
-| `list_assets` | List assets, optionally filtered by type |
-| `search_assets` | Full-text search across name, description, and content |
-| `get_asset` | Get full metadata and markdown content by ID or name |
-| `install_asset` | Returns content + recommended install path; the model creates the file |
+| `list_assets` | List assets, optionally filtered by type. Supports pagination  |
+| `search_assets` | Full-text search across name, description, and content. Supports type and tag filters |
+| `get_asset` | Get full metadata and markdown content by exact ID or partial name match |
+| `install_asset` | Returns content + recommended install path for the active tool; the model writes the file. Increments the install counter |
+| `get_popular` | Returns the most-installed assets, optionally filtered by type |
+| `list_providers`| Lists all configured repositories with their sync status, asset count, and last sync time |
+| `suggest_assets` ⚡ | Proactively suggests assets based on a project context description. Only available when ?proactive=true |
+
+### Available MCP prompts
+
+| Prompt | Description |
+|------|-------------|
+| `check_for_assets` ⚡ | Instructs the model to call suggest_assets with the current task context and offer to install relevant assets before starting work. Only available when ?proactive=true  |
+
+ ⚡ Proactive-only — registered only when the MCP URL includes ?proactive=true.
 
 Usage examples in chat:
 
