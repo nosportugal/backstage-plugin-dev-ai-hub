@@ -253,6 +253,11 @@ export function createRouter(options: RouterOptions): express.Router {
         (req.query.provider as string | undefined) ??
         (req.headers['x-ai-hub-provider'] as string | undefined) ??
         '';
+      // proactive defaults to false; pass ?proactive=true to enable check_for_assets + suggest_assets
+      const proactiveEnabled =
+        ((req.query.proactive as string | undefined) ??
+         (req.headers['x-ai-hub-proactive'] as string | undefined) ??
+         'false') === 'true';
 
       const newSessionId = randomUUID();
       const transport = new StreamableHTTPServerTransport({
@@ -260,7 +265,7 @@ export function createRouter(options: RouterOptions): express.Router {
         onsessioninitialized: id => {
           mcpSessions.set(id, transport);
           options.logger.debug(
-            `dev-ai-hub MCP: session ${id} opened (tool="${toolFilter || 'all'}", provider="${providerFilter || 'all'}")`,
+            `dev-ai-hub MCP: session ${id} opened (tool="${toolFilter || 'all'}", provider="${providerFilter || 'all'}", proactive=${proactiveEnabled})`,
           );
         },
       });
@@ -270,7 +275,7 @@ export function createRouter(options: RouterOptions): express.Router {
         options.logger.debug(`dev-ai-hub MCP: session ${newSessionId} closed`);
       };
 
-      const server = createMcpServer(store, toolFilter, providerFilter, providers);
+      const server = createMcpServer(store, toolFilter, providerFilter, providers, proactiveEnabled);
       await server.connect(transport);
 
       await transport.handleRequest(req, res, req.body);

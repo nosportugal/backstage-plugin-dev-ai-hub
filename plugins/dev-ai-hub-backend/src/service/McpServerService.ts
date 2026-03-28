@@ -13,16 +13,18 @@ function providerLabel(target: string): string {
 /**
  * Creates an McpServer instance connected to the AiAssetStore.
  *
- * @param store        - Asset store
- * @param toolFilter   - Captured from `?tool=` at session init; filters assets by tool compatibility
- * @param providerFilter - Captured from `?provider=` at session init; scopes assets to a single provider
- * @param providers    - Full provider config list (for `list_providers` and label resolution)
+ * @param store            - Asset store
+ * @param toolFilter       - Captured from `?tool=` at session init; filters assets by tool compatibility
+ * @param providerFilter   - Captured from `?provider=` at session init; scopes assets to a single provider
+ * @param providers        - Full provider config list (for `list_providers` and label resolution)
+ * @param proactiveEnabled - When false, the `check_for_assets` prompt and `suggest_assets` tool are not registered
  */
 export function createMcpServer(
   store: AiAssetStore,
   toolFilter: string,
   providerFilter: string,
   providers: ProviderConfig[],
+  proactiveEnabled = false,
 ): McpServer {
   const server = new McpServer({ name: 'dev-ai-hub', version: '0.1.0' });
 
@@ -59,78 +61,84 @@ export function createMcpServer(
   //
   // Teaches the model to proactively check the hub when it detects project
   // context. Supported by Claude Code (/mcp), and other MCP-compatible tools.
+  // Only registered when proactiveEnabled=true (default).
 
-  server.prompt(
-    'check_for_assets',
-    'Check Dev AI Hub for relevant instructions, agents, or skills before starting work on a project.',
-    {
-      context: z.string().describe(
-        'Describe what you are about to work on (e.g. "Python FastAPI REST API", "React TypeScript frontend")',
-      ),
-    },
-    ({ context }) => ({
-      messages: [
-        {
-          role: 'user' as const,
-          content: {
-            type: 'text' as const,
-            text: [
-              `I'm about to work on: ${context}`,
-              '',
-              'Before starting, call suggest_assets with this context to find relevant assets from Dev AI Hub.',
-              'If you find relevant instructions, agents, or skills, briefly describe each and offer to install them.',
-              'When the user confirms, call install_asset and then immediately write the "content" field to "recommended_path", creating parent directories if needed.',
-              'After installing, check related_assets in the response and offer those too.',
-            ].join('\n'),
+  if (proactiveEnabled) {
+    server.prompt(
+      'check_for_assets',
+      'Check Dev AI Hub for relevant instructions, agents, or skills before starting work on a project.',
+      {
+        context: z.string().describe(
+          'Describe what you are about to work on (e.g. "Python FastAPI REST API", "React TypeScript frontend")',
+        ),
+      },
+      ({ context }) => ({
+        messages: [
+          {
+            role: 'user' as const,
+            content: {
+              type: 'text' as const,
+              text: [
+                `I'm about to work on: ${context}`,
+                '',
+                'Before starting, call suggest_assets with this context to find relevant assets from Dev AI Hub.',
+                'If you find relevant instructions, agents, or skills, briefly describe each and offer to install them.',
+                'When the user confirms, call install_asset and then immediately write the "content" field to "recommended_path", creating parent directories if needed.',
+                'After installing, check related_assets in the response and offer those too.',
+              ].join('\n'),
+            },
           },
-        },
-      ],
-    }),
-  );
+        ],
+      }),
+    );
+  }
 
   // ── suggest_assets ────────────────────────────────────────────────────────
+  // Only registered when proactiveEnabled=true (default).
 
-  server.tool(
-    'suggest_assets',
-    [
-      'Proactively suggests relevant assets based on project context (language, framework, task).',
-      'Use this at the start of a session or when the user describes what they are building.',
-      'Prefer this over search_assets for proactive recommendations.',
-    ].join(' '),
-    {
-      context: z.string().describe(
-        'Describe the project or task (e.g. "Python FastAPI REST API", "React TypeScript frontend with testing")',
-      ),
-      limit: z.number().int().positive().max(10).default(5),
-    },
-    async ({ context, limit }) => {
-      const { items } = await store.listAssets({
-        ...sessionFilter,
-        search: context,
-        pageSize: limit,
-        page: 1,
-      });
+  if (proactiveEnabled) {
+    server.tool(
+      'suggest_assets',
+      [
+        'Proactively suggests relevant assets based on project context (language, framework, task).',
+        'Use this at the start of a session or when the user describes what they are building.',
+        'Prefer this over search_assets for proactive recommendations.',
+      ].join(' '),
+      {
+        context: z.string().describe(
+          'Describe the project or task (e.g. "Python FastAPI REST API", "React TypeScript frontend with testing")',
+        ),
+        limit: z.number().int().positive().max(10).default(5),
+      },
+      async ({ context, limit }) => {
+        const { items } = await store.listAssets({
+          ...sessionFilter,
+          search: context,
+          pageSize: limit,
+          page: 1,
+        });
 
-      return {
-        content: [{
-          type: 'text' as const,
-          text: JSON.stringify({
-            context,
-            suggestions: items.map(a => ({
-              id: a.id,
-              name: displayName(a),
-              type: a.type,
-              description: a.description,
-              tags: a.tags,
-              installCount: a.installCount,
-              provider: { id: a.providerId, label: resolveProviderLabel(a.providerId) },
-              install_hint: `install_asset(id: "${a.id}")`,
-            })),
-          }, null, 2),
-        }],
-      };
-    },
-  );
+        return {
+          content: [{
+            type: 'text' as const,
+            text: JSON.stringify({
+              context,
+              suggestions: items.map(a => ({
+                id: a.id,
+                name: displayName(a),
+                type: a.type,
+                description: a.description,
+                tags: a.tags,
+                installCount: a.installCount,
+                provider: { id: a.providerId, label: resolveProviderLabel(a.providerId) },
+                install_hint: `install_asset(id: "${a.id}")`,
+              })),
+            }, null, 2),
+          }],
+        };
+      },
+    );
+  }
 
   // ── search_assets ─────────────────────────────────────────────────────────
 
