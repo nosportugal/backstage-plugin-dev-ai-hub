@@ -60,9 +60,11 @@ export class AssetParser {
   ): AiAssetInput {
     const { meta } = parsed;
 
-    // Store resources path list in metadata (used for display/reference)
+    // Store extra fields in metadata (used for display/reference)
     const metadata: Record<string, unknown> = {};
     if (meta.resources) metadata.resources = meta.resources;
+    if ((meta as any).mcpServers) metadata.mcpServers = (meta as any).mcpServers;
+    if ((meta as any).steps) metadata.steps = (meta as any).steps;
 
     return {
       id: AssetParser.buildId(providerId, yamlFilePath),
