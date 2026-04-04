@@ -36,6 +36,8 @@ export function createMcpServer(
 ): McpServer {
   const server = new McpServer({ name: 'dev-ai-hub', version: '0.1.0' });
 
+  const POPULAR_THRESHOLD = 5;
+
   const toolParam     = toolFilter.trim()     || undefined;
   const providerParam = providerFilter.trim() || undefined;
 
@@ -47,6 +49,42 @@ export function createMcpServer(
 
   /** Returns the human-readable display name for an asset. */
   const displayName = (a: { name: string; label?: string }) => a.label ?? a.name;
+
+  /**
+   * Formats a list of assets as a markdown table for consistent display.
+   * Includes a compact ID reference list so the model can use install_asset.
+   */
+  const buildAssetTable = (
+    items: Array<{ id: string; name: string; label?: string; type: string; description?: string; tags?: string[]; installCount?: number }>,
+    meta?: { totalCount: number; page: number; pageSize: number; totalPages?: number },
+  ): string => {
+    const header = meta
+      ? `**${meta.totalCount} asset${meta.totalCount !== 1 ? 's' : ''} found** (page ${meta.page}/${meta.totalPages ?? Math.ceil(meta.totalCount / meta.pageSize)})\n\n`
+      : `**${items.length} asset${items.length !== 1 ? 's' : ''}**\n\n`;
+
+    const rows = items.map((a, i) => {
+      const name = displayName(a);
+      const desc = a.description
+        ? (a.description.length > 55 ? `${a.description.slice(0, 52)}…` : a.description)
+        : '—';
+      const tags = a.tags?.length ? a.tags.slice(0, 3).join(', ') : '—';
+      const installs = a.installCount ?? 0;
+      const pop = installs >= POPULAR_THRESHOLD ? ' 🔥' : '';
+      return `| ${i + 1} | **${name}** | \`${a.type}\` | ${desc} | ${tags} | ${installs}${pop} |`;
+    });
+
+    const table = [
+      '| # | Name | Type | Description | Tags | Installs |',
+      '|---|------|------|-------------|------|----------|',
+      ...rows,
+    ].join('\n');
+
+    const ids = items
+      .map((a, i) => `${i + 1}. ${displayName(a)} → \`${a.id}\``)
+      .join('\n');
+
+    return `IMPORTANT: Present the table below to the user exactly as formatted — do not convert to a list.\n\n${header}${table}\n\n**IDs for install_asset:**\n${ids}`;
+  };
 
   /** Returns the raw-content URL for an asset (empty string when baseUrl is not configured). */
   const rawUrl = (assetId: string) =>
@@ -152,6 +190,7 @@ export function createMcpServer(
       [
         'Proactively suggests relevant assets based on project context (language, framework, task).',
         'Use this at the start of a session or when the user describes what they are building.',
+        'Always present the results to the user as a markdown table — never as a bullet list.',
         'Prefer this over search_assets for proactive recommendations.',
       ].join(' '),
       {
@@ -171,19 +210,7 @@ export function createMcpServer(
         return {
           content: [{
             type: 'text' as const,
-            text: JSON.stringify({
-              context,
-              suggestions: items.map(a => ({
-                id: a.id,
-                name: displayName(a),
-                type: a.type,
-                description: a.description,
-                tags: a.tags,
-                installCount: a.installCount,
-                provider: { id: a.providerId, label: resolveProviderLabel(a.providerId) },
-                install_hint: `install_asset(id: "${a.id}")`,
-              })),
-            }, null, 2),
+            text: `**Suggestions for:** ${context}\n\n${buildAssetTable(items)}`,
           }],
         };
       },
@@ -197,6 +224,7 @@ export function createMcpServer(
     [
       'Search AI assets by text query, type, and tags.',
       'Use when the user explicitly asks to find or browse assets.',
+      'Always present the results to the user as a markdown table — never as a bullet list.',
       'Follow up with get_asset to preview content, or install_asset to install directly.',
     ].join(' '),
     {
@@ -219,23 +247,7 @@ export function createMcpServer(
       return {
         content: [{
           type: 'text' as const,
-          text: JSON.stringify({
-            totalCount,
-            page,
-            pageSize,
-            results: items.map(a => ({
-              id: a.id,
-              name: displayName(a),
-              type: a.type,
-              description: a.description,
-              tools: a.tools,
-              tags: a.tags,
-              version: a.version,
-              author: a.author,
-              installCount: a.installCount,
-              provider: { id: a.providerId, label: resolveProviderLabel(a.providerId) },
-            })),
-          }, null, 2),
+          text: buildAssetTable(items, { totalCount, page, pageSize }),
         }],
       };
     },
@@ -248,6 +260,7 @@ export function createMcpServer(
     [
       'List all available AI assets, optionally filtered by type.',
       'Use for browsing or when the user asks what assets are available.',
+      'Always present the results to the user as a markdown table — never as a bullet list.',
       'For context-aware recommendations, prefer suggest_assets instead.',
     ].join(' '),
     {
@@ -266,23 +279,7 @@ export function createMcpServer(
       return {
         content: [{
           type: 'text' as const,
-          text: JSON.stringify({
-            totalCount,
-            page,
-            pageSize,
-            totalPages: Math.ceil(totalCount / pageSize),
-            items: items.map(a => ({
-              id: a.id,
-              name: displayName(a),
-              type: a.type,
-              description: a.description,
-              tags: a.tags,
-              version: a.version,
-              author: a.author,
-              installCount: a.installCount,
-              provider: { id: a.providerId, label: resolveProviderLabel(a.providerId) },
-            })),
-          }, null, 2),
+          text: buildAssetTable(items, { totalCount, page, pageSize, totalPages: Math.ceil(totalCount / pageSize) }),
         }],
       };
     },

@@ -1,5 +1,5 @@
 import type { ElementType } from 'react';
-import { alpha } from '@mui/material/styles';
+import { alpha, useTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
@@ -42,6 +42,8 @@ interface AssetCardProps {
 }
 
 export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
+  const theme = useTheme();
+  const isDark = (theme.palette as any).mode === 'dark' || (theme.palette as any).type === 'dark';
   const cfg = TYPE_CONFIG[asset.type];
   const TypeIcon = cfg.Icon;
   const isPopular = asset.installCount >= POPULAR_THRESHOLD;
@@ -71,8 +73,8 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
           <Box
             sx={{
-              width: 36,
-              height: 36,
+              width: 40,
+              height: 40,
               borderRadius: 1.5,
               backgroundColor: alpha(cfg.color, 0.12),
               display: 'flex',
@@ -87,11 +89,11 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
                 component="img"
                 src={asset.icon}
                 alt={asset.label ?? asset.name}
-                sx={{ width: 20, height: 20, objectFit: 'contain' }}
+                sx={{ width: 26, height: 26, objectFit: 'contain' }}
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             ) : (
-              <TypeIcon sx={{ color: cfg.color, fontSize: '1.1rem' }} />
+              <TypeIcon sx={{ color: cfg.color, fontSize: '1.3rem' }} />
             )}
           </Box>
 
@@ -105,14 +107,17 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
                   label="New"
                   size="small"
                   sx={{
-                    height: 16,
-                    fontSize: '0.58rem',
+                    height: 18,
+                    fontSize: '0.6rem',
                     fontWeight: 700,
-                    backgroundColor: 'success.main',
-                    color: 'success.contrastText',
+                    backgroundColor: alpha('#059669', isDark ? 0.25 : 0.14),
+                    backdropFilter: 'blur(8px)',
+                    color: isDark ? '#fff' : '#059669',
+                    border: '1px solid',
+                    borderColor: alpha('#059669', isDark ? 0.5 : 0.3),
                     borderRadius: 1,
                     flexShrink: 0,
-                    '& .MuiChip-label': { px: '5px' },
+                    '& .MuiChip-label': { px: '6px' },
                   }}
                 />
               )}
