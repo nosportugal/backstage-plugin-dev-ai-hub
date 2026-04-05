@@ -64,9 +64,10 @@ export function createMcpServer(
 
     const rows = items.map((a, i) => {
       const name = displayName(a);
-      const desc = a.description
-        ? (a.description.length > 55 ? `${a.description.slice(0, 52)}…` : a.description)
-        : '—';
+      let desc = '—';
+      if (a.description) {
+        desc = a.description.length > 55 ? `${a.description.slice(0, 52)}…` : a.description;
+      }
       const tags = a.tags?.length ? a.tags.slice(0, 3).join(', ') : '—';
       const installs = a.installCount ?? 0;
       const pop = installs >= POPULAR_THRESHOLD ? ' 🔥' : '';
