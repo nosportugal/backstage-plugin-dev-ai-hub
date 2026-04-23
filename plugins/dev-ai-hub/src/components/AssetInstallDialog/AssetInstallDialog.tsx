@@ -90,7 +90,7 @@ export function AssetInstallDialog({
   useEffect(() => {
     if (!asset) {
       setRawUrl(null);
-      return;
+      return () => {};
     }
     let cancelled = false;
     api.getDownloadUrl(asset.id).then((downloadUrl) => {
