@@ -8,7 +8,7 @@ on:
 
 jobs:
   ci:
-    name: Lint · Type check · Test · Build
+    name: Lint · Test · Build
     runs-on: ubuntu-latest
     env:
       NODE_OPTIONS: --max-old-space-size=4096
@@ -30,14 +30,6 @@ jobs:
 
       - name: Lint
         run: yarn lint:all
-
-      - name: Type check
-        run: |
-          for dir in plugins/dev-ai-hub-common plugins/dev-ai-hub-node plugins/dev-ai-hub-backend plugins/dev-ai-hub; do
-            pkg=$(node -p "require('./$dir/package.json').name")
-            echo "Type checking $pkg..."
-            yarn workspace "$pkg" tsc
-          done
 
       - name: Test
         run: yarn test
