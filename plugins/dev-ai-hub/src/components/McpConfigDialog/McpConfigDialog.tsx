@@ -60,6 +60,15 @@ const TOOL_CONFIGS: ToolConfig[] = [
       mcpServers: { 'dev-ai-hub': { url } },
     }, null, 2),
   },
+  {
+    tool: 'cursor',
+    label: 'Cursor',
+    file: '.cursor/mcp.json',
+    description: 'Add to .cursor/mcp.json in your project root:',
+    buildConfig: url => JSON.stringify({
+      mcpServers: { 'dev-ai-hub': { type: 'http', url } },
+    }, null, 2),
+  },
 ];
 
 function providerLabel(target: string): string {

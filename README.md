@@ -13,22 +13,13 @@ https://github.com/user-attachments/assets/5728807d-2587-408b-88f2-4c2853606285
 
 ## Installation
 
-### 1. Copy plugin packages
+### 1. Add the packages
 
-Copy the four plugin directories into your Backstage monorepo's `plugins/` folder:
-
-```
-plugins/
-  dev-ai-hub/
-  dev-ai-hub-backend/
-  dev-ai-hub-common/
-  dev-ai-hub-node/
-```
-
-Then install:
+In your Backstage monorepo:
 
 ```bash
-yarn install
+yarn workspace backend add @julianpedro/plugin-dev-ai-hub-backend
+yarn workspace app add @julianpedro/plugin-dev-ai-hub
 ```
 
 ### 2. Register the backend plugin
@@ -77,8 +68,6 @@ import HubIcon from '@mui/icons-material/Hub';
 // inside <SidebarGroup>:
 <SidebarItem icon={HubIcon} to="dev-ai-hub" text="AI Hub" />
 ```
-
-The API client is registered automatically when `DevAiHubPage` is used — no extra plugin registration needed.
 
 ### 4. Configure `app-config.yaml`
 
