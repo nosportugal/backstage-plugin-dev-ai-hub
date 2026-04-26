@@ -120,6 +120,17 @@ export class AiAssetStore {
     await query.delete();
   }
 
+  /**
+   * Removes all assets and sync status for a provider in a single transaction.
+   * Called when a provider is no longer present in the Backstage config.
+   */
+  async purgeProvider(providerId: string): Promise<void> {
+    await this.db.transaction(async trx => {
+      await trx('ai_assets').where('provider_id', providerId).delete();
+      await trx('ai_asset_sync_status').where('provider_id', providerId).delete();
+    });
+  }
+
   async upsertSyncStatus(status: SyncStatus): Promise<void> {
     const row = {
       provider_id: status.providerId,

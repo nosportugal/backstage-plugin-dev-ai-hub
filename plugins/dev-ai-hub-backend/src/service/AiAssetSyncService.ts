@@ -21,13 +21,28 @@ export class AiAssetSyncService {
   constructor(private readonly options: Options) {}
 
   async start(): Promise<void> {
-    const { scheduler, logger, providers, externalProviders } = this.options;
+    const { scheduler, logger, store, providers, externalProviders } = this.options;
 
     if (providers.length === 0 && externalProviders.length === 0) {
       logger.warn(
         'dev-ai-hub: no providers configured under devAiHub.providers',
       );
-      return;
+    }
+
+    // Purge assets for providers that were removed from config.
+    // Runs before scheduling any syncs so removed providers are cleaned up on restart.
+    const configuredIds = new Set([
+      ...providers.map(p => p.id),
+      ...externalProviders.map(p => p.id),
+    ]);
+    const knownStatuses = await store.getAllSyncStatuses();
+    for (const status of knownStatuses) {
+      if (!configuredIds.has(status.providerId)) {
+        await store.purgeProvider(status.providerId);
+        logger.info(
+          `dev-ai-hub: purged removed provider "${status.providerId}" and its assets`,
+        );
+      }
     }
 
     for (const provider of providers) {
