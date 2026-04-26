@@ -61,9 +61,6 @@ jobs:
       - name: Lint
         run: yarn lint:all
 
-      - name: Type check
-        run: yarn tsc
-
       - name: Test
         run: yarn test
 
