@@ -31,9 +31,12 @@ jobs:
 
       - name: Type check
         run: yarn tsc
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
 
       - name: Test
         run: yarn test
 
       - name: Build
         run: yarn build:all
+
