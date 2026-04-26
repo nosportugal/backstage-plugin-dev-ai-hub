@@ -1,0 +1,80 @@
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write # required for --provenance (OIDC)
+
+jobs:
+  publish:
+    name: Build & Publish
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Verify tag matches package.json version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION=$(node -p "require('./plugins/dev-ai-hub-common/package.json').version")
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "❌ Tag ($TAG_VERSION) does not match package.json version ($PKG_VERSION)"
+            echo "Update the version in all package.json files before creating the tag."
+            exit 1
+          fi
+          echo "✅ Version $TAG_VERSION verified"
+
+      - name: Lint
+        run: yarn lint:all
+
+      - name: Type check
+        run: yarn tsc
+
+      - name: Test
+        run: yarn test
+
+      - name: Build all packages
+        run: yarn build:all
+
+      # Publish in dependency order: common → node → backend → frontend
+
+      - name: Publish dev-ai-hub-common
+        working-directory: plugins/dev-ai-hub-common
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish dev-ai-hub-node
+        working-directory: plugins/dev-ai-hub-node
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish dev-ai-hub-backend
+        working-directory: plugins/dev-ai-hub-backend
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish dev-ai-hub (frontend)
+        working-directory: plugins/dev-ai-hub
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
