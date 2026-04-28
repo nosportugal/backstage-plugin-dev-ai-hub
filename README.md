@@ -156,6 +156,15 @@ For more information about YAML envelope fields, see [YAML Envelope Reference](e
 
 You can use assets in examples folder to see how to use assets in your project or as a base for your own assets.
 
+#### NOS Portugal examples
+
+The following examples are tailored for NOS Portugal engineering teams:
+
+| Asset | Type | Description |
+|-------|------|-------------|
+| [`examples/instructions/nos-coding-principles/`](examples/instructions/nos-coding-principles/) | `instruction` | NOS coding principles — simplicity, transparency, security, and customer-first mindset |
+| [`examples/agents/nos-tech-lead/`](examples/agents/nos-tech-lead/) | `agent` | NOS Tech Lead agent — code review and architecture guidance aligned with NOS engineering culture |
+
 ### Default install paths (auto-resolved per tool)
 
 | Type | Tool | Default path |

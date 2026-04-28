@@ -1,0 +1,23 @@
+# Required
+name: nos-coding-principles
+type: instruction
+tools:
+  - all
+description: "NOS Portugal coding principles and standards for AI-assisted development. Promotes clean code, transparency, customer-first mindset, and full accountability consistent with NOS engineering culture."
+
+# Optional
+label: "NOS Coding Principles"
+author: "NOS Platform Team"
+version: "1.0.0"
+icon: "https://img.icons8.com/color/48/source-code.png"
+tags:
+  - nos
+  - coding-standards
+  - best-practices
+  - portugal
+
+# Optional - Content relative to the .yaml file
+content: nos-coding-principles.md
+
+# Optional - Installation paths
+installPath: ".github/instructions/nos-coding-principles.md"

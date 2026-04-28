@@ -1,0 +1,23 @@
+# Required
+name: nos-tech-lead
+type: agent
+tools:
+  - github-copilot
+description: "NOS Tech Lead agent — reviews code, enforces NOS engineering standards, suggests improvements aligned with NOS culture: customer-first, transparent, secure, and accountable."
+
+# Optional
+label: "NOS Tech Lead"
+author: "NOS Platform Team"
+version: "1.0.0"
+icon: "https://img.icons8.com/color/48/technical-support.png"
+tags:
+  - nos
+  - code-review
+  - tech-lead
+  - engineering-culture
+
+# Optional - Content relative to the .yaml file
+content: nos-tech-lead.md
+
+# Optional - Installation paths
+installPath: ".github/agents/nos-tech-lead.agent.md"
