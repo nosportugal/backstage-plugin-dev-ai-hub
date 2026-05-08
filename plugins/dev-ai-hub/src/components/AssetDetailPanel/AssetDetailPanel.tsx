@@ -21,9 +21,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FolderZipIcon from '@mui/icons-material/FolderZip';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import Inventory2Icon from '@mui/icons-material/Inventory2';
-import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
-import type { AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
+import type { AssetType } from '@nospt/plugin-dev-ai-hub-common';
 import { useAssetDetail } from '../../hooks';
 import { devAiHubTranslationRef } from '../../translation';
 

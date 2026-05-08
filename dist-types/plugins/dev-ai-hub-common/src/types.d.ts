@@ -69,8 +69,6 @@ export interface AiAsset {
      * Only populated for assets of type `skill` that declare `resources` in the envelope.
      */
     resourcesContent?: Record<string, string>;
-    /** Resolved bundle items — only populated for type === 'bundle'. */
-    items?: BundleItem[];
     /** Path of the .yaml file in the repository */
     yamlPath: string;
     /** Path of the .md file in the repository */

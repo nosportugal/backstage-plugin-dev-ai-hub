@@ -27,9 +27,8 @@ import TuneIcon from '@mui/icons-material/Tune';
 import { useApi, discoveryApiRef } from '@backstage/core-plugin-api';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { ToolIcon } from '../ToolIcon';
-import { useCopyToClipboard, useMcpCatalog, useProviders } from '../../hooks';
-import type { AiTool, McpCatalogEntry } from '@julianpedro/plugin-dev-ai-hub-common';
-import { devAiHubTranslationRef } from '../../translation';
+import { useCopyToClipboard, useProviders } from '../../hooks';
+import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
 
 interface ToolConfig {
   tool: AiTool;

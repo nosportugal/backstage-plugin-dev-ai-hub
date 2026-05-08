@@ -27,7 +27,7 @@ yarn workspace app add @julianpedro/plugin-dev-ai-hub
 In `packages/backend/src/index.ts`:
 
 ```typescript
-backend.add(import('@julianpedro/plugin-dev-ai-hub-backend'));
+backend.add(import('@nospt/plugin-dev-ai-hub-backend'));
 ```
 
 ### 3. Register the frontend plugin
@@ -37,7 +37,7 @@ backend.add(import('@julianpedro/plugin-dev-ai-hub-backend'));
 In `packages/app/src/App.tsx`:
 
 ```typescript
-import { devAiHubPlugin } from '@julianpedro/plugin-dev-ai-hub';
+import { devAiHubPlugin } from '@nospt/plugin-dev-ai-hub';
 
 const app = createApp({
   features: [
@@ -54,7 +54,7 @@ The sidebar item is registered automatically — no additional configuration nee
 In `packages/app/src/App.tsx`, add the route inside `<FlatRoutes>`:
 
 ```typescript
-import { DevAiHubPage } from '@julianpedro/plugin-dev-ai-hub';
+import { DevAiHubPage } from '@nospt/plugin-dev-ai-hub';
 
 // inside <FlatRoutes>:
 <Route path="/dev-ai-hub" element={<DevAiHubPage />} />
@@ -324,10 +324,10 @@ DELETE /api/dev-ai-hub/mcp                    Terminate MCP session
 
 | Package | Role | Description |
 |---------|------|-------------|
-| `@julianpedro/plugin-dev-ai-hub` | `frontend-plugin` | React UI — page, cards, filters, install dialog |
-| `@julianpedro/plugin-dev-ai-hub-backend` | `backend-plugin` | Sync service, REST API, embedded MCP server |
-| `@julianpedro/plugin-dev-ai-hub-common` | `common-library` | Shared TypeScript types, Zod schemas, install path conventions |
-| `@julianpedro/plugin-dev-ai-hub-node` | `node-library` | Extension points for external provider modules |
+| `@nospt/plugin-dev-ai-hub` | `frontend-plugin` | React UI — page, cards, filters, install dialog |
+| `@nospt/plugin-dev-ai-hub-backend` | `backend-plugin` | Sync service, REST API, embedded MCP server |
+| `@nospt/plugin-dev-ai-hub-common` | `common-library` | Shared TypeScript types, Zod schemas, install path conventions |
+| `@nospt/plugin-dev-ai-hub-node` | `node-library` | Extension points for external provider modules |
 
 ---
 

@@ -1,5 +1,4 @@
-import type { AiAsset, AssetListFilter, McpCatalogEntry } from '@julianpedro/plugin-dev-ai-hub-common';
-export type { McpCatalogEntry };
+import type { AiAsset, AssetListFilter } from '@nospt/plugin-dev-ai-hub-common';
 export interface ProviderConfig {
     id: string;
     type: 'github' | 'bitbucket' | 'azure-devops' | 'gitlab' | 'git';

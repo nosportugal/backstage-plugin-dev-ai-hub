@@ -1,4 +1,4 @@
-import type { AiAssetFrontmatter } from '@julianpedro/plugin-dev-ai-hub-common';
+import type { AiAssetFrontmatter } from '@nospt/plugin-dev-ai-hub-common';
 import type { AiAssetInput } from '../types';
 export interface ParsedAssetMeta {
     meta: AiAssetFrontmatter;
@@ -20,6 +20,8 @@ export declare class AssetParser {
      */
     static buildAsset(parsed: ParsedAssetMeta, mdContent: string, providerId: string, repoUrl: string, branch: string, yamlFilePath: string, resourcesContent?: Record<string, string>): AiAssetInput;
     static buildId(providerId: string, yamlPath: string): string;
-    /** True if the file is in a known asset directory (including bundles/) */
+    /** Known top-level directories that contain assets */
+    private static readonly ASSET_DIRS;
+    /** True if the file is in a known asset directory (root or .github/) */
     static isAssetFile(filePath: string): boolean;
 }

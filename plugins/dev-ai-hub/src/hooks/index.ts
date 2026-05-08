@@ -7,8 +7,7 @@ import type {
   AiHubProvider,
   AiHubStats,
   AssetListFilter,
-  McpCatalogEntry,
-} from '@julianpedro/plugin-dev-ai-hub-common';
+} from '@nospt/plugin-dev-ai-hub-common';
 
 function useDebounce<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);

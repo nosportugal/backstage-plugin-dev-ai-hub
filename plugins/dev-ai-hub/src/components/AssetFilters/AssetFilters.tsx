@@ -12,8 +12,7 @@ import BuildIcon from '@mui/icons-material/Build';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import AppsIcon from '@mui/icons-material/Apps';
-import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
-import type { AssetType, AiTool, AiHubProvider } from '@julianpedro/plugin-dev-ai-hub-common';
+import type { AssetType, AiTool, AiHubProvider } from '@nospt/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
 import { devAiHubTranslationRef } from '../../translation';
 

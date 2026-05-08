@@ -1,5 +1,5 @@
 {
-  "name": "@julianpedro/plugin-dev-ai-hub-backend",
+  "name": "@nospt/plugin-dev-ai-hub-backend",
   "version": "0.1.0",
   "description": "Backend plugin for Dev AI Hub",
   "license": "Apache-2.0",
@@ -10,26 +10,27 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "publishConfig": {
-    "access": "public",
-    "main": "dist/index.cjs.js",
-    "types": "dist/index.d.ts"
+    "access": "public"
   },
   "exports": {
     ".": "./src/index.ts",
     "./package.json": "./package.json"
   },
-  "files": [
-    "dist",
-    "migrations"
-  ],
+  "typesVersions": {
+    "*": {
+      "package.json": [
+        "package.json"
+      ]
+    }
+  },
   "backstage": {
     "role": "backend-plugin",
     "pluginId": "dev-ai-hub",
     "pluginPackages": [
-      "@julianpedro/plugin-dev-ai-hub",
-      "@julianpedro/plugin-dev-ai-hub-backend",
-      "@julianpedro/plugin-dev-ai-hub-common",
-      "@julianpedro/plugin-dev-ai-hub-node"
+      "@nospt/plugin-dev-ai-hub",
+      "@nospt/plugin-dev-ai-hub-backend",
+      "@nospt/plugin-dev-ai-hub-common",
+      "@nospt/plugin-dev-ai-hub-node"
     ]
   },
   "scripts": {
@@ -43,9 +44,10 @@
     "tsc": "tsc --noEmit"
   },
   "dependencies": {
-    "@julianpedro/plugin-dev-ai-hub-common": "^0.1.0",
-    "@julianpedro/plugin-dev-ai-hub-node": "^0.1.0",
+    "@backstage/backend-plugin-api": "*",
     "@modelcontextprotocol/sdk": "^1.5.0",
+    "@nospt/plugin-dev-ai-hub-common": "*",
+    "@nospt/plugin-dev-ai-hub-node": "*",
     "archiver": "^6.0.0",
     "express": "^4.18.0",
     "js-yaml": "^4.1.0",

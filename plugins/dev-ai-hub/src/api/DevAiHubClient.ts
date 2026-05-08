@@ -9,8 +9,7 @@ import type {
   AiHubProvider,
   AiHubStats,
   AssetListFilter,
-  McpCatalogEntry,
-} from '@julianpedro/plugin-dev-ai-hub-common';
+} from '@nospt/plugin-dev-ai-hub-common';
 
 export const devAiHubApiRef = createApiRef<DevAiHubApi>({
   id: 'plugin.dev-ai-hub.service',
