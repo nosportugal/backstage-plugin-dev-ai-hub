@@ -4,9 +4,10 @@ import type { ProviderConfig } from '../types';
 /**
  * Creates an McpServer instance connected to the AiAssetStore.
  *
- * @param store        - Asset store
- * @param toolFilter   - Captured from `?tool=` at session init; filters assets by tool compatibility
- * @param providerFilter - Captured from `?provider=` at session init; scopes assets to a single provider
- * @param providers    - Full provider config list (for `list_providers` and label resolution)
+ * @param store            - Asset store
+ * @param toolFilter       - Captured from `?tool=` at session init; filters assets by tool compatibility
+ * @param providerFilter   - Captured from `?provider=` at session init; scopes assets to a single provider
+ * @param providers        - Full provider config list (for `list_providers` and label resolution)
+ * @param proactiveEnabled - When false, the `check_for_assets` prompt and `suggest_assets` tool are not registered
  */
-export declare function createMcpServer(store: AiAssetStore, toolFilter: string, providerFilter: string, providers: ProviderConfig[]): McpServer;
+export declare function createMcpServer(store: AiAssetStore, toolFilter: string, providerFilter: string, providers: ProviderConfig[], proactiveEnabled?: boolean): McpServer;

@@ -1,5 +1,5 @@
 import { SvgIconProps } from '@mui/material/SvgIcon';
-import type { AiTool } from '@internal/plugin-dev-ai-hub-common';
+import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
 interface ToolIconProps extends Omit<SvgIconProps, 'color'> {
     tool: AiTool;
     /** Use the brand's official color. Defaults to true. */

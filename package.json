@@ -6,14 +6,15 @@
   "workspaces": [
     "plugins/*"
   ],
-  "scripts": {
-    "start:frontend": "yarn workspace @internal/plugin-dev-ai-hub start",
-    "start:backend": "yarn workspace @internal/plugin-dev-ai-hub-backend start",
-    "build:all": "yarn workspaces foreach --all --topological-dev run build",
-    "test": "yarn workspaces foreach --all -p run test --passWithNoTests",
-    "lint:all": "yarn workspaces foreach --all -p run lint",
-    "tsc": "tsc"
-  },
+"scripts": {
+  "start": "yarn start:frontend & yarn start:backend",
+  "start:frontend": "yarn workspace @nospt/plugin-dev-ai-hub start",
+  "start:backend": "yarn workspace @nospt/plugin-dev-ai-hub-backend start",
+  "build:all": "yarn workspaces foreach --all --topological-dev run build",
+  "test": "yarn workspaces foreach --all -p run test --passWithNoTests",
+  "lint:all": "yarn workspaces foreach --all -p run lint",
+  "tsc": "tsc"
+},
   "devDependencies": {
     "@backstage/cli": "*",
     "jest": "^29.0.0",

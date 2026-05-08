@@ -20,7 +20,7 @@ import StorageIcon from '@mui/icons-material/Storage';
 import { useApi, discoveryApiRef } from '@backstage/core-plugin-api';
 import { ToolIcon } from '../ToolIcon';
 import { useCopyToClipboard, useProviders } from '../../hooks';
-import type { AiTool } from '@internal/plugin-dev-ai-hub-common';
+import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
 
 interface ToolConfig {
   tool: AiTool;

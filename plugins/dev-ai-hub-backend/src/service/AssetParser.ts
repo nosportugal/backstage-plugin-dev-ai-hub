@@ -1,7 +1,7 @@
 import yaml from 'js-yaml';
 import path from 'path';
-import { AiAssetFrontmatterSchema } from '@internal/plugin-dev-ai-hub-common';
-import type { AiAssetFrontmatter } from '@internal/plugin-dev-ai-hub-common';
+import { AiAssetFrontmatterSchema } from '@nospt/plugin-dev-ai-hub-common';
+import type { AiAssetFrontmatter } from '@nospt/plugin-dev-ai-hub-common';
 import type { AiAssetInput } from '../types';
 
 export interface ParsedAssetMeta {

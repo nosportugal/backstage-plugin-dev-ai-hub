@@ -1,23 +1,35 @@
 {
-  "name": "@internal/plugin-dev-ai-hub-common",
+  "name": "@nospt/plugin-dev-ai-hub-common",
   "version": "0.1.0",
   "description": "Common types and schemas for Dev AI Hub",
   "license": "Apache-2.0",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "publishConfig": {
-    "access": "public",
-    "main": "dist/index.cjs.js",
-    "module": "dist/index.esm.js",
-    "types": "dist/index.d.ts"
+    "access": "public"
   },
   "exports": {
     ".": "./src/index.ts",
     "./package.json": "./package.json"
   },
-  "backstage": {
-    "role": "common-library"
+  "typesVersions": {
+    "*": {
+      "package.json": [
+        "package.json"
+      ]
+    }
   },
+  "backstage": {
+    "role": "common-library",
+    "pluginId": "dev-ai-hub",
+    "pluginPackages": [
+      "@nospt/plugin-dev-ai-hub",
+      "@nospt/plugin-dev-ai-hub-backend",
+      "@nospt/plugin-dev-ai-hub-common",
+      "@nospt/plugin-dev-ai-hub-node"
+    ]
+  },
+  "sideEffects": false,
   "scripts": {
     "build": "backstage-cli package build",
     "clean": "backstage-cli package clean",

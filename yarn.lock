@@ -3145,89 +3145,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@internal/plugin-dev-ai-hub-backend@workspace:plugins/dev-ai-hub-backend":
-  version: 0.0.0-use.local
-  resolution: "@internal/plugin-dev-ai-hub-backend@workspace:plugins/dev-ai-hub-backend"
-  dependencies:
-    "@backstage/backend-defaults": "npm:*"
-    "@backstage/backend-plugin-api": "npm:*"
-    "@backstage/backend-test-utils": "npm:*"
-    "@backstage/cli": "npm:*"
-    "@internal/plugin-dev-ai-hub-common": "npm:*"
-    "@internal/plugin-dev-ai-hub-node": "npm:*"
-    "@modelcontextprotocol/sdk": "npm:^1.5.0"
-    "@types/archiver": "npm:^6.0.0"
-    "@types/express": "npm:^4.17.21"
-    "@types/jest": "npm:^29.0.0"
-    "@types/js-yaml": "npm:^4.0.9"
-    archiver: "npm:^6.0.0"
-    express: "npm:^4.18.0"
-    jest: "npm:^29.0.0"
-    jest-environment-jsdom: "npm:^29.0.0"
-    js-yaml: "npm:^4.1.0"
-    knex: "npm:^3.1.0"
-    zod: "npm:^3.22.0"
-  languageName: unknown
-  linkType: soft
-
-"@internal/plugin-dev-ai-hub-common@npm:*, @internal/plugin-dev-ai-hub-common@workspace:plugins/dev-ai-hub-common":
-  version: 0.0.0-use.local
-  resolution: "@internal/plugin-dev-ai-hub-common@workspace:plugins/dev-ai-hub-common"
-  dependencies:
-    "@backstage/cli": "npm:*"
-    "@types/jest": "npm:^29.0.0"
-    jest: "npm:^29.0.0"
-    jest-environment-jsdom: "npm:^29.0.0"
-    zod: "npm:^3.22.0"
-  languageName: unknown
-  linkType: soft
-
-"@internal/plugin-dev-ai-hub-node@npm:*, @internal/plugin-dev-ai-hub-node@workspace:plugins/dev-ai-hub-node":
-  version: 0.0.0-use.local
-  resolution: "@internal/plugin-dev-ai-hub-node@workspace:plugins/dev-ai-hub-node"
-  dependencies:
-    "@backstage/backend-plugin-api": "npm:*"
-    "@backstage/cli": "npm:*"
-    "@internal/plugin-dev-ai-hub-common": "npm:*"
-    jest: "npm:^29.0.0"
-    jest-environment-jsdom: "npm:^29.0.0"
-  languageName: unknown
-  linkType: soft
-
-"@internal/plugin-dev-ai-hub@workspace:plugins/dev-ai-hub":
-  version: 0.0.0-use.local
-  resolution: "@internal/plugin-dev-ai-hub@workspace:plugins/dev-ai-hub"
-  dependencies:
-    "@backstage/cli": "npm:*"
-    "@backstage/core-components": "npm:*"
-    "@backstage/core-plugin-api": "npm:*"
-    "@backstage/dev-utils": "npm:*"
-    "@backstage/frontend-plugin-api": "npm:*"
-    "@backstage/test-utils": "npm:*"
-    "@internal/plugin-dev-ai-hub-common": "npm:*"
-    "@mui/icons-material": "npm:^5.15.0"
-    "@mui/material": "npm:^5.15.0"
-    "@testing-library/jest-dom": "npm:^6.0.0"
-    "@testing-library/react": "npm:^14.0.0"
-    "@types/jest": "npm:^29.0.0"
-    "@types/react": "npm:^18.0.0"
-    "@types/react-syntax-highlighter": "npm:^15.0.0"
-    jest: "npm:^29.0.0"
-    jest-environment-jsdom: "npm:^29.0.0"
-    react: "npm:^18.0.0"
-    react-dom: "npm:^18.0.0"
-    react-markdown: "npm:^9.0.0"
-    react-router-dom: "npm:^6.0.0"
-    react-syntax-highlighter: "npm:^16.1.1"
-    remark-gfm: "npm:^4.0.1"
-    simple-icons: "npm:^13.0.0"
-  peerDependencies:
-    react: ^18.0.0
-    react-dom: ^18.0.0
-    react-router-dom: ^6.0.0
-  languageName: unknown
-  linkType: soft
-
 "@internationalized/date@npm:^3.12.0":
   version: 3.12.0
   resolution: "@internationalized/date@npm:3.12.0"
@@ -4678,6 +4595,89 @@ __metadata:
   checksum: 10c0/db9de047c3bb9b51f9335a7bb46f4fcfb6829fb628318c12115fbaf7d369bfce71c15b103d1fc3b464812d936220ee9bc1c8f762d032c9f6be9acc99249095b1
   languageName: node
   linkType: hard
+
+"@nospt/plugin-dev-ai-hub-backend@workspace:plugins/dev-ai-hub-backend":
+  version: 0.0.0-use.local
+  resolution: "@nospt/plugin-dev-ai-hub-backend@workspace:plugins/dev-ai-hub-backend"
+  dependencies:
+    "@backstage/backend-defaults": "npm:*"
+    "@backstage/backend-plugin-api": "npm:*"
+    "@backstage/backend-test-utils": "npm:*"
+    "@backstage/cli": "npm:*"
+    "@modelcontextprotocol/sdk": "npm:^1.5.0"
+    "@nospt/plugin-dev-ai-hub-common": "npm:*"
+    "@nospt/plugin-dev-ai-hub-node": "npm:*"
+    "@types/archiver": "npm:^6.0.0"
+    "@types/express": "npm:^4.17.21"
+    "@types/jest": "npm:^29.0.0"
+    "@types/js-yaml": "npm:^4.0.9"
+    archiver: "npm:^6.0.0"
+    express: "npm:^4.18.0"
+    jest: "npm:^29.0.0"
+    jest-environment-jsdom: "npm:^29.0.0"
+    js-yaml: "npm:^4.1.0"
+    knex: "npm:^3.1.0"
+    zod: "npm:^3.22.0"
+  languageName: unknown
+  linkType: soft
+
+"@nospt/plugin-dev-ai-hub-common@npm:*, @nospt/plugin-dev-ai-hub-common@workspace:plugins/dev-ai-hub-common":
+  version: 0.0.0-use.local
+  resolution: "@nospt/plugin-dev-ai-hub-common@workspace:plugins/dev-ai-hub-common"
+  dependencies:
+    "@backstage/cli": "npm:*"
+    "@types/jest": "npm:^29.0.0"
+    jest: "npm:^29.0.0"
+    jest-environment-jsdom: "npm:^29.0.0"
+    zod: "npm:^3.22.0"
+  languageName: unknown
+  linkType: soft
+
+"@nospt/plugin-dev-ai-hub-node@npm:*, @nospt/plugin-dev-ai-hub-node@workspace:plugins/dev-ai-hub-node":
+  version: 0.0.0-use.local
+  resolution: "@nospt/plugin-dev-ai-hub-node@workspace:plugins/dev-ai-hub-node"
+  dependencies:
+    "@backstage/backend-plugin-api": "npm:*"
+    "@backstage/cli": "npm:*"
+    "@nospt/plugin-dev-ai-hub-common": "npm:*"
+    jest: "npm:^29.0.0"
+    jest-environment-jsdom: "npm:^29.0.0"
+  languageName: unknown
+  linkType: soft
+
+"@nospt/plugin-dev-ai-hub@workspace:plugins/dev-ai-hub":
+  version: 0.0.0-use.local
+  resolution: "@nospt/plugin-dev-ai-hub@workspace:plugins/dev-ai-hub"
+  dependencies:
+    "@backstage/cli": "npm:*"
+    "@backstage/core-components": "npm:*"
+    "@backstage/core-plugin-api": "npm:*"
+    "@backstage/dev-utils": "npm:*"
+    "@backstage/frontend-plugin-api": "npm:*"
+    "@backstage/test-utils": "npm:*"
+    "@mui/icons-material": "npm:^5.15.0"
+    "@mui/material": "npm:^5.15.0"
+    "@nospt/plugin-dev-ai-hub-common": "npm:*"
+    "@testing-library/jest-dom": "npm:^6.0.0"
+    "@testing-library/react": "npm:^14.0.0"
+    "@types/jest": "npm:^29.0.0"
+    "@types/react": "npm:^18.0.0"
+    "@types/react-syntax-highlighter": "npm:^15.0.0"
+    jest: "npm:^29.0.0"
+    jest-environment-jsdom: "npm:^29.0.0"
+    react: "npm:^18.0.0"
+    react-dom: "npm:^18.0.0"
+    react-markdown: "npm:^9.0.0"
+    react-router-dom: "npm:^6.0.0"
+    react-syntax-highlighter: "npm:^16.1.1"
+    remark-gfm: "npm:^4.0.1"
+    simple-icons: "npm:^13.0.0"
+  peerDependencies:
+    react: ^18.0.0
+    react-dom: ^18.0.0
+    react-router-dom: ^6.0.0
+  languageName: unknown
+  linkType: soft
 
 "@npmcli/agent@npm:^4.0.0":
   version: 4.0.0
