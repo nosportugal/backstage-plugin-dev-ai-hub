@@ -34,9 +34,9 @@ export class AssetParser {
 
     const meta = result.data;
 
-    // Resolve .md path: use the `content` field, or fall back to <same-name>.md
-    const mdReference =
-      meta.content ?? `${path.basename(yamlFilePath, '.yaml')}.md`;
+    // Resolve .md path: use the `content` field, or fall back to <slugified-name>.md
+    const nameSlug = meta.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '');
+    const mdReference = meta.content ?? `${nameSlug}.md`;
     const mdPath = path.posix.join(
       path.posix.dirname(yamlFilePath),
       mdReference,
@@ -97,21 +97,4 @@ export class AssetParser {
     return Buffer.from(`${providerId}:${normalized}`).toString('base64url');
   }
 
-  /** Known top-level directories that contain assets */
-  private static readonly ASSET_DIRS = [
-    'instructions/',
-    'agents/',
-    'skills/',
-    'workflows/',
-  ];
-
-  /** True if the file is in a known asset directory (root or .github/) */
-  static isAssetFile(filePath: string): boolean {
-    const normalized = filePath.replace(/\\/g, '/');
-    return AssetParser.ASSET_DIRS.some(
-      dir =>
-        normalized.startsWith(dir) ||
-        normalized.startsWith(`.github/${dir}`),
-    );
-  }
 }

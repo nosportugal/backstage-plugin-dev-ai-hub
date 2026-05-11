@@ -99,7 +99,6 @@ export class AiAssetSyncService {
 
       for (const [filePath, file] of fileMap) {
         if (!filePath.endsWith('.yaml')) continue;
-        if (!AssetParser.isAssetFile(filePath)) continue;
 
         const yamlContent = (await file.content()).toString('utf-8');
         const parsed = AssetParser.parseYaml(yamlContent, filePath);

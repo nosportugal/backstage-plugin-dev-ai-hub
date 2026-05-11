@@ -205,12 +205,12 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
         </Box>
         <Box sx={{ display: 'flex', gap: 0.25 }}>
           <Tooltip title="Install in editor">
-            <IconButton size="small" onClick={() => onInstall(asset.id)} color="primary">
+            <IconButton aria-label="Install in editor" size="small" onClick={() => onInstall(asset.id)} color="primary">
               <DownloadIcon fontSize="small" />
             </IconButton>
           </Tooltip>
           <Tooltip title="View details">
-            <IconButton size="small" onClick={() => onView(asset.id)}>
+            <IconButton aria-label="View details" size="small" onClick={() => onView(asset.id)}>
               <OpenInNewIcon fontSize="small" />
             </IconButton>
           </Tooltip>

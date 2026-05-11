@@ -146,38 +146,6 @@ describe('AssetParser.buildId', () => {
   });
 });
 
-describe('AssetParser.isAssetFile', () => {
-  it.each([
-    'instructions/my-rule.yaml',
-    'agents/my-agent.yaml',
-    'skills/my-skill.yaml',
-    'workflows/my-workflow.yaml',
-    '.github/instructions/my-rule.yaml',
-    '.github/agents/my-agent.yaml',
-    '.github/skills/my-skill.yaml',
-    '.github/workflows/my-workflow.yaml',
-  ])('returns true for %s', filePath => {
-    expect(AssetParser.isAssetFile(filePath)).toBe(true);
-  });
-
-  it.each([
-    'random/file.yaml',
-    'README.md',
-    'instruction.yaml',
-    'some/instructions/nested.yaml',
-    '',
-  ])('returns false for %s', filePath => {
-    expect(AssetParser.isAssetFile(filePath)).toBe(false);
-  });
-
-  it('normalises backslashes (Windows paths)', () => {
-    expect(AssetParser.isAssetFile('instructions\\my-rule.yaml')).toBe(true);
-    expect(AssetParser.isAssetFile('agents\\my-agent.yaml')).toBe(true);
-    expect(AssetParser.isAssetFile('.github\\instructions\\my-rule.yaml')).toBe(true);
-    expect(AssetParser.isAssetFile('.github\\agents\\my-agent.yaml')).toBe(true);
-  });
-});
-
 describe('AssetParser.buildAsset', () => {
   const parsed = AssetParser.parseYaml(VALID_YAML, 'instructions/my-instruction.yaml')!;
 
@@ -257,5 +225,102 @@ tools:
     const parsedNoAuthor = AssetParser.parseYaml(yaml, 'instructions/no-author.yaml')!;
     const asset = AssetParser.buildAsset(parsedNoAuthor, '', 'p', 'url', 'main', 'instructions/no-author.yaml');
     expect(asset.author).toBe('Unknown');
+  });
+});
+
+describe('AssetParser.parseYaml — schema-as-gatekeeper (arbitrary path discovery)', () => {
+  it('discovers a valid asset at an arbitrary custom directory', () => {
+    const result = AssetParser.parseYaml(VALID_YAML, 'ai-artifacts/my-agent.yaml');
+    expect(result).not.toBeNull();
+    expect(result!.meta.name).toBe('My Instruction');
+    expect(result!.mdPath).toBe('ai-artifacts/my-instruction.md');
+  });
+
+  it('discovers a valid asset at a deeply nested path', () => {
+    const result = AssetParser.parseYaml(VALID_YAML, 'team/ai-assets/copilot/my-agent.yaml');
+    expect(result).not.toBeNull();
+    expect(result!.mdPath).toBe('team/ai-assets/copilot/my-instruction.md');
+  });
+
+  it('discovers a valid asset at the repo root (no subdirectory)', () => {
+    const result = AssetParser.parseYaml(VALID_YAML, 'my-instruction.yaml');
+    expect(result).not.toBeNull();
+    expect(result!.mdPath).toBe('my-instruction.md');
+  });
+
+  it('rejects a GitHub Actions workflow YAML (missing required fields)', () => {
+    const ghActionsYaml = `
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+`;
+    expect(AssetParser.parseYaml(ghActionsYaml, '.github/workflows/ci.yaml')).toBeNull();
+  });
+
+  it('rejects a Helm values YAML (no name/type/tools)', () => {
+    const helmYaml = `
+replicaCount: 2
+image:
+  repository: nginx
+  tag: latest
+service:
+  type: ClusterIP
+  port: 80
+`;
+    expect(AssetParser.parseYaml(helmYaml, 'helm/values.yaml')).toBeNull();
+  });
+
+  it('rejects a Kubernetes manifest YAML (apiVersion/kind fields, no asset fields)', () => {
+    const k8sYaml = `
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 1
+`;
+    expect(AssetParser.parseYaml(k8sYaml, 'k8s/deployment.yaml')).toBeNull();
+  });
+
+  it('rejects a YAML with a valid-looking name but invalid type enum', () => {
+    const yaml = `
+name: CI Pipeline
+description: Continuous integration pipeline config
+type: pipeline
+tools:
+  - claude-code
+`;
+    expect(AssetParser.parseYaml(yaml, 'ai-artifacts/pipeline.yaml')).toBeNull();
+  });
+
+  it('rejects a YAML with a valid-looking type but unrecognised tool', () => {
+    const yaml = `
+name: My Agent
+description: An agent config
+type: agent
+tools:
+  - unknown-tool
+`;
+    expect(AssetParser.parseYaml(yaml, 'ai-artifacts/agent.yaml')).toBeNull();
+  });
+
+  it('buildAsset correctly sets yamlPath and mdPath for an arbitrary directory', () => {
+    const parsed = AssetParser.parseYaml(VALID_YAML, 'ai-artifacts/my-agent.yaml')!;
+    const asset = AssetParser.buildAsset(
+      parsed,
+      '# Content',
+      'my-provider',
+      'https://github.com/org/repo',
+      'main',
+      'ai-artifacts/my-agent.yaml',
+    );
+    expect(asset.yamlPath).toBe('ai-artifacts/my-agent.yaml');
+    expect(asset.mdPath).toBe('ai-artifacts/my-instruction.md');
+    expect(asset.id).toBe(AssetParser.buildId('my-provider', 'ai-artifacts/my-agent.yaml'));
   });
 });
