@@ -26,6 +26,7 @@ yarn workspace @nospt/plugin-dev-ai-hub-node test
 ### Run a specific test file
 ```sh
 yarn workspace @nospt/plugin-dev-ai-hub-backend backstage-cli package test --testPathPattern=AssetParser
+yarn workspace @nospt/plugin-dev-ai-hub-backend backstage-cli package test --testPathPattern=router.smoke
 ```
 
 ### Run in watch mode
@@ -35,6 +36,7 @@ yarn workspace @nospt/plugin-dev-ai-hub-backend backstage-cli package test --wat
 
 ## Test Files
 
+- `plugins/dev-ai-hub-backend/src/router.smoke.test.ts` — HTTP smoke tests for all Express routes; verifies path-to-regexp route matching (`:id` params, status codes, headers). Uses `supertest` with mocked `AiAssetStore`, `AiAssetSyncService`, and `LoggerService`. Run these after any dependency bump to `path-to-regexp` or `express`.
 - `plugins/dev-ai-hub-backend/src/service/AssetParser.test.ts`
 - `plugins/dev-ai-hub-backend/src/database/AiAssetStore.test.ts`
 - `plugins/dev-ai-hub-common/src/installPaths.test.ts`
