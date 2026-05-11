@@ -1,26 +1,16 @@
 import { useEffect, useState } from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import IconButton from '@mui/material/IconButton';
-import Switch from '@mui/material/Switch';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
-import StorageIcon from '@mui/icons-material/Storage';
+import {
+  Box, Flex, Text, Button, ButtonIcon, Tag, TagGroup, Switch,
+  Dialog, DialogTrigger, DialogHeader, DialogBody, DialogFooter,
+  Tabs, TabList, Tab, TabPanel,
+  Tooltip, TooltipTrigger,
+} from '@backstage/ui';
+import { RiFileCopyLine, RiCheckLine, RiDatabase2Line } from '@remixicon/react';
 import { useApi, discoveryApiRef } from '@backstage/core-plugin-api';
 import { ToolIcon } from '../ToolIcon';
 import { useCopyToClipboard, useProviders } from '../../hooks';
 import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
+import styles from './McpConfigDialog.module.css';
 
 interface ToolConfig {
   tool: AiTool;
@@ -70,11 +60,10 @@ interface McpConfigDialogProps {
 }
 
 export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
-  const theme = useTheme();
   const discoveryApi = useApi(discoveryApiRef);
   const { copy: copyUrl, copied: copiedUrl } = useCopyToClipboard();
   const { copy: copySnippet, copied: copiedSnippet } = useCopyToClipboard();
-  const [tab, setTab] = useState(0);
+  const [selectedToolKey, setSelectedToolKey] = useState<string>('claude-code');
   const [baseUrl, setBaseUrl] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [proactiveEnabled, setProactiveEnabled] = useState(false);
@@ -88,7 +77,7 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
     }
   }, [open, discoveryApi]);
 
-  const cfg = TOOL_CONFIGS[tab];
+  const cfg = TOOL_CONFIGS.find(t => t.tool === selectedToolKey) ?? TOOL_CONFIGS[0];
 
   const buildMcpUrl = () => {
     if (!baseUrl) return 'loading...';
@@ -102,200 +91,167 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
   const mcpUrl = buildMcpUrl();
   const configSnippet = baseUrl ? cfg.buildConfig(mcpUrl) : '';
 
+  // Detect dark mode via CSS media query instead of MUI useTheme
+  const isDark = typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ pb: 0 }}>
-        <Typography variant="h6" fontWeight={700}>Configure MCP Server</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          Connect your AI tool to the Dev AI Hub via Model Context Protocol.
-        </Typography>
-      </DialogTitle>
+    <DialogTrigger>
+      <Dialog
+        isOpen={open}
+        isDismissable
+        onOpenChange={o => { if (!o) onClose(); }}
+      >
+        <DialogHeader>
+          <Text variant="title-small" weight="bold">Configure MCP Server</Text>
+          <Text variant="body-small" color="secondary" className={styles.subtitle}>
+            Connect your AI tool to the Dev AI Hub via Model Context Protocol.
+          </Text>
+        </DialogHeader>
 
-      <DialogContent sx={{ pt: 1 }}>
-        <Tabs
-          value={tab}
-          onChange={(_, v) => setTab(v)}
-          sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}
-        >
-          {TOOL_CONFIGS.map((t, i) => (
-            <Tab
-              key={t.tool}
-              value={i}
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <ToolIcon
-                    tool={t.tool}
-                    sx={{ fontSize: '1rem', color: theme.palette.mode === 'dark' ? '#fff' : undefined }}
-                  />
-                  <span>{t.label}</span>
+        <DialogBody>
+          <Tabs selectedKey={selectedToolKey} onSelectionChange={key => setSelectedToolKey(key as string)}>
+            <TabList className={styles.tabBar}>
+              {TOOL_CONFIGS.map(t => (
+                <Tab key={t.tool} id={t.tool}>
+                  <span className={styles.tabContent}>
+                    <ToolIcon tool={t.tool} size={16} />
+                    <span>{t.label}</span>
+                  </span>
+                </Tab>
+              ))}
+            </TabList>
+
+            {/* All tab panels share the same content below */}
+            {TOOL_CONFIGS.map(t => (
+              <TabPanel key={t.tool} id={t.tool}>
+                {/* Provider filter — only shown when there are 2+ providers */}
+                {showProviderFilter && (
+                  <Box className={styles.providerSection}>
+                    <Text variant="body-x-small" color="secondary" className={styles.sectionLabel}>
+                      Scope to Provider
+                    </Text>
+                    <TagGroup aria-label="Provider filter">
+                      <Flex className={styles.chipsRow}>
+                        <Tag
+                          id="all-providers"
+                          size="small"
+                          className={styles.filterChip}
+                          style={{
+                            borderColor: !selectedProvider ? 'var(--bui-fg-primary)' : 'var(--bui-border-1)',
+                            backgroundColor: !selectedProvider ? 'var(--bui-fg-primary)' : 'transparent',
+                            color: !selectedProvider ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => setSelectedProvider('')}
+                        >
+                          All providers
+                        </Tag>
+                        {providers.map(p => {
+                          const isSelected = selectedProvider === p.id;
+                          const label = providerLabel(p.target);
+                          return (
+                            <Tag
+                              key={p.id}
+                              id={p.id}
+                              size="small"
+                              className={styles.filterChip}
+                              icon={<RiDatabase2Line size={12} style={{ color: isSelected ? 'var(--bui-bg-neutral-1)' : 'inherit' }} />}
+                              style={{
+                                borderColor: isSelected ? 'var(--bui-fg-primary)' : 'var(--bui-border-1)',
+                                backgroundColor: isSelected ? 'var(--bui-fg-primary)' : 'transparent',
+                                color: isSelected ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
+                                cursor: 'pointer',
+                              }}
+                              onClick={() => setSelectedProvider(isSelected ? '' : p.id)}
+                            >
+                              {label}
+                            </Tag>
+                          );
+                        })}
+                      </Flex>
+                    </TagGroup>
+                  </Box>
+                )}
+
+                {/* Proactive suggestions toggle */}
+                <Flex className={styles.proactiveSection}>
+                  <Flex className={styles.proactiveRow}>
+                    <Switch
+                      isSelected={proactiveEnabled}
+                      onChange={setProactiveEnabled}
+                      aria-label="Proactive suggestions"
+                    />
+                    <Box>
+                      <Text variant="body-small" weight="bold">Proactive suggestions</Text>
+                      <Text variant="body-x-small" color="secondary">
+                        The AI will automatically suggest relevant assets based on your project context.
+                        Disable if you prefer to search manually.
+                      </Text>
+                    </Box>
+                  </Flex>
+                </Flex>
+
+                {/* MCP URL */}
+                <Box className={styles.urlSection}>
+                  <Text variant="body-x-small" color="secondary" className={styles.sectionLabel}>
+                    MCP Endpoint
+                  </Text>
+                  <Flex className={styles.urlBox}>
+                    <Text variant="body-small" className={styles.urlText}>
+                      {mcpUrl}
+                    </Text>
+                    <TooltipTrigger>
+                      <ButtonIcon
+                        aria-label="Copy URL"
+                        icon={copiedUrl ? <RiCheckLine size={14} style={{ color: 'var(--bui-fg-success)' }} /> : <RiFileCopyLine size={14} />}
+                        variant="tertiary"
+                        onPress={() => copyUrl(mcpUrl)}
+                      />
+                      <Tooltip>{copiedUrl ? 'Copied!' : 'Copy URL'}</Tooltip>
+                    </TooltipTrigger>
+                  </Flex>
                 </Box>
-              }
-            />
-          ))}
-        </Tabs>
 
-        {/* Provider filter — only shown when there are 2+ providers */}
-        {showProviderFilter && (
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.75 }}>
-              Scope to Provider
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-              <Chip
-                label="All providers"
-                size="small"
-                clickable
-                onClick={() => setSelectedProvider('')}
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  borderRadius: 2,
-                  border: '1.5px solid',
-                  borderColor: !selectedProvider ? 'text.primary' : 'divider',
-                  backgroundColor: !selectedProvider ? 'text.primary' : 'transparent',
-                  color: !selectedProvider ? 'background.paper' : 'text.secondary',
-                  transition: 'all 0.15s ease',
-                }}
-              />
-              {providers.map(p => {
-                const isSelected = selectedProvider === p.id;
-                const label = providerLabel(p.target);
-                return (
-                  <Chip
-                    key={p.id}
-                    icon={<StorageIcon sx={{ fontSize: '0.8rem !important', color: isSelected ? 'background.paper' : 'inherit' }} />}
-                    label={label}
-                    size="small"
-                    clickable
-                    onClick={() => setSelectedProvider(isSelected ? '' : p.id)}
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: '0.75rem',
-                      borderRadius: 2,
-                      border: '1.5px solid',
-                      borderColor: isSelected ? 'text.primary' : 'divider',
-                      backgroundColor: isSelected ? 'text.primary' : 'transparent',
-                      color: isSelected ? 'background.paper' : 'text.secondary',
-                      transition: 'all 0.15s ease',
-                    }}
-                  />
-                );
-              })}
-            </Box>
-          </Box>
-        )}
+                {/* Config snippet */}
+                <Text variant="body-x-small" color="secondary" className={styles.sectionLabel}>
+                  {t.file}
+                </Text>
+                <Text variant="body-x-small" color="secondary" style={{ display: 'block', marginBottom: 'var(--bui-space-2)', marginTop: 'var(--bui-space-1)' }}>
+                  {t.description}
+                </Text>
+                <div className={styles.snippetContainer}>
+                  <pre className={`${styles.snippetPre} ${isDark ? styles.snippetPreDark : styles.snippetPreLight}`}>
+                    {configSnippet}
+                  </pre>
+                  <TooltipTrigger>
+                    <ButtonIcon
+                      aria-label="Copy config"
+                      className={styles.copySnippetButton}
+                      icon={copiedSnippet ? <RiCheckLine size={14} style={{ color: 'var(--bui-fg-success)' }} /> : <RiFileCopyLine size={14} />}
+                      variant="tertiary"
+                      onPress={() => copySnippet(configSnippet)}
+                    />
+                    <Tooltip>{copiedSnippet ? 'Copied!' : 'Copy config'}</Tooltip>
+                  </TooltipTrigger>
+                </div>
 
-        {/* Proactive suggestions toggle */}
-        <Box sx={{ mb: 2 }}>
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
-                checked={proactiveEnabled}
-                onChange={e => setProactiveEnabled(e.target.checked)}
-              />
-            }
-            label={
-              <Box>
-                <Typography variant="body2" fontWeight={600}>Proactive suggestions</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  The AI will automatically suggest relevant assets based on your project context.
-                  Disable if you prefer to search manually.
-                </Typography>
-              </Box>
-            }
-            sx={{ alignItems: 'flex-start', ml: 0, gap: 1 }}
-          />
-        </Box>
+                <Text variant="body-x-small" color="secondary" className={styles.hint}>
+                  💡 Omit <code>?tool=</code> from the URL to receive assets for all AI tools.
+                  {showProviderFilter && ' Omit ?provider= to receive assets from all repositories.'}
+                  {' '}Proactive suggestions add <code>?proactive=true</code> and register the{' '}
+                  <code>suggest_assets</code> tool and <code>check_for_assets</code> prompt.
+                </Text>
+              </TabPanel>
+            ))}
+          </Tabs>
+        </DialogBody>
 
-        {/* MCP URL */}
-        <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-          MCP Endpoint
-        </Typography>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            mt: 0.5,
-            mb: 2,
-            px: 1.5,
-            py: 1,
-            borderRadius: 1.5,
-            border: '1px solid',
-            borderColor: 'divider',
-            backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-          }}
-        >
-          <Typography
-            variant="body2"
-            sx={{ flex: 1, fontFamily: 'monospace', fontSize: '0.8rem', wordBreak: 'break-all' }}
-          >
-            {mcpUrl}
-          </Typography>
-          <Tooltip title={copiedUrl ? 'Copied!' : 'Copy URL'}>
-            <IconButton size="small" onClick={() => copyUrl(mcpUrl)}>
-              {copiedUrl ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
-            </IconButton>
-          </Tooltip>
-        </Box>
-
-        {/* Config snippet */}
-        <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-          {cfg.file}
-        </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, mt: 0.5 }}>
-          {cfg.description}
-        </Typography>
-        <Box sx={{ position: 'relative' }}>
-          <Box
-            component="pre"
-            sx={{
-              m: 0,
-              p: 2,
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              backgroundColor: theme.palette.mode === 'dark' ? '#0d1117' : '#f6f8fa',
-              color: theme.palette.mode === 'dark' ? '#e6edf3' : '#24292f',
-              fontFamily: 'monospace',
-              fontSize: '0.8rem',
-              overflowX: 'auto',
-              whiteSpace: 'pre',
-            }}
-          >
-            {configSnippet}
-          </Box>
-          <Tooltip title={copiedSnippet ? 'Copied!' : 'Copy config'}>
-            <IconButton
-              size="small"
-              onClick={() => copySnippet(configSnippet)}
-              sx={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-                '&:hover': {
-                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)',
-                },
-              }}
-            >
-              {copiedSnippet ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
-            </IconButton>
-          </Tooltip>
-        </Box>
-
-        <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 1.5 }}>
-          💡 Omit <code>?tool=</code> from the URL to receive assets for all AI tools.
-          {showProviderFilter && ' Omit ?provider= to receive assets from all repositories.'}
-          {' '}Proactive suggestions add <code>?proactive=true</code> and register the{' '}
-          <code>suggest_assets</code> tool and <code>check_for_assets</code> prompt.
-        </Typography>
-      </DialogContent>
-
-      <DialogActions>
-        <Button onClick={onClose}>Close</Button>
-      </DialogActions>
-    </Dialog>
+        <DialogFooter>
+          <Button onClick={onClose} variant="secondary" slot="close">
+            Close
+          </Button>
+        </DialogFooter>
+      </Dialog>
+    </DialogTrigger>
   );
 }

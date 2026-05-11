@@ -1,3 +1,5 @@
+import '@backstage/ui/css/styles.css';
+
 // New Frontend System (NFS)
 export { devAiHubPlugin } from './plugin';
 

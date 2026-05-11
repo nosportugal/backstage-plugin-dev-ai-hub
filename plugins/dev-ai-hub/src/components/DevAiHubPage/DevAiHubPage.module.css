@@ -1,0 +1,194 @@
+@layer components {
+  .headerContent {
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-4);
+  }
+
+  .headerIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+  }
+
+  .headerTextGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .headerTitle {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+  }
+
+  .headerSubtitle {
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1;
+  }
+
+  .headerActions {
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-4);
+  }
+
+  .supportedTools {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .toolBubble {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    transition: background-color 0.15s;
+  }
+
+  .toolBubble:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+  }
+
+  .syncStatus {
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-1);
+    cursor: default;
+  }
+
+  .syncDot {
+    font-size: 0.6rem;
+    color: #4ade80;
+  }
+
+  .mcpButton {
+    border-radius: var(--bui-radius-2);
+    font-weight: 700;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    box-shadow: none;
+    padding: var(--bui-space-1) var(--bui-space-3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--bui-space-2);
+    font-size: 0.875rem;
+  }
+
+  .mcpButton:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .statsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--bui-space-4);
+    margin-bottom: var(--bui-space-6);
+  }
+
+  @media (max-width: 600px) {
+    .statsGrid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .statCard {
+    border-radius: var(--bui-radius-3);
+    padding: var(--bui-space-4);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .statCard:hover {
+    transform: translateY(-2px);
+  }
+
+  .statCardInner {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .statValue {
+    color: #fff;
+    line-height: 1;
+  }
+
+  .statLabel {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+    margin-top: var(--bui-space-1);
+  }
+
+  .statIconBox {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--bui-radius-2);
+    background-color: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .assetGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--bui-space-3);
+  }
+
+  @media (max-width: 1200px) {
+    .assetGrid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .assetGrid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .assetGrid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .emptyState {
+    padding: 96px 0;
+    text-align: center;
+  }
+
+  .emptyEmoji {
+    margin-bottom: var(--bui-space-4);
+    opacity: 0.15;
+    font-size: 5rem;
+  }
+
+  .paginationRow {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--bui-space-8);
+  }
+}

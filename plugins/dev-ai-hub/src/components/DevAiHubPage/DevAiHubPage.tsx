@@ -1,18 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ElementType } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Grid from '@mui/material/Grid';
-import Pagination from '@mui/material/Pagination';
-import Skeleton from '@mui/material/Skeleton';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
-import SettingsEthernetIcon from '@mui/icons-material/SettingsEthernet';
-import ArticleIcon from '@mui/icons-material/Article';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import BuildIcon from '@mui/icons-material/Build';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import { Box, Flex, Text, Skeleton, Tooltip, TooltipTrigger, TablePagination } from '@backstage/ui';
+import { RiSettingsLine, RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiCircleFill } from '@remixicon/react';
 import HubIcon from '@mui/icons-material/Hub';
 import { Content, Header, Page } from '@backstage/core-components';
 import type { AssetType, AiTool } from '@nospt/plugin-dev-ai-hub-common';
@@ -24,6 +13,7 @@ import { AssetInstallDialog } from '../AssetInstallDialog';
 import { McpConfigDialog } from '../McpConfigDialog';
 import { ToolIcon } from '../ToolIcon';
 import { useAssets, useStats, useProviders } from '../../hooks';
+import styles from './DevAiHubPage.module.css';
 
 const SUPPORTED_TOOLS: AiTool[] = ['claude-code', 'github-copilot', 'google-gemini', 'cursor'];
 
@@ -53,14 +43,14 @@ const DEFAULT_FILTERS: AssetFiltersValue = {
 
 const PAGE_SIZE = 24;
 
-const STATS_CONFIG = [
-  { key: 'instruction' as AssetType, label: 'Instructions', Icon: ArticleIcon,
+const STATS_CONFIG: { key: AssetType; label: string; Icon: ElementType; gradient: string; shadow: string }[] = [
+  { key: 'instruction', label: 'Instructions', Icon: RiArticleLine,
     gradient: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)', shadow: '#2563EB40' },
-  { key: 'agent'       as AssetType, label: 'Agents',       Icon: SmartToyIcon,
+  { key: 'agent',       label: 'Agents',       Icon: RiRobot2Line,
     gradient: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)', shadow: '#7C3AED40' },
-  { key: 'skill'       as AssetType, label: 'Skills',       Icon: BuildIcon,
+  { key: 'skill',       label: 'Skills',       Icon: RiToolsLine,
     gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)', shadow: '#05966940' },
-  { key: 'workflow'    as AssetType, label: 'Workflows',    Icon: AccountTreeIcon,
+  { key: 'workflow',    label: 'Workflows',    Icon: RiGitBranchLine,
     gradient: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)', shadow: '#D9770640' },
 ];
 
@@ -121,152 +111,100 @@ export function DevAiHubPage() {
     <Page themeId="tool">
       <Header
         title={
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 44,
-                height: 44,
-                borderRadius: 2.5,
-                background: 'rgba(255,255,255,0.15)',
-                backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(255,255,255,0.3)',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
-                flexShrink: 0,
-              }}
-            >
-              <HubIcon sx={{ fontSize: '1.5rem', color: '#fff' }} />
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
-              <Box sx={{ fontSize: '1.75rem', fontWeight: 700, lineHeight: 1, color: '#fff' }}>
+          <div className={styles.headerContent}>
+            <div className={styles.headerIcon}>
+              <HubIcon style={{ fontSize: '1.5rem', color: '#fff' }} />
+            </div>
+            <div className={styles.headerTextGroup}>
+              <div className={styles.headerTitle}>
                 Dev AI Hub
-              </Box>
-              <Box sx={{ fontSize: '0.85rem', fontWeight: 400, color: 'rgba(255,255,255,0.75)', lineHeight: 1 }}>
+              </div>
+              <div className={styles.headerSubtitle}>
                 {stats
                   ? `${stats.totalAssets} assets · ${Object.keys(stats.byProvider).length} provider${Object.keys(stats.byProvider).length !== 1 ? 's' : ''}`
                   : 'Centralized AI assets for your team'}
-              </Box>
-            </Box>
-          </Box>
+              </div>
+            </div>
+          </div>
         }
         pageTitleOverride="Dev AI Hub"
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Flex className={styles.headerActions}>
           {/* Supported tools */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+          <Flex className={styles.supportedTools}>
             {SUPPORTED_TOOLS.map(tool => (
-              <Tooltip key={tool} title={TOOL_LABELS[tool]} arrow>
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(255,255,255,0.15)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backdropFilter: 'blur(4px)',
-                    transition: 'background-color 0.15s',
-                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.25)' },
-                  }}
-                >
-                  <ToolIcon tool={tool} branded={false} sx={{ fontSize: '1rem', color: '#fff' }} />
-                </Box>
-              </Tooltip>
+              <TooltipTrigger key={tool}>
+                <div className={styles.toolBubble}>
+                  <ToolIcon tool={tool} branded={false} size={16} style={{ color: '#fff' }} />
+                </div>
+                <Tooltip>{TOOL_LABELS[tool]}</Tooltip>
+              </TooltipTrigger>
             ))}
-          </Box>
+          </Flex>
 
           {/* Last sync status */}
           {stats?.lastSync && (
-            <Tooltip title={`Last sync: ${new Date(stats.lastSync).toLocaleString()}`} arrow>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, cursor: 'default' }}>
-                <FiberManualRecordIcon sx={{ fontSize: '0.6rem', color: '#4ade80' }} />
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>
+            <TooltipTrigger>
+              <div className={styles.syncStatus}>
+                <RiCircleFill size={8} className={styles.syncDot} />
+                <Text variant="body-x-small" style={{ color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>
                   {timeAgo(stats.lastSync)}
-                </Typography>
-              </Box>
-            </Tooltip>
+                </Text>
+              </div>
+              <Tooltip>{`Last sync: ${new Date(stats.lastSync).toLocaleString()}`}</Tooltip>
+            </TooltipTrigger>
           )}
 
           {/* Configure MCP button */}
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<SettingsEthernetIcon />}
+          <button
+            type="button"
+            className={styles.mcpButton}
             onClick={() => setMcpDialogOpen(true)}
-            sx={{
-              borderRadius: 2,
-              fontWeight: 700,
-              whiteSpace: 'nowrap',
-              background: 'rgba(255,255,255,0.15)',
-              backdropFilter: 'blur(4px)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              color: '#fff',
-              boxShadow: 'none',
-              '&:hover': {
-                background: 'rgba(255,255,255,0.25)',
-                boxShadow: 'none',
-              },
-            }}
           >
+            <RiSettingsLine size={16} />
             Configure MCP
-          </Button>
-        </Box>
+          </button>
+        </Flex>
       </Header>
 
       <Content>
-
         {/* Stats row */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          {STATS_CONFIG.map(({ key, label, Icon, gradient, shadow }) => (
-            <Grid item xs={6} sm={3} key={key}>
-              <Box
-                onClick={() => handleFiltersChange({ ...filters, types: filters.types[0] === key ? [] : [key] })}
-                sx={{
+        <div className={styles.statsGrid}>
+          {STATS_CONFIG.map(({ key, label, Icon, gradient, shadow }) => {
+            const isActive = filters.types[0] === key;
+            return (
+              <div
+                key={key}
+                className={styles.statCard}
+                onClick={() => handleFiltersChange({ ...filters, types: isActive ? [] : [key] })}
+                style={{
                   background: gradient,
-                  borderRadius: 3,
-                  p: 2,
-                  cursor: 'pointer',
-                  boxShadow: filters.types[0] === key ? `0 8px 24px ${shadow}` : `0 2px 8px ${shadow}`,
-                  transform: filters.types[0] === key ? 'translateY(-2px)' : 'none',
-                  transition: 'all 0.2s ease',
-                  outline: filters.types[0] === key ? '2px solid rgba(255,255,255,0.6)' : 'none',
+                  boxShadow: isActive ? `0 8px 24px ${shadow}` : `0 2px 8px ${shadow}`,
+                  transform: isActive ? 'translateY(-2px)' : 'none',
+                  outline: isActive ? '2px solid rgba(255,255,255,0.6)' : 'none',
                   outlineOffset: 2,
-                  '&:hover': {
-                    boxShadow: `0 8px 24px ${shadow}`,
-                    transform: 'translateY(-2px)',
-                  },
                 }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => { if (e.key === 'Enter') handleFiltersChange({ ...filters, types: isActive ? [] : [key] }); }}
               >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div className={styles.statCardInner}>
                   <Box>
-                    <Typography variant="h4" fontWeight={800} sx={{ color: '#fff', lineHeight: 1 }}>
-                      {stats ? (stats.byType[key] ?? 0) : <Skeleton width={32} sx={{ bgcolor: 'rgba(255,255,255,0.3)' }} />}
-                    </Typography>
-                    <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)', fontWeight: 500, mt: 0.5 }}>
+                    <Text variant="title-large" weight="bold" className={styles.statValue}>
+                      {stats ? (stats.byType[key] ?? 0) : <Skeleton style={{ width: 32 }} />}
+                    </Text>
+                    <Text variant="body-small" className={styles.statLabel}>
                       {label}
-                    </Typography>
+                    </Text>
                   </Box>
-                  <Box
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 2,
-                      backgroundColor: 'rgba(255,255,255,0.2)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Icon sx={{ color: '#fff', fontSize: '1.4rem' }} />
-                  </Box>
-                </Box>
-              </Box>
-            </Grid>
-          ))}
-        </Grid>
+                  <div className={styles.statIconBox}>
+                    <Icon size={22} style={{ color: '#fff' }} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
         {/* Filters */}
         <AssetFilters
@@ -278,52 +216,51 @@ export function DevAiHubPage() {
 
         {/* Results summary */}
         {result && !loading && (
-          <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+          <Text variant="body-x-small" color="secondary" style={{ marginBottom: 'var(--bui-space-4)', display: 'block' }}>
             {result.totalCount} asset{result.totalCount !== 1 ? 's' : ''} found
-          </Typography>
+          </Text>
         )}
 
         {/* Asset grid — 4 columns on large screens */}
-        <Grid container spacing={1.5}>
+        <div className={styles.assetGrid}>
           {loading
             ? Array.from({ length: 8 }).map((_, i) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={i}>
-                  <Skeleton variant="rectangular" height={150} sx={{ borderRadius: 2 }} />
-                </Grid>
+                <Skeleton key={i} style={{ height: 150, borderRadius: 'var(--bui-radius-2)' }} />
               ))
             : result?.items.map(asset => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={asset.id}>
-                  <AssetCard
-                    asset={asset}
-                    onView={handleViewAsset}
-                    onInstall={handleInstallAsset}
-                  />
-                </Grid>
+                <AssetCard
+                  key={asset.id}
+                  asset={asset}
+                  onView={handleViewAsset}
+                  onInstall={handleInstallAsset}
+                />
               ))}
-        </Grid>
+        </div>
 
         {/* Empty state */}
         {!loading && result?.items.length === 0 && (
-          <Box sx={{ py: 12, textAlign: 'center' }}>
-            <Typography variant="h1" sx={{ mb: 2, opacity: 0.15, fontSize: '5rem' }}>🤖</Typography>
-            <Typography variant="h6" color="text.secondary" fontWeight={600}>No assets found</Typography>
-            <Typography variant="body2" color="text.disabled" sx={{ mt: 0.5 }}>
+          <div className={styles.emptyState}>
+            <div className={styles.emptyEmoji}>🤖</div>
+            <Text variant="title-small" color="secondary" weight="bold">No assets found</Text>
+            <Text variant="body-small" color="secondary" style={{ marginTop: 'var(--bui-space-1)' }}>
               Try adjusting your filters or search terms.
-            </Typography>
-          </Box>
+            </Text>
+          </div>
         )}
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <Pagination
-              count={totalPages}
-              page={page}
-              onChange={(_, p) => setPage(p)}
-              color="primary"
-              shape="rounded"
+          <Flex className={styles.paginationRow}>
+            <TablePagination
+              pageSize={PAGE_SIZE}
+              offset={(page - 1) * PAGE_SIZE}
+              totalCount={result?.totalCount ?? 0}
+              hasNextPage={page < totalPages}
+              hasPreviousPage={page > 1}
+              onNextPage={() => setPage(p => p + 1)}
+              onPreviousPage={() => setPage(p => p - 1)}
             />
-          </Box>
+          </Flex>
         )}
       </Content>
 
