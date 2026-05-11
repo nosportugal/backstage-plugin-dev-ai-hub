@@ -83,27 +83,23 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
         </Text>
 
         {/* Tools */}
-        <TagGroup aria-label="Compatible tools">
-          <Flex className={`${styles.toolsRow} ${asset.tags.length > 0 ? styles.toolsRowWithTags : ''}`}>
-            {asset.tools.map(tool => (
-              <Tag key={tool} id={tool} size="small" className={styles.toolChip} icon={<ToolIcon tool={tool as AiTool} size={12} />}>
-                {TOOL_LABELS[tool as AiTool] ?? tool}
-              </Tag>
-            ))}
-          </Flex>
+        <TagGroup aria-label="Compatible tools" className={`${styles.toolsRow} ${asset.tags.length > 0 ? styles.toolsRowWithTags : ''}`}>
+          {asset.tools.map(tool => (
+            <Tag key={tool} id={tool} size="small" className={styles.toolChip} icon={<ToolIcon tool={tool as AiTool} size={12} />}>
+              {TOOL_LABELS[tool as AiTool] ?? tool}
+            </Tag>
+          ))}
         </TagGroup>
 
         {/* Tags */}
         {asset.tags.length > 0 && (
           <>
-            <TagGroup aria-label="Tags">
-              <Flex className={styles.tagsRow}>
-                {asset.tags.slice(0, 3).map(tag => (
-                  <Tag key={tag} id={tag} size="small" className={styles.tagChip}>
-                    #{tag}
-                  </Tag>
-                ))}
-              </Flex>
+            <TagGroup aria-label="Tags" className={styles.tagsRow}>
+              {asset.tags.slice(0, 3).map(tag => (
+                <Tag key={tag} id={tag} size="small" className={styles.tagChip}>
+                  #{tag}
+                </Tag>
+              ))}
             </TagGroup>
             {asset.tags.length > 3 && (
               <Text variant="body-x-small" color="secondary" style={{ alignSelf: 'center' }}>
