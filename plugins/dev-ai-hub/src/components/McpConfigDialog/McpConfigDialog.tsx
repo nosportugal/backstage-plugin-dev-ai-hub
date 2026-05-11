@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  Box, Flex, Text, Button, ButtonIcon, Tag, TagGroup, Switch,
+  Box, Flex, Text, Button, ButtonIcon, ToggleButton, Switch,
   Dialog, DialogTrigger, DialogHeader, DialogBody, DialogFooter,
   Tabs, TabList, Tab, TabPanel,
   Tooltip, TooltipTrigger,
@@ -130,46 +130,44 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
                     <Text variant="body-x-small" color="secondary" className={styles.sectionLabel}>
                       Scope to Provider
                     </Text>
-                    <TagGroup aria-label="Provider filter">
-                      <Flex className={styles.chipsRow}>
-                        <Tag
+                    <Flex className={styles.chipsRow}>
+                        <ToggleButton
                           id="all-providers"
                           size="small"
                           className={styles.filterChip}
+                          isSelected={!selectedProvider}
+                          onChange={() => setSelectedProvider('')}
                           style={{
                             borderColor: !selectedProvider ? 'var(--bui-fg-primary)' : 'var(--bui-border-1)',
                             backgroundColor: !selectedProvider ? 'var(--bui-fg-primary)' : 'transparent',
                             color: !selectedProvider ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
-                            cursor: 'pointer',
                           }}
-                          onClick={() => setSelectedProvider('')}
                         >
                           All providers
-                        </Tag>
+                        </ToggleButton>
                         {providers.map(p => {
                           const isSelected = selectedProvider === p.id;
                           const label = providerLabel(p.target);
                           return (
-                            <Tag
+                            <ToggleButton
                               key={p.id}
                               id={p.id}
                               size="small"
                               className={styles.filterChip}
-                              icon={<RiDatabase2Line size={12} style={{ color: isSelected ? 'var(--bui-bg-neutral-1)' : 'inherit' }} />}
+                              iconStart={<RiDatabase2Line size={12} style={{ color: isSelected ? 'var(--bui-bg-neutral-1)' : 'inherit' }} />}
+                              isSelected={isSelected}
+                              onChange={() => setSelectedProvider(isSelected ? '' : p.id)}
                               style={{
                                 borderColor: isSelected ? 'var(--bui-fg-primary)' : 'var(--bui-border-1)',
                                 backgroundColor: isSelected ? 'var(--bui-fg-primary)' : 'transparent',
                                 color: isSelected ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
-                                cursor: 'pointer',
                               }}
-                              onClick={() => setSelectedProvider(isSelected ? '' : p.id)}
                             >
                               {label}
-                            </Tag>
+                            </ToggleButton>
                           );
                         })}
                       </Flex>
-                    </TagGroup>
                   </Box>
                 )}
 

@@ -78,7 +78,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                       </Tag>
                     </TagGroup>
                   </Flex>
-                  <Text variant="body-small" color="secondary">
+                  <Text variant="body-medium" color="secondary">
                     {asset.description}
                   </Text>
                 </>
@@ -158,7 +158,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                       <hr className={styles.divider} />
 
                       <Box>
-                        <Text variant="body-x-small" color="secondary">
+                        <Text variant="body-small" color="secondary">
                           Compatible tools
                         </Text>
                         <Flex className={styles.chipsRow}>
@@ -172,7 +172,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
 
                       {asset.tags.length > 0 && (
                         <Box>
-                          <Text variant="body-x-small" color="secondary">
+                          <Text variant="body-small" color="secondary">
                             Tags
                           </Text>
                           <Flex className={styles.chipsRow}>
@@ -191,7 +191,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                           <Box>
                             <Flex className={styles.bundledHeader}>
                               <RiFolderZipLine size={14} style={{ color: 'var(--bui-fg-secondary)' }} />
-                              <Text variant="body-x-small" color="secondary">
+                              <Text variant="body-small" color="secondary">
                                 Bundled files
                               </Text>
                             </Flex>
@@ -209,7 +209,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                                     ))}
                                   </Flex>
                                 </TagGroup>
-                                <Text variant="body-x-small" color="secondary">
+                                <Text variant="body-small" color="secondary">
                                   Downloads as .zip containing all files above.
                                 </Text>
                               </Flex>
@@ -229,7 +229,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                       <hr className={styles.divider} />
 
                       <Box>
-                        <Text variant="body-x-small" color="secondary">
+                        <Text variant="body-small" color="secondary">
                           Repository
                         </Text>
                         <Box>
@@ -303,11 +303,11 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
 
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
-    <Box>
-      <Text variant="body-x-small" color="secondary">
-        {label}
+    <Flex className={styles.metaRow}>
+      <Text variant="body-medium" color="secondary" className={styles.metaLabel}>
+        {label}:
       </Text>
-      <Text variant="body-small">{value}</Text>
-    </Box>
+      <Text variant="body-medium" weight="bold">{value}</Text>
+    </Flex>
   );
 }

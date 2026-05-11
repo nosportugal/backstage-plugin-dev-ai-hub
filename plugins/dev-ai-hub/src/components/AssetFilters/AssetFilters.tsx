@@ -1,5 +1,5 @@
 import type { ElementType } from 'react';
-import { Box, Flex, Text, SearchField, Tag, TagGroup } from '@backstage/ui';
+import { Box, Flex, Text, SearchField, ToggleButton, ToggleButtonGroup } from '@backstage/ui';
 import { RiAppsLine, RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiDatabase2Line } from '@remixicon/react';
 import type { AssetType, AiTool, AiHubProvider } from '@nospt/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
@@ -76,32 +76,30 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
           <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
             Type
           </Text>
-          <TagGroup aria-label="Type filter">
-            <Flex className={styles.filterChips}>
+          <Flex className={styles.filterChips}>
               {ASSET_TYPES.map(t => {
                 const isSelected = selectedType === t.value;
                 const TypeIcon = t.Icon;
                 return (
-                  <Tag
+                  <ToggleButton
                     key={t.value}
                     id={t.value}
                     size="small"
-                    className={styles.filterChip}
-                    icon={<TypeIcon size={14} style={{ color: isSelected ? '#fff' : t.color }} />}
+                    className={`${styles.filterChip} ${isSelected ? styles.filterChipSelected : ''}`}
+                    iconStart={<TypeIcon size={14} style={{ color: isSelected ? '#fff' : t.color }} />}
+                    isSelected={isSelected}
+                    onChange={() => handleTypeClick(t.value as AssetType | 'all')}
                     style={{
-                      borderColor: isSelected ? t.color : `${t.color}60`,
-                      backgroundColor: isSelected ? t.color : 'transparent',
+                      borderColor: isSelected ? t.color : `${t.color}30`,
+                      backgroundColor: isSelected ? t.color : `${t.color}10`,
                       color: isSelected ? '#fff' : t.color,
-                      cursor: 'pointer',
                     }}
-                    onClick={() => handleTypeClick(t.value as AssetType | 'all')}
                   >
                     {t.label}
-                  </Tag>
+                  </ToggleButton>
                 );
               })}
             </Flex>
-          </TagGroup>
         </Box>
 
         {/* AI Tool filter */}
@@ -109,34 +107,32 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
           <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
             AI Tool
           </Text>
-          <TagGroup aria-label="AI Tool filter">
-            <Flex className={styles.filterChips}>
+          <Flex className={styles.filterChips}>
               {AI_TOOLS.map(t => {
                 const isSelected = selectedTool === t.value;
                 const iconEl = t.value !== 'all'
-                  ? <ToolIcon tool={t.value as AiTool} branded={!isSelected} size={14} style={{ color: isSelected ? 'var(--bui-bg-neutral-1)' : 'inherit' }} />
+                  ? <ToolIcon tool={t.value as AiTool} branded size={14} />
                   : undefined;
                 return (
-                  <Tag
+                  <ToggleButton
                     key={t.value}
                     id={t.value}
                     size="small"
-                    className={styles.filterChip}
-                    icon={iconEl}
+                    className={`${styles.filterChip} ${isSelected ? styles.toolChipSelected : ''}`}
+                    iconStart={iconEl}
+                    isSelected={isSelected}
+                    onChange={() => handleToolClick(t.value as AiTool | 'all')}
                     style={{
-                      borderColor: isSelected ? 'var(--bui-fg-primary)' : 'var(--bui-border-1)',
-                      backgroundColor: isSelected ? 'var(--bui-fg-primary)' : 'transparent',
-                      color: isSelected ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
-                      cursor: 'pointer',
+                      borderColor: isSelected ? 'var(--bui-fg-link)' : 'var(--bui-border-1)',
+                      backgroundColor: isSelected ? 'var(--bui-bg-accent-1)' : 'transparent',
+                      color: isSelected ? 'var(--bui-fg-link)' : 'var(--bui-fg-secondary)',
                     }}
-                    onClick={() => handleToolClick(t.value as AiTool | 'all')}
                   >
                     {t.label}
-                  </Tag>
+                  </ToggleButton>
                 );
               })}
             </Flex>
-          </TagGroup>
         </Box>
 
         {/* Provider filter — only shown when there are 2+ providers */}
@@ -145,47 +141,45 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
             <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
               Provider
             </Text>
-            <TagGroup aria-label="Provider filter">
-              <Flex className={styles.filterChips}>
-                <Tag
+            <Flex className={styles.filterChips}>
+                <ToggleButton
                   id="all-providers"
                   size="small"
-                  className={styles.filterChip}
-                  icon={<RiAppsLine size={14} />}
+                  className={`${styles.filterChip} ${!value.providerId ? styles.filterChipSelected : ''}`}
+                  iconStart={<RiAppsLine size={14} />}
+                  isSelected={!value.providerId}
+                  onChange={() => handleProviderClick(undefined)}
                   style={{
                     borderColor: !value.providerId ? 'var(--bui-fg-primary)' : 'var(--bui-border-1)',
                     backgroundColor: !value.providerId ? 'var(--bui-fg-primary)' : 'transparent',
                     color: !value.providerId ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
-                    cursor: 'pointer',
                   }}
-                  onClick={() => handleProviderClick(undefined)}
                 >
                   All
-                </Tag>
+                </ToggleButton>
                 {providers.map(p => {
                   const isSelected = value.providerId === p.id;
                   const label = p.target.split('/').slice(-1)[0]?.replace(/\.git$/, '') ?? p.id;
                   return (
-                    <Tag
+                    <ToggleButton
                       key={p.id}
                       id={p.id}
                       size="small"
-                      className={styles.filterChip}
-                      icon={<RiDatabase2Line size={14} style={{ color: isSelected ? 'var(--bui-bg-neutral-1)' : 'inherit' }} />}
+                      className={`${styles.filterChip} ${isSelected ? styles.filterChipSelected : ''}`}
+                      iconStart={<RiDatabase2Line size={14} style={{ color: isSelected ? 'var(--bui-bg-neutral-1)' : 'inherit' }} />}
+                      isSelected={isSelected}
+                      onChange={() => handleProviderClick(isSelected ? undefined : p.id)}
                       style={{
                         borderColor: isSelected ? 'var(--bui-fg-primary)' : 'var(--bui-border-1)',
                         backgroundColor: isSelected ? 'var(--bui-fg-primary)' : 'transparent',
                         color: isSelected ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
-                        cursor: 'pointer',
                       }}
-                      onClick={() => handleProviderClick(p.id)}
                     >
                       {label}
-                    </Tag>
+                    </ToggleButton>
                   );
                 })}
               </Flex>
-            </TagGroup>
           </Box>
         )}
       </Flex>
@@ -195,31 +189,29 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
           <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
             Tags
           </Text>
-          <TagGroup aria-label="Tags filter">
-            <Flex className={styles.filterChips}>
+          <Flex className={styles.filterChips}>
               {availableTags.map(tag => {
                 const isActive = value.tags.includes(tag);
                 return (
-                  <Tag
+                  <ToggleButton
                     key={tag}
                     id={tag}
                     size="small"
-                    className={styles.tagChip}
+                    className={`${styles.tagChip} ${isActive ? styles.tagChipSelected : ''}`}
+                    isSelected={isActive}
+                    onChange={() => handleTagToggle(tag)}
                     style={{
                       fontWeight: isActive ? 700 : 400,
                       backgroundColor: isActive ? 'var(--bui-bg-solid)' : 'transparent',
                       color: isActive ? '#fff' : 'var(--bui-fg-secondary)',
                       borderColor: isActive ? 'var(--bui-bg-solid)' : 'var(--bui-border-1)',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => handleTagToggle(tag)}
-                >
-                  #{tag}
-                </Tag>
-              );
-            })}
+                    }}
+                  >
+                    #{tag}
+                  </ToggleButton>
+                );
+              })}
             </Flex>
-          </TagGroup>
         </Box>
       )}
     </Flex>

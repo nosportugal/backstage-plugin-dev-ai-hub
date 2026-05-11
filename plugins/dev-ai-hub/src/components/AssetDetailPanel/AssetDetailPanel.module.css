@@ -16,7 +16,7 @@
   .overlay {
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.9);
     z-index: 1299;
   }
 
@@ -64,6 +64,11 @@
     flex: 1;
     overflow: auto;
     padding: var(--bui-space-4);
+  }
+
+  .markdownContent {
+    font-size: 0.9375rem;
+    line-height: 1.7;
   }
 
   .markdownContent h1,
@@ -138,7 +143,18 @@
   .metaSection {
     display: flex;
     flex-direction: column;
-    gap: var(--bui-space-4);
+    gap: var(--bui-space-3);
+  }
+
+  .metaRow {
+    display: flex;
+    align-items: baseline;
+    gap: var(--bui-space-2);
+  }
+
+  .metaLabel {
+    min-width: 90px;
+    flex-shrink: 0;
   }
 
   .chipsRow {

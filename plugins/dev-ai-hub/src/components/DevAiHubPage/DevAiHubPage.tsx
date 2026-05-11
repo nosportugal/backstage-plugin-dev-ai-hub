@@ -1,9 +1,7 @@
 import { useState, useMemo, type ElementType } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Box, Flex, Text, Skeleton, Tooltip, TooltipTrigger, TablePagination } from '@backstage/ui';
-import { RiSettingsLine, RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiCircleFill } from '@remixicon/react';
-import HubIcon from '@mui/icons-material/Hub';
-import { Content, Header, Page } from '@backstage/core-components';
+import { Box, Flex, Text, Skeleton, TablePagination, PluginHeader, Button } from '@backstage/ui';
+import { RiSettingsLine, RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine } from '@remixicon/react';
 import type { AssetType, AiTool } from '@nospt/plugin-dev-ai-hub-common';
 import { AssetCard } from '../AssetCard';
 import { AssetFilters } from '../AssetFilters';
@@ -11,27 +9,8 @@ import type { AssetFiltersValue } from '../AssetFilters';
 import { AssetDetailPanel } from '../AssetDetailPanel';
 import { AssetInstallDialog } from '../AssetInstallDialog';
 import { McpConfigDialog } from '../McpConfigDialog';
-import { ToolIcon } from '../ToolIcon';
 import { useAssets, useStats, useProviders } from '../../hooks';
 import styles from './DevAiHubPage.module.css';
-
-const SUPPORTED_TOOLS: AiTool[] = ['claude-code', 'github-copilot', 'google-gemini', 'cursor'];
-
-const TOOL_LABELS: Record<AiTool, string> = {
-  'all':            'Universal',
-  'claude-code':    'Claude Code',
-  'github-copilot': 'GitHub Copilot',
-  'google-gemini':  'Google Gemini',
-  'cursor':         'Cursor',
-};
-
-function timeAgo(iso: string): string {
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (diff < 60) return 'just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
-}
 
 const DEFAULT_FILTERS: AssetFiltersValue = {
   types: [],
@@ -108,66 +87,22 @@ export function DevAiHubPage() {
   }, [result]);
 
   return (
-    <Page themeId="tool">
-      <Header
-        title={
-          <div className={styles.headerContent}>
-            <div className={styles.headerIcon}>
-              <HubIcon style={{ fontSize: '1.5rem', color: '#fff' }} />
-            </div>
-            <div className={styles.headerTextGroup}>
-              <div className={styles.headerTitle}>
-                Dev AI Hub
-              </div>
-              <div className={styles.headerSubtitle}>
-                {stats
-                  ? `${stats.totalAssets} assets · ${Object.keys(stats.byProvider).length} provider${Object.keys(stats.byProvider).length !== 1 ? 's' : ''}`
-                  : 'Centralized AI assets for your team'}
-              </div>
-            </div>
-          </div>
-        }
-        pageTitleOverride="Dev AI Hub"
-      >
-        <Flex className={styles.headerActions}>
-          {/* Supported tools */}
-          <Flex className={styles.supportedTools}>
-            {SUPPORTED_TOOLS.map(tool => (
-              <TooltipTrigger key={tool}>
-                <div className={styles.toolBubble}>
-                  <ToolIcon tool={tool} branded={false} size={16} style={{ color: '#fff' }} />
-                </div>
-                <Tooltip>{TOOL_LABELS[tool]}</Tooltip>
-              </TooltipTrigger>
-            ))}
-          </Flex>
-
-          {/* Last sync status */}
-          {stats?.lastSync && (
-            <TooltipTrigger>
-              <div className={styles.syncStatus}>
-                <RiCircleFill size={8} className={styles.syncDot} />
-                <Text variant="body-x-small" style={{ color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>
-                  {timeAgo(stats.lastSync)}
-                </Text>
-              </div>
-              <Tooltip>{`Last sync: ${new Date(stats.lastSync).toLocaleString()}`}</Tooltip>
-            </TooltipTrigger>
-          )}
-
-          {/* Configure MCP button */}
-          <button
-            type="button"
+    <div className={styles.pageRoot}>
+      <PluginHeader
+        title="Dev AI Hub"
+        customActions={
+          <Button
+            variant="secondary"
+            onPress={() => setMcpDialogOpen(true)}
             className={styles.mcpButton}
-            onClick={() => setMcpDialogOpen(true)}
           >
             <RiSettingsLine size={16} />
             Configure MCP
-          </button>
-        </Flex>
-      </Header>
+          </Button>
+        }
+      />
 
-      <Content>
+      <div className={styles.content}>
         {/* Stats row */}
         <div className={styles.statsGrid}>
           {STATS_CONFIG.map(({ key, label, Icon, gradient, shadow }) => {
@@ -262,7 +197,7 @@ export function DevAiHubPage() {
             />
           </Flex>
         )}
-      </Content>
+      </div>
 
       <AssetDetailPanel
         assetId={selectedAssetId}
@@ -278,6 +213,6 @@ export function DevAiHubPage() {
         open={mcpDialogOpen}
         onClose={() => setMcpDialogOpen(false)}
       />
-    </Page>
+    </div>
   );
 }

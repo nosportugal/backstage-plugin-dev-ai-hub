@@ -40,10 +40,28 @@
     cursor: pointer;
   }
 
+  .filterChip :global(.bui-ToggleButtonContent) {
+    display: flex;
+    align-items: center;
+  }
+
+  .filterChip svg {
+    display: block;
+  }
+
+  .toolChipSelected {
+    font-weight: 700;
+  }
+
   .tagChip {
     font-size: 0.7rem;
     border-radius: var(--bui-radius-2);
     border: 1px solid;
     cursor: pointer;
+  }
+
+  .tagChip :global(.bui-ToggleButtonContent) {
+    display: flex;
+    align-items: center;
   }
 }
