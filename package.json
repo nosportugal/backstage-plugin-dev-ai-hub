@@ -1,20 +1,20 @@
 {
   "name": "backstage-plugin-dev-ai-hub",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
   "license": "Apache-2.0",
   "workspaces": [
     "plugins/*"
   ],
-"scripts": {
-  "start": "yarn start:frontend & yarn start:backend",
-  "start:frontend": "yarn workspace @nospt/plugin-dev-ai-hub start",
-  "start:backend": "yarn workspace @nospt/plugin-dev-ai-hub-backend start",
-  "build:all": "yarn workspaces foreach --all --topological-dev run build",
-  "test": "yarn workspaces foreach --all -p run test --passWithNoTests",
-  "lint:all": "yarn workspaces foreach --all -p run lint",
-  "tsc": "tsc"
-},
+  "scripts": {
+    "start": "yarn start:frontend & yarn start:backend",
+    "start:frontend": "yarn workspace @nospt/plugin-dev-ai-hub start",
+    "start:backend": "yarn workspace @nospt/plugin-dev-ai-hub-backend start",
+    "build:all": "yarn workspaces foreach --all --topological-dev run build",
+    "test": "yarn workspaces foreach --all -p run test --passWithNoTests",
+    "lint:all": "yarn workspaces foreach --all -p run lint",
+    "tsc": "tsc"
+  },
   "devDependencies": {
     "@backstage/cli": "*",
     "jest": "^29.0.0",

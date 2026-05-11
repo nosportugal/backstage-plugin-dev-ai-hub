@@ -295,13 +295,13 @@ export function AssetCard({ asset, onView, onInstall, onHelp, onOpenMcpCatalog, 
           )}
         </Box>
         <Box sx={{ display: 'flex', gap: 0.25 }}>
-          <Tooltip title={t('assetCard.installTooltip')}>
-            <IconButton size="small" onClick={() => onInstall(asset.id)} color="primary">
+          <Tooltip title="Install in editor">
+            <IconButton aria-label="Install in editor" size="small" onClick={() => onInstall(asset.id)} color="primary">
               <DownloadIcon fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title={t('assetCard.detailsTooltip')}>
-            <IconButton size="small" onClick={() => onView(asset.id)}>
+          <Tooltip title="View details">
+            <IconButton aria-label="View details" size="small" onClick={() => onView(asset.id)}>
               <OpenInNewIcon fontSize="small" />
             </IconButton>
           </Tooltip>
