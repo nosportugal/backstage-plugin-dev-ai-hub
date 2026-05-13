@@ -18,10 +18,10 @@ const TOOL_LABELS: Record<AiTool, string> = {
 };
 
 const TYPE_CONFIG: Record<AssetType, { label: string; color: string; bg: string; Icon: ElementType }> = {
-  instruction: { label: 'Instruction', color: '#2563EB', bg: '#EFF6FF', Icon: RiArticleLine },
-  agent:       { label: 'Agent',       color: '#7C3AED', bg: '#F5F3FF', Icon: RiRobot2Line },
-  skill:       { label: 'Skill',       color: '#059669', bg: '#ECFDF5', Icon: RiToolsLine },
-  workflow:    { label: 'Workflow',    color: '#D97706', bg: '#FFFBEB', Icon: RiGitBranchLine },
+  instruction: { label: 'Instruction', color: '#54A0FF', bg: 'rgba(84, 160, 255, 0.15)',   Icon: RiArticleLine },
+  agent:       { label: 'Agent',       color: '#FF6B9D', bg: 'rgba(255, 107, 157, 0.15)', Icon: RiRobot2Line },
+  skill:       { label: 'Skill',       color: '#6AB04C', bg: 'rgba(106, 176, 76, 0.15)',  Icon: RiToolsLine },
+  workflow:    { label: 'Workflow',    color: '#F9CA24', bg: 'rgba(249, 202, 36, 0.15)',  Icon: RiGitBranchLine },
 };
 
 interface AssetCardProps {

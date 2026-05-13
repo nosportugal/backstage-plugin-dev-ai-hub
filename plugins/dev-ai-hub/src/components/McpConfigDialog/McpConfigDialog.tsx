@@ -91,8 +91,24 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
   const mcpUrl = buildMcpUrl();
   const configSnippet = baseUrl ? cfg.buildConfig(mcpUrl) : '';
 
-  // Detect dark mode via CSS media query instead of MUI useTheme
-  const isDark = typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+  // Detect dark mode by observing BUI's data-theme-mode attribute, which
+  // reflects the Backstage theme toggle (not the OS preference).
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof document === 'undefined') return false;
+    return document.documentElement.getAttribute('data-theme-mode') === 'dark' ||
+      document.body.getAttribute('data-theme-mode') === 'dark';
+  });
+
+  useEffect(() => {
+    const getIsDark = () =>
+      document.documentElement.getAttribute('data-theme-mode') === 'dark' ||
+      document.body.getAttribute('data-theme-mode') === 'dark';
+
+    const observer = new MutationObserver(() => setIsDark(getIsDark()));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme-mode'] });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['data-theme-mode'] });
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <DialogTrigger>

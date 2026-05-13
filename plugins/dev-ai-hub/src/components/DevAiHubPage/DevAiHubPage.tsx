@@ -24,13 +24,13 @@ const PAGE_SIZE = 24;
 
 const STATS_CONFIG: { key: AssetType; label: string; Icon: ElementType; gradient: string; shadow: string }[] = [
   { key: 'instruction', label: 'Instructions', Icon: RiArticleLine,
-    gradient: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)', shadow: '#2563EB40' },
+    gradient: 'linear-gradient(135deg, #54A0FF 0%, #2980FF 100%)', shadow: '#54A0FF40' },
   { key: 'agent',       label: 'Agents',       Icon: RiRobot2Line,
-    gradient: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)', shadow: '#7C3AED40' },
+    gradient: 'linear-gradient(135deg, #FF6B9D 0%, #E0507A 100%)', shadow: '#FF6B9D40' },
   { key: 'skill',       label: 'Skills',       Icon: RiToolsLine,
-    gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)', shadow: '#05966940' },
+    gradient: 'linear-gradient(135deg, #6AB04C 0%, #4A8F2E 100%)', shadow: '#6AB04C40' },
   { key: 'workflow',    label: 'Workflows',    Icon: RiGitBranchLine,
-    gradient: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)', shadow: '#D9770640' },
+    gradient: 'linear-gradient(135deg, #F9CA24 0%, #D4A800 100%)', shadow: '#F9CA2440' },
 ];
 
 export function DevAiHubPage() {

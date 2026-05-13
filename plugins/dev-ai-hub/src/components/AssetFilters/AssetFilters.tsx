@@ -6,11 +6,11 @@ import { ToolIcon } from '../ToolIcon';
 import styles from './AssetFilters.module.css';
 
 const ASSET_TYPES: { value: AssetType | 'all'; label: string; color: string; Icon: ElementType }[] = [
-  { value: 'all', label: 'All', color: '#64748b', Icon: RiAppsLine },
-  { value: 'instruction', label: 'Instructions', color: '#2563EB', Icon: RiArticleLine },
-  { value: 'agent', label: 'Agents', color: '#7C3AED', Icon: RiRobot2Line },
-  { value: 'skill', label: 'Skills', color: '#059669', Icon: RiToolsLine },
-  { value: 'workflow', label: 'Workflows', color: '#D97706', Icon: RiGitBranchLine },
+  { value: 'all',         label: 'All',          color: '#DCDDE1', Icon: RiAppsLine },
+  { value: 'instruction', label: 'Instructions', color: '#54A0FF', Icon: RiArticleLine },
+  { value: 'agent',       label: 'Agents',       color: '#FF6B9D', Icon: RiRobot2Line },
+  { value: 'skill',       label: 'Skills',       color: '#6AB04C', Icon: RiToolsLine },
+  { value: 'workflow',    label: 'Workflows',    color: '#F9CA24', Icon: RiGitBranchLine },
 ];
 
 const AI_TOOLS: { value: AiTool | 'all'; label: string }[] = [
