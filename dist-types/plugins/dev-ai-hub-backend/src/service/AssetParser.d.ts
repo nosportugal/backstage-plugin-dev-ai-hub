@@ -18,8 +18,4 @@ export declare class AssetParser {
      */
     static buildAsset(parsed: ParsedAssetMeta, mdContent: string, providerId: string, repoUrl: string, branch: string, yamlFilePath: string, resourcesContent?: Record<string, string>): AiAssetInput;
     static buildId(providerId: string, yamlPath: string): string;
-    /** Known top-level directories that contain assets */
-    private static readonly ASSET_DIRS;
-    /** True if the file is in a known asset directory (root or .github/) */
-    static isAssetFile(filePath: string): boolean;
 }
