@@ -5230,7 +5230,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/material@npm:^5.12.2":
+"@mui/material@npm:^5.12.2, @mui/material@npm:^5.15.0":
   version: 5.18.0
   resolution: "@mui/material@npm:5.18.0"
   dependencies:
@@ -5478,6 +5478,7 @@ __metadata:
     "@backstage/test-utils": "npm:*"
     "@backstage/ui": "npm:*"
     "@mui/icons-material": "npm:^5.15.0"
+    "@mui/material": "npm:^5.15.0"
     "@nospt/plugin-dev-ai-hub-common": "npm:*"
     "@remixicon/react": "npm:^4.6.0"
     "@testing-library/jest-dom": "npm:^6.0.0"
