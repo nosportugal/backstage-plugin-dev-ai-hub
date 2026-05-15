@@ -1,0 +1,67 @@
+@layer components {
+  .container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bui-space-4);
+    margin-bottom: var(--bui-space-6);
+  }
+
+  .searchField {
+    width: 100%;
+  }
+
+  .filtersRow {
+    display: flex;
+    gap: var(--bui-space-6);
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .filterLabel {
+    margin-bottom: var(--bui-space-2);
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .filterChips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .filterChip {
+    font-weight: 600;
+    font-size: 0.75rem;
+    border-radius: var(--bui-radius-2);
+    border: 1.5px solid;
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+
+  .filterChip :global(.bui-ToggleButtonContent) {
+    display: flex;
+    align-items: center;
+  }
+
+  .filterChip svg {
+    display: block;
+  }
+
+  .toolChipSelected {
+    font-weight: 700;
+  }
+
+  .tagChip {
+    font-size: 0.7rem;
+    border-radius: var(--bui-radius-2);
+    border: 1px solid;
+    cursor: pointer;
+  }
+
+  .tagChip :global(.bui-ToggleButtonContent) {
+    display: flex;
+    align-items: center;
+  }
+}
