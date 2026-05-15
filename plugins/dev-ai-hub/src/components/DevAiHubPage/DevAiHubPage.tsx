@@ -1,14 +1,13 @@
 import { useState, useMemo, type ElementType } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Box, Flex, Text, Skeleton, TablePagination, PluginHeader, Button } from '@backstage/ui';
-import { RiSettingsLine, RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine } from '@remixicon/react';
+import { Box, Flex, Text, Skeleton, TablePagination } from '@backstage/ui';
+import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine } from '@remixicon/react';
 import type { AssetType, AiTool } from '@nospt/plugin-dev-ai-hub-common';
 import { AssetCard } from '../AssetCard';
 import { AssetFilters } from '../AssetFilters';
 import type { AssetFiltersValue } from '../AssetFilters';
 import { AssetDetailPanel } from '../AssetDetailPanel';
 import { AssetInstallDialog } from '../AssetInstallDialog';
-import { McpConfigDialog } from '../McpConfigDialog';
 import { useAssets, useStats, useProviders } from '../../hooks';
 import styles from './DevAiHubPage.module.css';
 
@@ -36,7 +35,6 @@ const STATS_CONFIG: { key: AssetType; label: string; Icon: ElementType; gradient
 export function DevAiHubPage() {
   const [filters, setFilters] = useState<AssetFiltersValue>(DEFAULT_FILTERS);
   const [page, setPage] = useState(1);
-  const [mcpDialogOpen, setMcpDialogOpen] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedAssetId = searchParams.get('assetId');
@@ -88,20 +86,6 @@ export function DevAiHubPage() {
 
   return (
     <div className={styles.pageRoot}>
-      <PluginHeader
-        title="Dev AI Hub"
-        customActions={
-          <Button
-            variant="secondary"
-            onPress={() => setMcpDialogOpen(true)}
-            className={styles.mcpButton}
-          >
-            <RiSettingsLine size={16} />
-            Configure MCP
-          </Button>
-        }
-      />
-
       <div className={styles.content}>
         {/* Stats row */}
         <div className={styles.statsGrid}>
@@ -207,11 +191,6 @@ export function DevAiHubPage() {
       <AssetInstallDialog
         assetId={installAssetId}
         onClose={handleCloseInstall}
-      />
-
-      <McpConfigDialog
-        open={mcpDialogOpen}
-        onClose={() => setMcpDialogOpen(false)}
       />
     </div>
   );

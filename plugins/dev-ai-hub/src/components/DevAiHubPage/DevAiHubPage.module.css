@@ -11,12 +11,6 @@
     overflow-y: auto;
   }
 
-  .mcpButton {
-    display: flex;
-    align-items: center;
-    gap: var(--bui-space-2);
-  }
-
   .statsGrid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
