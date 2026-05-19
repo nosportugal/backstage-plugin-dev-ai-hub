@@ -1,6 +1,5 @@
-import SvgIcon, { SvgIconProps } from '@mui/material/SvgIcon';
-import AllInclusiveIcon from '@mui/icons-material/AllInclusive';
-import NearMeIcon from '@mui/icons-material/NearMe';
+import type { CSSProperties } from 'react';
+import { RiInfinityLine, RiNavigationLine } from '@remixicon/react';
 import { siAnthropic, siGithub, siGooglegemini } from 'simple-icons';
 import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
 
@@ -12,23 +11,35 @@ const TOOL_ICON: Record<SvgTool, { path: string; hex: string; label: string }> =
   'google-gemini':  { ...siGooglegemini, label: 'Google Gemini' },
 };
 
-interface ToolIconProps extends Omit<SvgIconProps, 'color'> {
+interface ToolIconProps {
   tool: AiTool;
   /** Use the brand's official color. Defaults to true. */
   branded?: boolean;
+  className?: string;
+  style?: CSSProperties;
+  /** Icon size in pixels. Defaults to 20. */
+  size?: number;
 }
 
-export function ToolIcon({ tool, branded = true, sx, ...props }: ToolIconProps) {
+export function ToolIcon({ tool, branded = true, className, style, size = 20 }: ToolIconProps) {
   if (tool === 'all') {
-    return <AllInclusiveIcon {...props} sx={{ color: 'text.secondary', ...sx }} titleAccess="Universal" />;
+    return (
+      <RiInfinityLine
+        size={size}
+        className={className}
+        style={{ color: 'var(--bui-fg-secondary)', ...style }}
+        aria-label="Universal"
+      />
+    );
   }
 
   if (tool === 'cursor') {
     return (
-      <NearMeIcon
-        {...props}
-        sx={{ color: branded ? 'text.primary' : 'inherit', ...sx }}
-        titleAccess="Cursor"
+      <RiNavigationLine
+        size={size}
+        className={className}
+        style={{ color: branded ? 'var(--bui-fg-primary)' : 'inherit', ...style }}
+        aria-label="Cursor"
       />
     );
   }
@@ -37,13 +48,18 @@ export function ToolIcon({ tool, branded = true, sx, ...props }: ToolIconProps) 
   if (!cfg) return null;
 
   return (
-    <SvgIcon
-      {...props}
-      sx={{ color: branded ? `#${cfg.hex}` : 'inherit', ...sx }}
-      titleAccess={cfg.label}
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="currentColor"
+      className={className}
+      style={{ color: branded ? `#${cfg.hex}` : 'inherit', ...style }}
+      aria-label={cfg.label}
+      role="img"
     >
       <path d={cfg.path} />
-    </SvgIcon>
+    </svg>
   );
 }

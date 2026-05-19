@@ -1,24 +1,17 @@
 import { useState } from 'react';
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import DownloadIcon from '@mui/icons-material/Download';
-import CheckIcon from '@mui/icons-material/Check';
-import FolderZipIcon from '@mui/icons-material/FolderZip';
+import {
+  Box, Flex, Text, Button, Tag, TagGroup, Skeleton,
+  Dialog, DialogTrigger, DialogHeader, DialogBody, DialogFooter,
+  Tooltip, TooltipTrigger,
+} from '@backstage/ui';
+import { RiFileCopyLine, RiDownloadLine, RiCheckLine, RiFolderZipLine } from '@remixicon/react';
 import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
 import { getInstallPathsForAsset } from '@nospt/plugin-dev-ai-hub-common';
 import { useApi } from '@backstage/core-plugin-api';
 import { devAiHubApiRef } from '../../api/DevAiHubClient';
 import { useAssetDetail } from '../../hooks';
 import { ToolIcon } from '../ToolIcon';
+import styles from './AssetInstallDialog.module.css';
 
 const TOOL_LABELS: Record<string, string> = {
   'claude-code':    'Claude Code',
@@ -85,132 +78,99 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
     : {};
 
   return (
-    <Dialog open={!!assetId} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ pb: 1 }}>
-        {asset ? `Install: ${asset.name}` : 'Install'}
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 400 }}>
-          Copy the content and place the file at the path shown for your tool.
-        </Typography>
-      </DialogTitle>
+    <DialogTrigger>
+      <Dialog
+        isOpen={!!assetId}
+        isDismissable
+        onOpenChange={open => { if (!open) handleClose(); }}
+      >
+        <DialogHeader>
+          {asset ? `Install: ${asset.name}` : 'Install'}
+          <Text variant="body-small" color="secondary" className={styles.subtitle}>
+            Copy the content and place the file at the path shown for your tool.
+          </Text>
+        </DialogHeader>
 
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: '8px !important' }}>
-        {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-            <CircularProgress />
-          </Box>
-        )}
+        <DialogBody>
+          <Flex direction="column" style={{ gap: 'var(--bui-space-3)' }}>
+            {loading && (
+              <Flex className={styles.loadingContainer}>
+                <Skeleton style={{ width: '100%', height: 80 }} />
+              </Flex>
+            )}
 
-        {!loading && asset && isZipSkill && (
-          <Box
-            sx={{
-              border: '1px solid',
-              borderColor: 'info.main',
-              borderRadius: 2,
-              p: 1.5,
-              backgroundColor: 'info.main',
-              backgroundImage: 'none',
-              bgcolor: theme => `${theme.palette.info.main}12`,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <FolderZipIcon sx={{ fontSize: '1rem', color: 'info.main' }} />
-              <Typography variant="subtitle2" fontWeight={700} color="info.main">
-                Bundled skill — downloads as .zip
-              </Typography>
-            </Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-              This skill includes resource files alongside <code>SKILL.md</code>.
-              Extract the zip and place all files in the skill directory.
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              <Chip
-                label="SKILL.md"
-                size="small"
-                sx={{ fontFamily: 'monospace', fontSize: '0.7rem', height: 20 }}
-              />
-              {resourcePaths.map(p => (
-                <Chip
-                  key={p}
-                  label={p}
-                  size="small"
-                  variant="outlined"
-                  sx={{ fontFamily: 'monospace', fontSize: '0.7rem', height: 20 }}
-                />
-              ))}
-            </Box>
-          </Box>
-        )}
+            {!loading && asset && isZipSkill && (
+              <Box className={styles.zipInfo}>
+                <Flex className={styles.zipHeader}>
+                  <RiFolderZipLine size={16} style={{ color: 'var(--bui-fg-info)' }} />
+                  <Text variant="body-small" weight="bold" style={{ color: 'var(--bui-fg-info)' }}>
+                    Bundled skill — downloads as .zip
+                  </Text>
+                </Flex>
+                <Text variant="body-x-small" color="secondary" style={{ display: 'block', marginBottom: 'var(--bui-space-2)' }}>
+                  This skill includes resource files alongside <code>SKILL.md</code>.
+                  Extract the zip and place all files in the skill directory.
+                </Text>
+                <TagGroup aria-label="Bundled files">
+                  <Flex className={styles.zipFiles}>
+                    <Tag id="skill-md" size="small" className={styles.monoTag}>SKILL.md</Tag>
+                    {resourcePaths.map(p => (
+                      <Tag key={p} id={p} size="small" className={styles.monoTag}>{p}</Tag>
+                    ))}
+                  </Flex>
+                </TagGroup>
+              </Box>
+            )}
 
-        {!loading && asset && Object.entries(installPaths).map(([tool, installPath]) => (
-          <Box
-            key={tool}
-            sx={{
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: 2,
-              p: 1.5,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <ToolIcon tool={tool as AiTool} sx={{ fontSize: '1rem' }} />
-              <Typography variant="subtitle2" fontWeight={700}>
-                {TOOL_LABELS[tool] ?? tool}
-              </Typography>
-            </Box>
+            {!loading && asset && Object.entries(installPaths).map(([tool, installPath]) => (
+              <Box key={tool} className={styles.toolSection}>
+                <Flex className={styles.toolHeader}>
+                  <ToolIcon tool={tool as AiTool} size={16} />
+                  <Text variant="body-small" weight="bold">
+                    {TOOL_LABELS[tool] ?? tool}
+                  </Text>
+                </Flex>
 
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-              Install path
-            </Typography>
-            <Box
-              sx={{
-                bgcolor: 'action.hover',
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-                px: 1.5,
-                py: 0.75,
-                fontFamily: 'monospace',
-                fontSize: '0.78rem',
-                color: 'text.primary',
-                wordBreak: 'break-all',
-                mb: 1.25,
-              }}
-            >
-              {installPath}
-            </Box>
+                <Text variant="body-x-small" color="secondary" style={{ display: 'block', marginBottom: 'var(--bui-space-1)' }}>
+                  Install path
+                </Text>
+                <Box className={styles.installPathBox}>
+                  {installPath}
+                </Box>
 
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Tooltip title={copiedTool === tool ? 'Copied!' : 'Copy markdown content'}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={copiedTool === tool ? <CheckIcon /> : <ContentCopyIcon />}
-                  onClick={() => handleCopy(tool)}
-                  color={copiedTool === tool ? 'success' : 'primary'}
-                  sx={{ flex: 1 }}
-                >
-                  {copiedTool === tool ? 'Copied!' : 'Copy Content'}
-                </Button>
-              </Tooltip>
-              <Tooltip title={isZipSkill ? 'Download as .zip with all bundled files' : 'Download file with correct name'}>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  startIcon={isZipSkill ? <FolderZipIcon /> : <DownloadIcon />}
-                  onClick={() => handleDownload(tool, installPath)}
-                  sx={{ flex: 1 }}
-                >
-                  {isZipSkill ? 'Download .zip' : 'Download'}
-                </Button>
-              </Tooltip>
-            </Box>
-          </Box>
-        ))}
-      </DialogContent>
+                <Flex className={styles.toolActions}>
+                  <TooltipTrigger>
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleCopy(tool)}
+                    >
+                      {copiedTool === tool ? <RiCheckLine size={14} /> : <RiFileCopyLine size={14} />}
+                      {copiedTool === tool ? 'Copied!' : 'Copy Content'}
+                    </Button>
+                    <Tooltip>{copiedTool === tool ? 'Copied!' : 'Copy markdown content'}</Tooltip>
+                  </TooltipTrigger>
+                  <TooltipTrigger>
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleDownload(tool, installPath)}
+                    >
+                      {isZipSkill ? <RiFolderZipLine size={14} /> : <RiDownloadLine size={14} />}
+                      {isZipSkill ? 'Download .zip' : 'Download'}
+                    </Button>
+                    <Tooltip>{isZipSkill ? 'Download as .zip with all bundled files' : 'Download file with correct name'}</Tooltip>
+                  </TooltipTrigger>
+                </Flex>
+              </Box>
+            ))}
+          </Flex>
+        </DialogBody>
 
-      <DialogActions>
-        <Button onClick={handleClose}>Close</Button>
-      </DialogActions>
-    </Dialog>
+        <DialogFooter>
+          <Button onClick={handleClose} variant="secondary" slot="close">
+            Close
+          </Button>
+        </DialogFooter>
+      </Dialog>
+    </DialogTrigger>
   );
 }

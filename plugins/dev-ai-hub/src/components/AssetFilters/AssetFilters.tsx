@@ -1,25 +1,16 @@
 import type { ElementType } from 'react';
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import InputAdornment from '@mui/material/InputAdornment';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import SearchIcon from '@mui/icons-material/Search';
-import StorageIcon from '@mui/icons-material/Storage';
-import ArticleIcon from '@mui/icons-material/Article';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import BuildIcon from '@mui/icons-material/Build';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import AppsIcon from '@mui/icons-material/Apps';
+import { Box, Flex, Text, SearchField, ToggleButton, ToggleButtonGroup } from '@backstage/ui';
+import { RiAppsLine, RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiDatabase2Line } from '@remixicon/react';
 import type { AssetType, AiTool, AiHubProvider } from '@nospt/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
+import styles from './AssetFilters.module.css';
 
 const ASSET_TYPES: { value: AssetType | 'all'; label: string; color: string; Icon: ElementType }[] = [
-  { value: 'all', label: 'All', color: '#64748b', Icon: AppsIcon },
-  { value: 'instruction', label: 'Instructions', color: '#2563EB', Icon: ArticleIcon },
-  { value: 'agent', label: 'Agents', color: '#7C3AED', Icon: SmartToyIcon },
-  { value: 'skill', label: 'Skills', color: '#059669', Icon: BuildIcon },
-  { value: 'workflow', label: 'Workflows', color: '#D97706', Icon: AccountTreeIcon },
+  { value: 'all',         label: 'All',          color: '#DCDDE1', Icon: RiAppsLine },
+  { value: 'instruction', label: 'Instructions', color: '#54A0FF', Icon: RiArticleLine },
+  { value: 'agent',       label: 'Agents',       color: '#FF6B9D', Icon: RiRobot2Line },
+  { value: 'skill',       label: 'Skills',       color: '#6AB04C', Icon: RiToolsLine },
+  { value: 'workflow',    label: 'Workflows',    color: '#F9CA24', Icon: RiGitBranchLine },
 ];
 
 const AI_TOOLS: { value: AiTool | 'all'; label: string }[] = [
@@ -70,192 +61,159 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 3 }}>
-      <TextField
-        fullWidth
-        size="small"
+    <Flex className={styles.container}>
+      <SearchField
+        aria-label="Search assets"
+        className={styles.searchField}
         placeholder="Search assets by name, description or content…"
         value={value.search}
-        onChange={e => onChange({ ...value, search: e.target.value })}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
-        }}
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 2,
-          },
-        }}
+        onChange={v => onChange({ ...value, search: v })}
       />
 
-      <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+      <Flex className={styles.filtersRow}>
         {/* Type filter */}
         <Box>
-          <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
             Type
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-            {ASSET_TYPES.map(t => {
-              const isSelected = selectedType === t.value;
-              const TypeIcon = t.Icon;
-              return (
-                <Chip
-                  key={t.value}
-                  icon={<TypeIcon sx={{ fontSize: '0.9rem !important', color: isSelected ? '#fff !important' : t.color }} />}
-                  label={t.label}
-                  size="small"
-                  clickable
-                  onClick={() => handleTypeClick(t.value as AssetType | 'all')}
-                  sx={{
-                    fontWeight: 600,
-                    fontSize: '0.75rem',
-                    borderRadius: 2,
-                    border: '1.5px solid',
-                    borderColor: isSelected ? t.color : `${t.color}60`,
-                    backgroundColor: isSelected ? t.color : 'transparent',
-                    color: isSelected ? '#fff' : t.color,
-                    transition: 'all 0.15s ease',
-                    '&:hover': {
-                      backgroundColor: isSelected ? t.color : `${t.color}18`,
-                      borderColor: t.color,
-                    },
-                  }}
-                />
-              );
-            })}
-          </Box>
+          </Text>
+          <Flex className={styles.filterChips}>
+              {ASSET_TYPES.map(t => {
+                const isSelected = selectedType === t.value;
+                const TypeIcon = t.Icon;
+                return (
+                  <ToggleButton
+                    key={t.value}
+                    id={t.value}
+                    size="small"
+                    className={`${styles.filterChip} ${isSelected ? styles.filterChipSelected : ''}`}
+                    iconStart={<TypeIcon size={14} style={{ color: isSelected ? '#fff' : t.color }} />}
+                    isSelected={isSelected}
+                    onChange={() => handleTypeClick(t.value as AssetType | 'all')}
+                    style={{
+                      borderColor: isSelected ? t.color : `${t.color}30`,
+                      backgroundColor: isSelected ? t.color : `${t.color}10`,
+                      color: isSelected ? '#fff' : t.color,
+                    }}
+                  >
+                    {t.label}
+                  </ToggleButton>
+                );
+              })}
+            </Flex>
         </Box>
 
         {/* AI Tool filter */}
         <Box>
-          <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
             AI Tool
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-            {AI_TOOLS.map(t => {
-              const isSelected = selectedTool === t.value;
-              const iconEl = t.value !== 'all'
-                ? <ToolIcon tool={t.value as AiTool} branded={!isSelected} sx={{ fontSize: '0.85rem !important', color: isSelected ? 'background.paper' : 'inherit' }} />
-                : undefined;
-              return (
-                <Chip
-                  key={t.value}
-                  icon={iconEl}
-                  label={t.label}
-                  size="small"
-                  clickable
-                  onClick={() => handleToolClick(t.value as AiTool | 'all')}
-                  sx={{
-                    fontWeight: 600,
-                    fontSize: '0.75rem',
-                    borderRadius: 2,
-                    border: '1.5px solid',
-                    borderColor: isSelected ? 'text.primary' : 'divider',
-                    backgroundColor: isSelected ? 'text.primary' : 'transparent',
-                    color: isSelected ? 'background.paper' : 'text.secondary',
-                    transition: 'all 0.15s ease',
-                    '&:hover': {
-                      borderColor: 'text.primary',
-                      backgroundColor: isSelected ? 'text.primary' : 'action.hover',
-                    },
-                  }}
-                />
-              );
-            })}
-          </Box>
+          </Text>
+          <Flex className={styles.filterChips}>
+              {AI_TOOLS.map(t => {
+                const isSelected = selectedTool === t.value;
+                const iconEl = t.value !== 'all'
+                  ? <ToolIcon tool={t.value as AiTool} branded size={14} />
+                  : undefined;
+                return (
+                  <ToggleButton
+                    key={t.value}
+                    id={t.value}
+                    size="small"
+                    className={`${styles.filterChip} ${isSelected ? styles.toolChipSelected : ''}`}
+                    iconStart={iconEl}
+                    isSelected={isSelected}
+                    onChange={() => handleToolClick(t.value as AiTool | 'all')}
+                    style={{
+                      borderColor: isSelected ? 'var(--bui-fg-link)' : 'var(--bui-border-1)',
+                      backgroundColor: isSelected ? 'var(--bui-bg-accent-1)' : 'transparent',
+                      color: isSelected ? 'var(--bui-fg-link)' : 'var(--bui-fg-secondary)',
+                    }}
+                  >
+                    {t.label}
+                  </ToggleButton>
+                );
+              })}
+            </Flex>
         </Box>
 
         {/* Provider filter — only shown when there are 2+ providers */}
         {showProviderFilter && (
           <Box>
-            <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
               Provider
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-              <Chip
-                icon={<AppsIcon sx={{ fontSize: '0.9rem !important' }} />}
-                label="All"
-                size="small"
-                clickable
-                onClick={() => handleProviderClick(undefined)}
-                sx={{
-                  fontWeight: 600,
-                  fontSize: '0.75rem',
-                  borderRadius: 2,
-                  border: '1.5px solid',
-                  borderColor: !value.providerId ? 'text.primary' : 'divider',
-                  backgroundColor: !value.providerId ? 'text.primary' : 'transparent',
-                  color: !value.providerId ? 'background.paper' : 'text.secondary',
-                  transition: 'all 0.15s ease',
-                  '&:hover': {
-                    borderColor: 'text.primary',
-                    backgroundColor: !value.providerId ? 'text.primary' : 'action.hover',
-                  },
-                }}
-              />
-              {providers.map(p => {
-                const isSelected = value.providerId === p.id;
-                const label = p.target.split('/').slice(-1)[0]?.replace(/\.git$/, '') ?? p.id;
-                return (
-                  <Chip
-                    key={p.id}
-                    icon={<StorageIcon sx={{ fontSize: '0.85rem !important', color: isSelected ? 'background.paper' : 'inherit' }} />}
-                    label={label}
-                    size="small"
-                    clickable
-                    onClick={() => handleProviderClick(p.id)}
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: '0.75rem',
-                      borderRadius: 2,
-                      border: '1.5px solid',
-                      borderColor: isSelected ? 'text.primary' : 'divider',
-                      backgroundColor: isSelected ? 'text.primary' : 'transparent',
-                      color: isSelected ? 'background.paper' : 'text.secondary',
-                      transition: 'all 0.15s ease',
-                      '&:hover': {
-                        borderColor: 'text.primary',
-                        backgroundColor: isSelected ? 'text.primary' : 'action.hover',
-                      },
-                    }}
-                  />
-                );
-              })}
-            </Box>
+            </Text>
+            <Flex className={styles.filterChips}>
+                <ToggleButton
+                  id="all-providers"
+                  size="small"
+                  className={`${styles.filterChip} ${!value.providerId ? styles.filterChipSelected : ''}`}
+                  iconStart={<RiAppsLine size={14} />}
+                  isSelected={!value.providerId}
+                  onChange={() => handleProviderClick(undefined)}
+                  style={{
+                    borderColor: !value.providerId ? 'var(--bui-fg-primary)' : 'var(--bui-border-1)',
+                    backgroundColor: !value.providerId ? 'var(--bui-fg-primary)' : 'transparent',
+                    color: !value.providerId ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
+                  }}
+                >
+                  All
+                </ToggleButton>
+                {providers.map(p => {
+                  const isSelected = value.providerId === p.id;
+                  const label = p.target.split('/').slice(-1)[0]?.replace(/\.git$/, '') ?? p.id;
+                  return (
+                    <ToggleButton
+                      key={p.id}
+                      id={p.id}
+                      size="small"
+                      className={`${styles.filterChip} ${isSelected ? styles.filterChipSelected : ''}`}
+                      iconStart={<RiDatabase2Line size={14} style={{ color: isSelected ? 'var(--bui-bg-neutral-1)' : 'inherit' }} />}
+                      isSelected={isSelected}
+                      onChange={() => handleProviderClick(isSelected ? undefined : p.id)}
+                      style={{
+                        borderColor: isSelected ? 'var(--bui-fg-primary)' : 'var(--bui-border-1)',
+                        backgroundColor: isSelected ? 'var(--bui-fg-primary)' : 'transparent',
+                        color: isSelected ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
+                      }}
+                    >
+                      {label}
+                    </ToggleButton>
+                  );
+                })}
+              </Flex>
           </Box>
         )}
-      </Box>
+      </Flex>
 
       {availableTags.length > 0 && (
         <Box>
-          <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 1, display: 'block', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
             Tags
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-            {availableTags.map(tag => (
-              <Chip
-                key={tag}
-                label={`#${tag}`}
-                size="small"
-                clickable
-                onClick={() => handleTagToggle(tag)}
-                sx={{
-                  fontSize: '0.7rem',
-                  fontWeight: value.tags.includes(tag) ? 700 : 400,
-                  borderRadius: 1.5,
-                  backgroundColor: value.tags.includes(tag) ? 'primary.main' : 'transparent',
-                  color: value.tags.includes(tag) ? '#fff' : 'text.secondary',
-                  border: '1px solid',
-                  borderColor: value.tags.includes(tag) ? 'primary.main' : 'divider',
-                }}
-              />
-            ))}
-          </Box>
+          </Text>
+          <Flex className={styles.filterChips}>
+              {availableTags.map(tag => {
+                const isActive = value.tags.includes(tag);
+                return (
+                  <ToggleButton
+                    key={tag}
+                    id={tag}
+                    size="small"
+                    className={`${styles.tagChip} ${isActive ? styles.tagChipSelected : ''}`}
+                    isSelected={isActive}
+                    onChange={() => handleTagToggle(tag)}
+                    style={{
+                      fontWeight: isActive ? 700 : 400,
+                      backgroundColor: isActive ? 'var(--bui-bg-solid)' : 'transparent',
+                      color: isActive ? '#fff' : 'var(--bui-fg-secondary)',
+                      borderColor: isActive ? 'var(--bui-bg-solid)' : 'var(--bui-border-1)',
+                    }}
+                  >
+                    #{tag}
+                  </ToggleButton>
+                );
+              })}
+            </Flex>
         </Box>
       )}
-    </Box>
+    </Flex>
   );
 }
