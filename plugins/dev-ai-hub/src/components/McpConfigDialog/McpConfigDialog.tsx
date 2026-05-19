@@ -1,34 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import Collapse from '@mui/material/Collapse';
-import Dialog from '@mui/material/Dialog';
-import Grid from '@mui/material/Grid';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import Divider from '@mui/material/Divider';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import IconButton from '@mui/material/IconButton';
-import Switch from '@mui/material/Switch';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
-import { useTheme } from '@mui/material/styles';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import StorageIcon from '@mui/icons-material/Storage';
-import OpenInBrowserIcon from '@mui/icons-material/OpenInBrowser';
-import AppsIcon from '@mui/icons-material/Apps';
-import TuneIcon from '@mui/icons-material/Tune';
+import { useEffect, useState } from 'react';
+import {
+  Box, Flex, Text, Button, ButtonIcon, ToggleButton, Switch,
+  Dialog, DialogTrigger, DialogHeader, DialogBody, DialogFooter,
+  Tabs, TabList, Tab, TabPanel,
+  Tooltip, TooltipTrigger,
+} from '@backstage/ui';
+import { RiFileCopyLine, RiCheckLine, RiDatabase2Line } from '@remixicon/react';
 import { useApi, discoveryApiRef } from '@backstage/core-plugin-api';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { ToolIcon } from '../ToolIcon';
 import { useCopyToClipboard, useProviders } from '../../hooks';
 import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
+import styles from './McpConfigDialog.module.css';
 
 interface ToolConfig {
   tool: AiTool;
@@ -227,12 +210,10 @@ interface McpConfigDialogProps {
 }
 
 export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
-  const theme = useTheme();
-  const { t } = useTranslationRef(devAiHubTranslationRef);
   const discoveryApi = useApi(discoveryApiRef);
   const { copy: copyUrl, copied: copiedUrl } = useCopyToClipboard();
   const { copy: copySnippet, copied: copiedSnippet } = useCopyToClipboard();
-  const [tab, setTab] = useState(0);
+  const [selectedToolKey, setSelectedToolKey] = useState<string>('claude-code');
   const [baseUrl, setBaseUrl] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [proactiveEnabled, setProactiveEnabled] = useState(false);
@@ -288,7 +269,7 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
     }
   }, [open, discoveryApi]);
 
-  const cfg = toolConfigs[tab] ?? toolConfigs[0];
+  const cfg = TOOL_CONFIGS.find(t => t.tool === selectedToolKey) ?? TOOL_CONFIGS[0];
 
   const buildMcpUrl = () => {
     if (!baseUrl) return 'loading...';
@@ -302,380 +283,181 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
   const mcpUrl = buildMcpUrl();
   const configSnippet = baseUrl ? cfg.buildConfig(mcpUrl) : '';
 
-  const handleInstallInVscode = () => {
-    if (!baseUrl) return;
-    const config = JSON.stringify({ name: 'dev-ai-hub', type: 'http', url: mcpUrl });
-    window.location.href = `vscode:mcp/install?${encodeURIComponent(config)}`;
-  };
+  // Detect dark mode by observing BUI's data-theme-mode attribute, which
+  // reflects the Backstage theme toggle (not the OS preference).
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof document === 'undefined') return false;
+    return document.documentElement.getAttribute('data-theme-mode') === 'dark' ||
+      document.body.getAttribute('data-theme-mode') === 'dark';
+  });
 
-  const handleInstallInCursor = () => {
-    if (!baseUrl) return;
-    const config = btoa(JSON.stringify({ type: 'http', url: mcpUrl }));
-    window.location.href = `cursor://anysphere.cursor-deeplink/mcp/install?name=dev-ai-hub&config=${config}`;
-  };
+  useEffect(() => {
+    const getIsDark = () =>
+      document.documentElement.getAttribute('data-theme-mode') === 'dark' ||
+      document.body.getAttribute('data-theme-mode') === 'dark';
 
-  const showVscodeButton = cfg.tool === 'github-copilot';
-  const showCursorButton = cfg.tool === 'cursor';
+    const observer = new MutationObserver(() => setIsDark(getIsDark()));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme-mode'] });
+    observer.observe(document.body, { attributes: true, attributeFilter: ['data-theme-mode'] });
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ pb: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box
-            sx={{
-              width: 36, height: 36, borderRadius: 1.5,
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              boxShadow: '0 2px 8px #6366f140',
-            }}
-          >
-            <AppsIcon sx={{ color: '#fff', fontSize: '1.2rem' }} />
-          </Box>
-          <Box>
-            <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
-              {t('mcpConfigDialog.title')}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {t('mcpConfigDialog.subtitle')}
-            </Typography>
-          </Box>
-        </Box>
-      </DialogTitle>
+    <DialogTrigger>
+      <Dialog
+        isOpen={open}
+        isDismissable
+        onOpenChange={o => { if (!o) onClose(); }}
+      >
+        <DialogHeader>
+          <Text variant="title-small" weight="bold">Configure MCP Server</Text>
+          <Text variant="body-small" color="secondary" className={styles.subtitle}>
+            Connect your AI tool to the Dev AI Hub via Model Context Protocol.
+          </Text>
+        </DialogHeader>
 
-      <DialogContent sx={{ pt: 0 }}>
-        {/* ── Section 1: MCP Catalog ── */}
-        <Box sx={{ mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1, pt: 0.5 }}>
-            <AppsIcon sx={{ fontSize: '0.95rem', color: 'text.secondary' }} />
-            <Typography
-              variant="caption"
-              fontWeight={700}
-              color="text.secondary"
-              sx={{ textTransform: 'uppercase', letterSpacing: 0.8, flex: 1 }}
-            >
-              {t('mcpConfigDialog.catalogTab')}
-            </Typography>
-            {catalog.length > 0 && (
-              <Chip
-                label={catalog.length}
-                size="small"
-                sx={{ height: 18, fontSize: '0.65rem', fontWeight: 700, bgcolor: 'action.selected', color: 'text.secondary', border: '1px solid', borderColor: 'divider' }}
-              />
-            )}
-          </Box>
-
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, fontSize: '0.8rem' }}>
-            {t('mcpConfigDialog.catalogDescription')}
-          </Typography>
-
-          {catalog.length === 0 ? (
-            <Box
-              sx={{
-                border: '1px dashed',
-                borderColor: 'divider',
-                borderRadius: 2,
-                p: 3,
-                textAlign: 'center',
-              }}
-            >
-              <AppsIcon sx={{ fontSize: '2rem', color: 'text.disabled', mb: 1 }} />
-              <Typography variant="body2" color="text.secondary">
-                {t('mcpConfigDialog.catalogEmpty')}
-              </Typography>
-              <Typography variant="caption" color="text.disabled">
-                {t('mcpConfigDialog.catalogAddHint')}
-              </Typography>
-            </Box>
-          ) : (
-            <Grid container spacing={1.5}>
-              {catalog.map(entry => (
-                <Grid item xs={12} sm={6} key={entry.id}>
-                  <CatalogEntryCard entry={entry} />
-                </Grid>
+        <DialogBody>
+          <Tabs selectedKey={selectedToolKey} onSelectionChange={key => setSelectedToolKey(key as string)}>
+            <TabList className={styles.tabBar}>
+              {TOOL_CONFIGS.map(t => (
+                <Tab key={t.tool} id={t.tool}>
+                  <span className={styles.tabContent}>
+                    <ToolIcon tool={t.tool} size={16} />
+                    <span>{t.label}</span>
+                  </span>
+                </Tab>
               ))}
-            </Grid>
-          )}
-        </Box>
+            </TabList>
 
-        <Divider sx={{ mb: 0 }} />
-
-        {/* ── Section 2: Tool Config (collapsible) ── */}
-        <Box>
-          <Box
-            onClick={() => setToolConfigExpanded(v => !v)}
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.75,
-              cursor: 'pointer',
-              userSelect: 'none',
-              py: 1.25,
-              '&:hover': { opacity: 0.8 },
-            }}
-          >
-            <TuneIcon sx={{ fontSize: '0.95rem', color: 'text.secondary' }} />
-            <Typography
-              variant="caption"
-              fontWeight={700}
-              color="text.secondary"
-              sx={{ textTransform: 'uppercase', letterSpacing: 0.8, flex: 1 }}
-            >
-              {t('mcpConfigDialog.toolConfigSection')}
-            </Typography>
-            <ExpandMoreIcon
-              fontSize="small"
-              sx={{
-                color: 'text.disabled',
-                transition: 'transform 0.2s ease',
-                transform: toolConfigExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-              }}
-            />
-          </Box>
-
-          <Collapse in={toolConfigExpanded}>
-            {/* Tool tabs */}
-            <Tabs
-              value={tab}
-              onChange={(_, v) => setTab(v)}
-              sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}
-            >
-              {toolConfigs.map((toolCfg, i) => (
-                <Tab
-                  key={toolCfg.tool}
-                  value={i}
-                  sx={{
-                    color: 'text.secondary',
-                    minHeight: 40,
-                    '&.Mui-selected': { color: 'primary.main' },
-                    '&:hover': {
-                      backgroundColor: 'transparent',
-                      color: 'text.primary',
-                    },
-                    '&.Mui-selected:hover': {
-                      backgroundColor: 'transparent',
-                    },
-                  }}
-                  label={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                      <ToolIcon tool={toolCfg.tool} branded={false} sx={{ fontSize: '1rem' }} />
-                      <span>{toolCfg.label}</span>
-                    </Box>
-                  }
-                />
-              ))}
-            </Tabs>
-
-            {/* Provider filter — only shown when there are 2+ providers */}
-            {showProviderFilter && (
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', mb: 0.75 }}>
-                  {t('mcpConfigDialog.scopeToProvider')}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
-                  <Chip
-                    label={t('mcpConfigDialog.allProviders')}
-                    size="small"
-                    clickable
-                    onClick={() => setSelectedProvider('')}
-                    sx={{
-                      fontWeight: 600,
-                      fontSize: '0.75rem',
-                      borderRadius: 2,
-                      border: '1.5px solid',
-                      borderColor: !selectedProvider ? 'text.primary' : 'divider',
-                      backgroundColor: !selectedProvider ? 'text.primary' : 'transparent',
-                      color: !selectedProvider ? 'background.paper' : 'text.secondary',
-                      transition: 'all 0.15s ease',
-                    }}
-                  />
-                  {providers.map(p => {
-                    const isSelected = selectedProvider === p.id;
-                    const label = providerLabel(p.target);
-                    return (
-                      <Chip
-                        key={p.id}
-                        icon={<StorageIcon sx={{ fontSize: '0.8rem !important', color: isSelected ? 'background.paper' : 'inherit' }} />}
-                        label={label}
-                        size="small"
-                        clickable
-                        onClick={() => setSelectedProvider(isSelected ? '' : p.id)}
-                        sx={{
-                          fontWeight: 600,
-                          fontSize: '0.75rem',
-                          borderRadius: 2,
-                          border: '1.5px solid',
-                          borderColor: isSelected ? 'text.primary' : 'divider',
-                          backgroundColor: isSelected ? 'text.primary' : 'transparent',
-                          color: isSelected ? 'background.paper' : 'text.secondary',
-                          transition: 'all 0.15s ease',
-                        }}
-                      />
-                    );
-                  })}
-                </Box>
-              </Box>
-            )}
-
-            {/* Proactive suggestions toggle */}
-            <Box sx={{ mb: 2 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    size="small"
-                    checked={proactiveEnabled}
-                    onChange={e => setProactiveEnabled(e.target.checked)}
-                  />
-                }
-                label={
-                  <Box>
-                    <Typography variant="body2" fontWeight={600}>{t('mcpConfigDialog.proactiveSuggestions')}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {t('mcpConfigDialog.proactiveDescription')}
-                    </Typography>
+            {/* All tab panels share the same content below */}
+            {TOOL_CONFIGS.map(t => (
+              <TabPanel key={t.tool} id={t.tool}>
+                {/* Provider filter — only shown when there are 2+ providers */}
+                {showProviderFilter && (
+                  <Box className={styles.providerSection}>
+                    <Text variant="body-x-small" color="secondary" className={styles.sectionLabel}>
+                      Scope to Provider
+                    </Text>
+                    <Flex className={styles.chipsRow}>
+                        <ToggleButton
+                          id="all-providers"
+                          size="small"
+                          className={styles.filterChip}
+                          isSelected={!selectedProvider}
+                          onChange={() => setSelectedProvider('')}
+                          style={{
+                            borderColor: !selectedProvider ? 'var(--bui-fg-primary)' : 'var(--bui-border-1)',
+                            backgroundColor: !selectedProvider ? 'var(--bui-fg-primary)' : 'transparent',
+                            color: !selectedProvider ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
+                          }}
+                        >
+                          All providers
+                        </ToggleButton>
+                        {providers.map(p => {
+                          const isSelected = selectedProvider === p.id;
+                          const label = providerLabel(p.target);
+                          return (
+                            <ToggleButton
+                              key={p.id}
+                              id={p.id}
+                              size="small"
+                              className={styles.filterChip}
+                              iconStart={<RiDatabase2Line size={12} style={{ color: isSelected ? 'var(--bui-bg-neutral-1)' : 'inherit' }} />}
+                              isSelected={isSelected}
+                              onChange={() => setSelectedProvider(isSelected ? '' : p.id)}
+                              style={{
+                                borderColor: isSelected ? 'var(--bui-fg-primary)' : 'var(--bui-border-1)',
+                                backgroundColor: isSelected ? 'var(--bui-fg-primary)' : 'transparent',
+                                color: isSelected ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
+                              }}
+                            >
+                              {label}
+                            </ToggleButton>
+                          );
+                        })}
+                      </Flex>
                   </Box>
-                }
-                sx={{ alignItems: 'flex-start', ml: 0, gap: 1 }}
-              />
-            </Box>
+                )}
 
-            {/* MCP URL */}
-            <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-              {t('mcpConfigDialog.mcpEndpoint')}
-            </Typography>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                mt: 0.5,
-                mb: (showVscodeButton || showCursorButton) ? 1.5 : 1.5,
-                px: 1.5,
-                py: 1,
-                borderRadius: 1.5,
-                border: '1px solid',
-                borderColor: 'divider',
-                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-              }}
-            >
-              <Typography
-                variant="body2"
-                sx={{ flex: 1, fontFamily: 'monospace', fontSize: '0.8rem', wordBreak: 'break-all' }}
-              >
-                {mcpUrl}
-              </Typography>
-              <Tooltip title={copiedUrl ? t('assetInstallDialog.copied') : t('mcpConfigDialog.copyUrl')}>
-                <IconButton size="small" onClick={() => copyUrl(mcpUrl)}>
-                  {copiedUrl ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
-                </IconButton>
-              </Tooltip>
-            </Box>
+                {/* Proactive suggestions toggle */}
+                <Flex className={styles.proactiveSection}>
+                  <Flex className={styles.proactiveRow}>
+                    <Switch
+                      isSelected={proactiveEnabled}
+                      onChange={setProactiveEnabled}
+                      aria-label="Proactive suggestions"
+                    />
+                    <Box>
+                      <Text variant="body-small" weight="bold">Proactive suggestions</Text>
+                      <Text variant="body-x-small" color="secondary">
+                        The AI will automatically suggest relevant assets based on your project context.
+                        Disable if you prefer to search manually.
+                      </Text>
+                    </Box>
+                  </Flex>
+                </Flex>
 
-            {showVscodeButton && (
-              <Button
-                variant="contained"
-                startIcon={<OpenInBrowserIcon />}
-                onClick={handleInstallInVscode}
-                disabled={!baseUrl}
-                fullWidth
-                sx={{ mb: 2, fontSize: '0.8rem' }}
-              >
-                {t('mcpConfigDialog.installInVscode')}
-              </Button>
-            )}
-
-            {showCursorButton && (
-              <Button
-                variant="contained"
-                startIcon={<ToolIcon tool="cursor" branded={false} sx={{ fontSize: '1rem !important' }} />}
-                onClick={handleInstallInCursor}
-                disabled={!baseUrl}
-                fullWidth
-                sx={{ mb: 2, fontSize: '0.8rem' }}
-              >
-                {t('mcpConfigDialog.installInCursor')}
-              </Button>
-            )}
-
-            <Divider sx={{ mb: 1.5 }} />
-
-            {/* Manual config snippet — collapsed by default */}
-            <Box
-              onClick={() => setManualExpanded(v => !v)}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                cursor: 'pointer',
-                userSelect: 'none',
-                py: 0.75,
-              }}
-            >
-              <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                {t('mcpConfigDialog.manualConfig', { file: cfg.file })}
-              </Typography>
-              <ExpandMoreIcon
-                fontSize="small"
-                sx={{
-                  color: 'text.disabled',
-                  transition: 'transform 0.2s ease',
-                  transform: manualExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                }}
-              />
-            </Box>
-
-            <Collapse in={manualExpanded}>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, mt: 0.5 }}>
-                {cfg.description}
-              </Typography>
-              <Box sx={{ position: 'relative' }}>
-                <Box
-                  component="pre"
-                  sx={{
-                    m: 0,
-                    p: 2,
-                    borderRadius: 2,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    backgroundColor: theme.palette.mode === 'dark' ? '#0d1117' : '#f6f8fa',
-                    color: theme.palette.mode === 'dark' ? '#e6edf3' : '#24292f',
-                    fontFamily: 'monospace',
-                    fontSize: '0.8rem',
-                    overflowX: 'auto',
-                    whiteSpace: 'pre',
-                  }}
-                >
-                  {configSnippet}
+                {/* MCP URL */}
+                <Box className={styles.urlSection}>
+                  <Text variant="body-x-small" color="secondary" className={styles.sectionLabel}>
+                    MCP Endpoint
+                  </Text>
+                  <Flex className={styles.urlBox}>
+                    <Text variant="body-small" className={styles.urlText}>
+                      {mcpUrl}
+                    </Text>
+                    <TooltipTrigger>
+                      <ButtonIcon
+                        aria-label="Copy URL"
+                        icon={copiedUrl ? <RiCheckLine size={14} style={{ color: 'var(--bui-fg-success)' }} /> : <RiFileCopyLine size={14} />}
+                        variant="tertiary"
+                        onPress={() => copyUrl(mcpUrl)}
+                      />
+                      <Tooltip>{copiedUrl ? 'Copied!' : 'Copy URL'}</Tooltip>
+                    </TooltipTrigger>
+                  </Flex>
                 </Box>
-                <Tooltip title={copiedSnippet ? t('assetInstallDialog.copied') : t('mcpConfigDialog.copyUrl')}>
-                  <IconButton
-                    size="small"
-                    onClick={e => { e.stopPropagation(); copySnippet(configSnippet); }}
-                    sx={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
-                      backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-                      '&:hover': {
-                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)',
-                      },
-                    }}
-                  >
-                    {copiedSnippet ? <CheckIcon fontSize="small" color="success" /> : <ContentCopyIcon fontSize="small" />}
-                  </IconButton>
-                </Tooltip>
-              </Box>
 
-              <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 1.5 }}>
-                {t('mcpConfigDialog.omitToolHint')}
-              </Typography>
-            </Collapse>
-          </Collapse>
-        </Box>
-      </DialogContent>
+                {/* Config snippet */}
+                <Text variant="body-x-small" color="secondary" className={styles.sectionLabel}>
+                  {t.file}
+                </Text>
+                <Text variant="body-x-small" color="secondary" style={{ display: 'block', marginBottom: 'var(--bui-space-2)', marginTop: 'var(--bui-space-1)' }}>
+                  {t.description}
+                </Text>
+                <div className={styles.snippetContainer}>
+                  <pre className={`${styles.snippetPre} ${isDark ? styles.snippetPreDark : styles.snippetPreLight}`}>
+                    {configSnippet}
+                  </pre>
+                  <TooltipTrigger>
+                    <ButtonIcon
+                      aria-label="Copy config"
+                      className={styles.copySnippetButton}
+                      icon={copiedSnippet ? <RiCheckLine size={14} style={{ color: 'var(--bui-fg-success)' }} /> : <RiFileCopyLine size={14} />}
+                      variant="tertiary"
+                      onPress={() => copySnippet(configSnippet)}
+                    />
+                    <Tooltip>{copiedSnippet ? 'Copied!' : 'Copy config'}</Tooltip>
+                  </TooltipTrigger>
+                </div>
 
-      <DialogActions>
-        <Button onClick={onClose}>{t('mcpConfigDialog.close')}</Button>
-      </DialogActions>
-    </Dialog>
+                <Text variant="body-x-small" color="secondary" className={styles.hint}>
+                  💡 Omit <code>?tool=</code> from the URL to receive assets for all AI tools.
+                  {showProviderFilter && ' Omit ?provider= to receive assets from all repositories.'}
+                  {' '}Proactive suggestions add <code>?proactive=true</code> and register the{' '}
+                  <code>suggest_assets</code> tool and <code>check_for_assets</code> prompt.
+                </Text>
+              </TabPanel>
+            ))}
+          </Tabs>
+        </DialogBody>
+
+        <DialogFooter>
+          <Button onClick={onClose} variant="secondary" slot="close">
+            Close
+          </Button>
+        </DialogFooter>
+      </Dialog>
+    </DialogTrigger>
   );
 }

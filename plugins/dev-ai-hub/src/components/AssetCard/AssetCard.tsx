@@ -1,23 +1,10 @@
 import type { ElementType } from 'react';
-import { alpha, useTheme } from '@mui/material/styles';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
-import CardContent from '@mui/material/CardContent';
-import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import DownloadIcon from '@mui/icons-material/Download';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import ArticleIcon from '@mui/icons-material/Article';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import BuildIcon from '@mui/icons-material/Build';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
+import { Box, Flex, Text, Card, CardBody, CardFooter, Tag, TagGroup, ButtonIcon, Tooltip, TooltipTrigger } from '@backstage/ui';
+import { RiDownloadLine, RiExternalLinkLine } from '@remixicon/react';
+import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine } from '@remixicon/react';
 import type { AiAssetSummary, AssetType, AiTool } from '@nospt/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
-import { devAiHubTranslationRef } from '../../translation';
+import styles from './AssetCard.module.css';
 
 const POPULAR_THRESHOLD = 5;
 const NEW_DAYS_MS     = 14 * 24 * 60 * 60 * 1000;
@@ -31,12 +18,11 @@ const TOOL_LABELS: Record<AiTool, string> = {
   'cursor':         'Cursor',
 };
 
-const TYPE_CONFIG: Record<AssetType, { label: string; color: string; Icon: ElementType }> = {
-  instruction: { label: 'Instruction', color: '#2563EB', Icon: ArticleIcon },
-  agent:       { label: 'Agent',       color: '#7C3AED', Icon: SmartToyIcon },
-  skill:       { label: 'Skill',       color: '#059669', Icon: BuildIcon },
-  workflow:    { label: 'Workflow',    color: '#D97706', Icon: AccountTreeIcon },
-  bundle:      { label: 'Bundle',      color: '#8B5CF6', Icon: Inventory2Icon },
+const TYPE_CONFIG: Record<AssetType, { label: string; color: string; bg: string; Icon: ElementType }> = {
+  instruction: { label: 'Instruction', color: '#54A0FF', bg: 'rgba(84, 160, 255, 0.15)',   Icon: RiArticleLine },
+  agent:       { label: 'Agent',       color: '#FF6B9D', bg: 'rgba(255, 107, 157, 0.15)', Icon: RiRobot2Line },
+  skill:       { label: 'Skill',       color: '#6AB04C', bg: 'rgba(106, 176, 76, 0.15)',  Icon: RiToolsLine },
+  workflow:    { label: 'Workflow',    color: '#F9CA24', bg: 'rgba(249, 202, 36, 0.15)',  Icon: RiGitBranchLine },
 };
 
 function resolveMcp(req: McpRequirement, catalog: McpCatalogEntry[]): { name: string; icon?: string } {
@@ -68,252 +54,115 @@ export function AssetCard({ asset, onView, onInstall, onHelp, onOpenMcpCatalog, 
 
   return (
     <Card
-      variant="outlined"
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'divider',
-        borderLeft: `3px solid ${cfg.color}`,
-        transition: 'all 0.18s ease',
-        '&:hover': {
-          boxShadow: `0 6px 24px ${cfg.color}30`,
-          borderColor: cfg.color,
-          transform: 'translateY(-2px)',
-        },
-      }}
+      className={styles.card}
+      style={{ '--card-accent': cfg.color } as React.CSSProperties}
     >
-      <CardContent sx={{ p: 1.5, pb: '0 !important', flex: 1 }}>
+      <CardBody className={styles.cardContent}>
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 1 }}>
+        <Flex className={styles.header}>
           <Box
-            sx={{
-              width: 40,
-              height: 40,
-              borderRadius: 1.5,
-              backgroundColor: alpha(cfg.color, 0.12),
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-              boxShadow: `0 2px 8px ${cfg.color}25`,
-            }}
+            className={styles.iconBox}
+            style={{ backgroundColor: cfg.bg }}
           >
             {asset.icon ? (
-              <Box
-                component="img"
+              <img
                 src={asset.icon}
                 alt={asset.label ?? asset.name}
-                sx={{ width: 26, height: 26, objectFit: 'contain' }}
+                className={styles.iconImage}
                 onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
             ) : (
-              <TypeIcon sx={{ color: cfg.color, fontSize: '1.3rem' }} />
+              <TypeIcon size={18} style={{ color: cfg.color }} />
             )}
           </Box>
 
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.2 }}>
-              <Typography variant="body2" fontWeight={700} noWrap title={asset.label ?? asset.name} sx={{ lineHeight: 1.2, flex: 1 }}>
+          <Box className={styles.headerInfo}>
+            <Flex className={styles.titleRow}>
+              <Text variant="body-medium" weight="bold" className={styles.title} title={asset.label ?? asset.name}>
                 {asset.label ?? asset.name}
-              </Typography>
+              </Text>
               {isNew && (
-                <Chip
-                  label={t('assetCard.newBadge')}
-                  size="small"
-                  sx={{
-                    height: 18,
-                    fontSize: '0.6rem',
-                    fontWeight: 700,
-                    backgroundColor: alpha('#059669', isDark ? 0.25 : 0.14),
-                    backdropFilter: 'blur(8px)',
-                    color: isDark ? '#6ee7b7' : '#059669',
-                    border: '1px solid',
-                    borderColor: alpha('#059669', isDark ? 0.5 : 0.3),
-                    borderRadius: 1,
-                    flexShrink: 0,
-                    '& .MuiChip-label': { px: '6px' },
-                  }}
-                />
+                <TagGroup aria-label="Status">
+                  <Tag id="new" size="small" className={styles.newBadge}>New</Tag>
+                </TagGroup>
               )}
-              {isUpdated && (
-                <Chip
-                  label={t('assetCard.updatedBadge')}
-                  size="small"
-                  sx={{
-                    height: 18,
-                    fontSize: '0.6rem',
-                    fontWeight: 700,
-                    backgroundColor: alpha('#D97706', isDark ? 0.25 : 0.12),
-                    color: isDark ? '#fcd34d' : '#D97706',
-                    border: '1px solid',
-                    borderColor: alpha('#D97706', isDark ? 0.5 : 0.3),
-                    borderRadius: 1,
-                    flexShrink: 0,
-                    '& .MuiChip-label': { px: '6px' },
-                  }}
-                />
-              )}
-            </Box>
-            <Typography variant="caption" sx={{ color: cfg.color, fontWeight: 600 }}>
+            </Flex>
+            <Text variant="body-x-small" style={{ color: cfg.color, fontWeight: 600 }}>
               {cfg.label}
-            </Typography>
+            </Text>
           </Box>
-        </Box>
+        </Flex>
 
         {/* Description */}
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          title={asset.description}
-          sx={{
-            mb: 1,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            lineHeight: 1.4,
-          }}
-        >
+        <Text variant="body-x-small" color="secondary" className={styles.description}>
           {asset.description}
-        </Typography>
+        </Text>
 
         {/* Tools */}
-        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: asset.tags.length > 0 ? 0.75 : 0 }}>
+        <TagGroup aria-label="Compatible tools" className={`${styles.toolsRow} ${asset.tags.length > 0 ? styles.toolsRowWithTags : ''}`}>
           {asset.tools.map(tool => (
-            <Chip
-              key={tool}
-              icon={<ToolIcon tool={tool as AiTool} sx={{ fontSize: '0.75rem !important' }} />}
-              label={TOOL_LABELS[tool as AiTool] ?? tool}
-              size="small"
-              sx={{
-                height: 18,
-                fontSize: '0.65rem',
-                fontWeight: 600,
-                backgroundColor: 'action.hover',
-                color: 'text.secondary',
-                borderRadius: 1,
-                '& .MuiChip-icon': { ml: '4px' },
-              }}
-            />
+            <Tag key={tool} id={tool} size="small" className={styles.toolChip} icon={<ToolIcon tool={tool as AiTool} size={12} />}>
+              {TOOL_LABELS[tool as AiTool] ?? tool}
+            </Tag>
           ))}
-        </Box>
+        </TagGroup>
 
         {/* Tags */}
         {asset.tags.length > 0 && (
-          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-            {asset.tags.slice(0, 3).map(tag => (
-              <Chip
-                key={tag}
-                label={`#${tag}`}
-                size="small"
-                sx={{
-                  height: 16,
-                  fontSize: '0.6rem',
-                  color: 'text.disabled',
-                  backgroundColor: 'transparent',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 1,
-                }}
-              />
-            ))}
+          <>
+            <TagGroup aria-label="Tags" className={styles.tagsRow}>
+              {asset.tags.slice(0, 3).map(tag => (
+                <Tag key={tag} id={tag} size="small" className={styles.tagChip}>
+                  #{tag}
+                </Tag>
+              ))}
+            </TagGroup>
             {asset.tags.length > 3 && (
-              <Typography variant="caption" color="text.disabled" sx={{ alignSelf: 'center' }}>
+              <Text variant="body-x-small" color="secondary" style={{ alignSelf: 'center' }}>
                 +{asset.tags.length - 3}
-              </Typography>
+              </Text>
             )}
-          </Box>
+          </>
         )}
+      </CardBody>
 
-        {/* Required MCPs — circular icon-only badges, below tags */}
-        {asset.mcps && asset.mcps.length > 0 && (
-          <Box sx={{ mt: 0.75, mb: 1 }}>
-            <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.6rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.4, display: 'block', mb: 0.5 }}>
-              {t('assetCard.mcpsRequired')}
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              {asset.mcps.map(req => {
-                const { name, icon } = resolveMcp(req, mcpCatalog);
-                return (
-                  <Box
-                    key={req.id}
-                    title={name}
-                    onClick={onOpenMcpCatalog}
-                    sx={{
-                      width: 26,
-                      height: 26,
-                      borderRadius: '50%',
-                      backgroundColor: 'action.hover',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      overflow: 'hidden',
-                      cursor: onOpenMcpCatalog ? 'pointer' : 'default',
-                      transition: 'background-color 0.15s ease',
-                      '&:hover': onOpenMcpCatalog ? { backgroundColor: 'action.selected' } : {},
-                    }}
-                  >
-                    {icon ? (
-                      <Box
-                        component="img"
-                        src={icon}
-                        alt={name}
-                        sx={{ width: 18, height: 18, objectFit: 'contain' }}
-                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
-                    ) : (
-                      <StorageIcon sx={{ fontSize: '0.9rem', color: 'text.secondary' }} />
-                    )}
-                  </Box>
-                );
-              })}
-            </Box>
-          </Box>
-        )}
-      </CardContent>
-
-      <CardActions sx={{ px: 1.5, py: 1, justifyContent: 'space-between', mt: 'auto', borderTop: '1px solid', borderColor: 'divider' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.65rem' }}>
-            {asset.type === 'bundle' && asset.itemCount !== undefined
-              ? t('assetCard.bundleFooter', { count: asset.itemCount, author: asset.author })
-              : t('assetCard.versionFooter', { version: asset.version, author: asset.author })}
-          </Typography>
+      <CardFooter className={styles.cardActions}>
+        <Flex className={styles.metaRow}>
+          <Text variant="body-x-small" color="secondary" className={styles.metaText}>
+            v{asset.version} · {asset.author}
+          </Text>
           {asset.installCount > 0 && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
-              <Typography sx={{ fontSize: '0.65rem', lineHeight: 1 }}>
+            <Flex className={styles.installCountRow}>
+              <Text className={styles.installEmoji}>
                 {isPopular ? '🔥' : '↓'}
-              </Typography>
-              <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.65rem' }}>
+              </Text>
+              <Text variant="body-x-small" color="secondary" className={styles.metaText}>
                 {asset.installCount}
-              </Typography>
-            </Box>
+              </Text>
+            </Flex>
           )}
-        </Box>
-        <Box sx={{ display: 'flex', gap: 0.25 }}>
-          <Tooltip title="Install in editor">
-            <IconButton aria-label="Install in editor" size="small" onClick={() => onInstall(asset.id)} color="primary">
-              <DownloadIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="View details">
-            <IconButton aria-label="View details" size="small" onClick={() => onView(asset.id)}>
-              <OpenInNewIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          {asset.helpText && onHelp && (
-            <Tooltip title={t('assetCard.helpTooltip')}>
-              <IconButton size="small" onClick={() => onHelp(asset.id)}>
-                <HelpOutlineIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Box>
-      </CardActions>
+        </Flex>
+        <Flex className={styles.actionsRow}>
+          <TooltipTrigger>
+            <ButtonIcon
+              aria-label="Install in editor"
+              icon={<RiDownloadLine size={16} />}
+              variant="tertiary"
+              onPress={() => onInstall(asset.id)}
+            />
+            <Tooltip>Install in editor</Tooltip>
+          </TooltipTrigger>
+          <TooltipTrigger>
+            <ButtonIcon
+              aria-label="View details"
+              icon={<RiExternalLinkLine size={16} />}
+              variant="tertiary"
+              onPress={() => onView(asset.id)}
+            />
+            <Tooltip>View details</Tooltip>
+          </TooltipTrigger>
+        </Flex>
+      </CardFooter>
     </Card>
   );
 }

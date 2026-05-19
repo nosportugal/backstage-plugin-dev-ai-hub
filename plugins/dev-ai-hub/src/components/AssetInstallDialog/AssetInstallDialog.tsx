@@ -1,26 +1,17 @@
 import { useState } from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import CircularProgress from '@mui/material/CircularProgress';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import LinearProgress from '@mui/material/LinearProgress';
-import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import DownloadIcon from '@mui/icons-material/Download';
-import CheckIcon from '@mui/icons-material/Check';
-import FolderZipIcon from '@mui/icons-material/FolderZip';
+import {
+  Box, Flex, Text, Button, Tag, TagGroup, Skeleton,
+  Dialog, DialogTrigger, DialogHeader, DialogBody, DialogFooter,
+  Tooltip, TooltipTrigger,
+} from '@backstage/ui';
+import { RiFileCopyLine, RiDownloadLine, RiCheckLine, RiFolderZipLine } from '@remixicon/react';
 import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
 import { getInstallPathsForAsset } from '@nospt/plugin-dev-ai-hub-common';
 import { useApi } from '@backstage/core-plugin-api';
 import { devAiHubApiRef } from '../../api/DevAiHubClient';
 import { useAssetDetail } from '../../hooks';
 import { ToolIcon } from '../ToolIcon';
-import { devAiHubTranslationRef } from '../../translation';
+import styles from './AssetInstallDialog.module.css';
 
 const TOOL_LABELS: Record<string, string> = {
   'claude-code':    'Claude Code',
@@ -280,242 +271,99 @@ function BundleItemStep({ item, stepIndex, total }: BundleItemStepProps) {
   const showVscodeButton = asset && canUseVscodeDeepLink(asset.type, asset.tools, installPaths['github-copilot']);
 
   return (
-    <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-        <Typography variant="caption" color="text.secondary">
-          {t('assetInstallDialog.stepProgress', { current: stepIndex + 1, total })}
-        </Typography>
-        {item.type && (
-          <Chip label={item.type} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.65rem' }} />
-        )}
-      </Box>
+    <DialogTrigger>
+      <Dialog
+        isOpen={!!assetId}
+        isDismissable
+        onOpenChange={open => { if (!open) handleClose(); }}
+      >
+        <DialogHeader>
+          {asset ? `Install: ${asset.name}` : 'Install'}
+          <Text variant="body-small" color="secondary" className={styles.subtitle}>
+            Copy the content and place the file at the path shown for your tool.
+          </Text>
+        </DialogHeader>
 
-      <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.25 }}>
-        {item.label ?? item.name ?? item.ref}
-      </Typography>
+        <DialogBody>
+          <Flex direction="column" style={{ gap: 'var(--bui-space-3)' }}>
+            {loading && (
+              <Flex className={styles.loadingContainer}>
+                <Skeleton style={{ width: '100%', height: 80 }} />
+              </Flex>
+            )}
 
-      {item.description && (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-          {item.description}
-        </Typography>
-      )}
+            {!loading && asset && isZipSkill && (
+              <Box className={styles.zipInfo}>
+                <Flex className={styles.zipHeader}>
+                  <RiFolderZipLine size={16} style={{ color: 'var(--bui-fg-info)' }} />
+                  <Text variant="body-small" weight="bold" style={{ color: 'var(--bui-fg-info)' }}>
+                    Bundled skill — downloads as .zip
+                  </Text>
+                </Flex>
+                <Text variant="body-x-small" color="secondary" style={{ display: 'block', marginBottom: 'var(--bui-space-2)' }}>
+                  This skill includes resource files alongside <code>SKILL.md</code>.
+                  Extract the zip and place all files in the skill directory.
+                </Text>
+                <TagGroup aria-label="Bundled files">
+                  <Flex className={styles.zipFiles}>
+                    <Tag id="skill-md" size="small" className={styles.monoTag}>SKILL.md</Tag>
+                    {resourcePaths.map(p => (
+                      <Tag key={p} id={p} size="small" className={styles.monoTag}>{p}</Tag>
+                    ))}
+                  </Flex>
+                </TagGroup>
+              </Box>
+            )}
 
-      {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-          <CircularProgress size={24} />
-        </Box>
-      )}
+            {!loading && asset && Object.entries(installPaths).map(([tool, installPath]) => (
+              <Box key={tool} className={styles.toolSection}>
+                <Flex className={styles.toolHeader}>
+                  <ToolIcon tool={tool as AiTool} size={16} />
+                  <Text variant="body-small" weight="bold">
+                    {TOOL_LABELS[tool] ?? tool}
+                  </Text>
+                </Flex>
 
-      {!loading && !item.assetId && (
-        <Box
-          sx={{
-            border: '1px dashed',
-            borderColor: 'warning.main',
-            borderRadius: 2,
-            p: 1.5,
-            bgcolor: theme => `${theme.palette.warning.main}10`,
-          }}
-        >
-          <Typography variant="body2" color="warning.main" fontWeight={600}>
-            {t('assetInstallDialog.notSyncedTitle')}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {t('assetInstallDialog.notSyncedRef', { ref: item.ref })}
-          </Typography>
-        </Box>
-      )}
+                <Text variant="body-x-small" color="secondary" style={{ display: 'block', marginBottom: 'var(--bui-space-1)' }}>
+                  Install path
+                </Text>
+                <Box className={styles.installPathBox}>
+                  {installPath}
+                </Box>
 
-      {!loading && asset && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {firstInstallPath && (
-            <Box
-              sx={{
-                bgcolor: 'action.hover',
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-                px: 1.5,
-                py: 0.75,
-                fontFamily: 'monospace',
-                fontSize: '0.78rem',
-                wordBreak: 'break-all',
-              }}
-            >
-              {firstInstallPath}
-            </Box>
-          )}
+                <Flex className={styles.toolActions}>
+                  <TooltipTrigger>
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleCopy(tool)}
+                    >
+                      {copiedTool === tool ? <RiCheckLine size={14} /> : <RiFileCopyLine size={14} />}
+                      {copiedTool === tool ? 'Copied!' : 'Copy Content'}
+                    </Button>
+                    <Tooltip>{copiedTool === tool ? 'Copied!' : 'Copy markdown content'}</Tooltip>
+                  </TooltipTrigger>
+                  <TooltipTrigger>
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleDownload(tool, installPath)}
+                    >
+                      {isZipSkill ? <RiFolderZipLine size={14} /> : <RiDownloadLine size={14} />}
+                      {isZipSkill ? 'Download .zip' : 'Download'}
+                    </Button>
+                    <Tooltip>{isZipSkill ? 'Download as .zip with all bundled files' : 'Download file with correct name'}</Tooltip>
+                  </TooltipTrigger>
+                </Flex>
+              </Box>
+            ))}
+          </Flex>
+        </DialogBody>
 
-          {showVscodeButton && (
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<OpenInBrowserIcon />}
-              onClick={handleInstallInVscode}
-              fullWidth
-            >
-              {t('assetInstallDialog.installInVscode')}
-            </Button>
-          )}
-
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={copied ? <CheckIcon /> : <ContentCopyIcon />}
-              onClick={handleCopy}
-              color={copied ? 'success' : 'primary'}
-              sx={{ flex: 1 }}
-            >
-              {copied ? t('assetInstallDialog.copied') : t('assetInstallDialog.copyContent')}
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<DownloadIcon />}
-              onClick={handleDownload}
-              sx={{ flex: 1 }}
-            >
-              {t('assetInstallDialog.download')}
-            </Button>
-          </Box>
-        </Box>
-      )}
-    </Box>
-  );
-}
-
-// ─── Main dialog ──────────────────────────────────────────────────────────────
-
-interface AssetInstallDialogProps {
-  assetId: string | null;
-  onClose: () => void;
-}
-
-export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps) {
-  const [step, setStep] = useState(0);
-  const api = useApi(devAiHubApiRef);
-  const { asset, loading } = useAssetDetail(assetId);
-  const { t } = useTranslationRef(devAiHubTranslationRef);
-
-  const handleClose = () => {
-    setStep(0);
-    onClose();
-  };
-
-  const handleDownloadBundle = async () => {
-    if (!asset) return;
-    const url = await api.getDownloadUrl(asset.id);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${asset.name.replace(/\s+/g, '-').toLowerCase()}-bundle.zip`;
-    a.click();
-    api.trackInstall(asset.id).catch(() => {});
-  };
-
-  const isBundle = asset?.type === 'bundle';
-  const bundleItems = isBundle ? (asset.items ?? []) : [];
-  const totalSteps = bundleItems.length;
-  const progress = totalSteps > 0 ? ((step + 1) / totalSteps) * 100 : 0;
-
-  return (
-    <Dialog open={!!assetId} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ pb: 1 }}>
-        {isBundle ? (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Inventory2Icon sx={{ color: '#8B5CF6', fontSize: '1.4rem' }} />
-            <Box>
-              <Typography variant="h6" fontWeight={700}>
-                {t('assetInstallDialog.dialogTitleBundle', { name: asset?.name ?? '' })}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 400 }}>
-                {t('assetInstallDialog.dialogSubtitleBundle')}
-              </Typography>
-            </Box>
-          </Box>
-        ) : (
-          <>
-            <Typography variant="h6" fontWeight={700}>
-              {asset ? t('assetInstallDialog.dialogTitle', { name: asset.name }) : t('assetInstallDialog.dialogTitle', { name: '' })}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 400 }}>
-              {t('assetInstallDialog.dialogSubtitle')}
-            </Typography>
-          </>
-        )}
-      </DialogTitle>
-
-      {isBundle && totalSteps > 0 && (
-        <Box sx={{ px: 3, pb: 1 }}>
-          <LinearProgress variant="determinate" value={progress} sx={{ borderRadius: 1, height: 6 }} />
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, textAlign: 'right' }}>
-            {t('assetInstallDialog.bundleProgress', { current: step + 1, total: totalSteps })}
-          </Typography>
-        </Box>
-      )}
-
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, pt: '8px !important' }}>
-        {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-            <CircularProgress />
-          </Box>
-        )}
-
-        {!loading && asset && !isBundle && <SingleAssetView asset={asset} />}
-
-        {!loading && isBundle && bundleItems.length === 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-            {t('assetInstallDialog.bundleEmpty')}
-          </Typography>
-        )}
-
-        {!loading && isBundle && bundleItems.length > 0 && (
-          <BundleItemStep
-            item={bundleItems[step]}
-            stepIndex={step}
-            total={totalSteps}
-          />
-        )}
-      </DialogContent>
-
-      <DialogActions sx={{ justifyContent: 'space-between', px: 2, py: 1.5 }}>
-        {isBundle ? (
-          <>
-            <Button
-              startIcon={<FolderZipIcon />}
-              variant="outlined"
-              size="small"
-              onClick={handleDownloadBundle}
-              disabled={!asset}
-            >
-              {t('assetInstallDialog.downloadBundle')}
-            </Button>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button
-                startIcon={<ArrowBackIcon />}
-                onClick={() => setStep(s => Math.max(0, s - 1))}
-                disabled={step === 0}
-              >
-                {t('assetInstallDialog.back')}
-              </Button>
-              {step < totalSteps - 1 ? (
-                <Button
-                  endIcon={<ArrowForwardIcon />}
-                  variant="contained"
-                  onClick={() => setStep(s => Math.min(totalSteps - 1, s + 1))}
-                >
-                  {t('assetInstallDialog.next')}
-                </Button>
-              ) : (
-                <Button variant="contained" color="success" onClick={handleClose}>
-                  {t('assetInstallDialog.finish')}
-                </Button>
-              )}
-            </Box>
-          </>
-        ) : (
-          <Button onClick={handleClose} sx={{ ml: 'auto' }}>{t('assetInstallDialog.close')}</Button>
-        )}
-      </DialogActions>
-    </Dialog>
+        <DialogFooter>
+          <Button onClick={handleClose} variant="secondary" slot="close">
+            Close
+          </Button>
+        </DialogFooter>
+      </Dialog>
+    </DialogTrigger>
   );
 }

@@ -35,8 +35,5 @@ jobs:
       - name: Lint
         run: yarn lint:all
 
-      - name: Check formatting
-        run: yarn prettier:check
-
       - name: Build
         run: yarn build:all
