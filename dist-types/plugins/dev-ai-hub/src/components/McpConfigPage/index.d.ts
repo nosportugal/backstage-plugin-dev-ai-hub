@@ -1,0 +1,1 @@
+export { McpConfigPage } from './McpConfigPage';

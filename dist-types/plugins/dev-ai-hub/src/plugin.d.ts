@@ -1,5 +1,6 @@
 export declare const devAiHubPlugin: import("@backstage/frontend-plugin-api").OverridableFrontendPlugin<{
     root: import("@backstage/frontend-plugin-api").RouteRef<undefined>;
+    mcpConfig: import("@backstage/frontend-plugin-api").RouteRef<undefined>;
 }, {}, {
     "api:dev-ai-hub": import("@backstage/frontend-plugin-api").OverridableExtensionDefinition<{
         kind: "api";
@@ -13,8 +14,12 @@ export declare const devAiHubPlugin: import("@backstage/frontend-plugin-api").Ov
     "nav-item:dev-ai-hub": import("@backstage/frontend-plugin-api").OverridableExtensionDefinition<{
         kind: "nav-item";
         name: undefined;
-        config: {};
-        configInput: {};
+        config: {
+            title: string | undefined;
+        };
+        configInput: {
+            title?: string | undefined;
+        };
         output: import("@backstage/frontend-plugin-api").ExtensionDataRef<{
             title: string;
             icon: import("@backstage/frontend-plugin-api").IconComponent;
@@ -35,8 +40,8 @@ export declare const devAiHubPlugin: import("@backstage/frontend-plugin-api").Ov
             title: string | undefined;
         };
         configInput: {
-            title?: string | undefined;
             path?: string | undefined;
+            title?: string | undefined;
         };
         output: import("@backstage/frontend-plugin-api").ExtensionDataRef<string, "core.routing.path", {}> | import("@backstage/frontend-plugin-api").ExtensionDataRef<import("@backstage/frontend-plugin-api").RouteRef<import("@backstage/frontend-plugin-api").AnyRouteRefParams>, "core.routing.ref", {
             optional: true;
@@ -59,7 +64,6 @@ export declare const devAiHubPlugin: import("@backstage/frontend-plugin-api").Ov
             }>;
         };
         params: {
-            defaultPath?: [Error: `Use the 'path' param instead`];
             path: string;
             title?: string;
             icon?: import("@backstage/frontend-plugin-api").IconElement;

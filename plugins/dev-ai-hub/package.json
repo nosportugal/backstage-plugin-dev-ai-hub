@@ -57,6 +57,7 @@
   "devDependencies": {
     "@backstage/cli": "^0.36.1",
     "@backstage/dev-utils": "^1.1.22",
+    "@testing-library/dom": "^10.0.0",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^16.3.1",
     "@types/jest": "^30.0.0",
@@ -70,6 +71,7 @@
   },
   "peerDependencies": {
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "react-router-dom": "^6.0.0"
   }
 }
