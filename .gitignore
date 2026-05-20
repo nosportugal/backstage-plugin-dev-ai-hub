@@ -1,8 +1,17 @@
 node_modules/
 dist/
+dist-types/
 .cache/
 coverage/
 *.tsbuildinfo
 .yarn/cache
 .yarn/install-state.gz
+
+# Playwright
 test-results/
+playwright-report/
+playwright-results.json
+**/.auth.json
+
+# Claude Code
+.claude/
