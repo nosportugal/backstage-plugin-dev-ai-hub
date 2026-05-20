@@ -5,3 +5,4 @@ coverage/
 *.tsbuildinfo
 .yarn/cache
 .yarn/install-state.gz
+test-results/
