@@ -1,3 +1,2 @@
 yarn tsc
 yarn lint:all
-yarn build:all
