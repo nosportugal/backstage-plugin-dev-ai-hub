@@ -1,5 +1,6 @@
 import { createDevApp } from '@backstage/dev-utils';
 import { DevAiHubPage } from '../src/components/DevAiHubPage';
+import { McpConfigPage } from '../src/components/McpConfigPage';
 import { devAiHubApiRef } from '../src/api/DevAiHubClient';
 import type {
   AiAsset,
@@ -228,5 +229,10 @@ createDevApp()
     element: <DevAiHubPage />,
     title: 'Dev AI Hub',
     path: '/dev-ai-hub',
+  })
+  .addPage({
+    element: <McpConfigPage />,
+    title: 'MCP Config',
+    path: '/mcp-config',
   })
   .render();

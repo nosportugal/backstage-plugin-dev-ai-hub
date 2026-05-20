@@ -38,6 +38,9 @@
     "prepack": "backstage-cli package prepack",
     "postpack": "backstage-cli package postpack",
     "test": "backstage-cli package test --passWithNoTests --watchAll=false",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
     "tsc": "tsc --noEmit"
   },
   "dependencies": {
@@ -57,6 +60,7 @@
   "devDependencies": {
     "@backstage/cli": "^0.36.1",
     "@backstage/dev-utils": "^1.1.22",
+    "@playwright/test": "^1.48.0",
     "@testing-library/dom": "^10.0.0",
     "@testing-library/jest-dom": "^6.0.0",
     "@testing-library/react": "^16.3.1",
