@@ -19,6 +19,7 @@ export const test = base.extend<object>({
         configurable: true,
       });
     });
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(page);
   },
 });

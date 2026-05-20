@@ -1,5 +1,5 @@
 import { chromium } from '@playwright/test';
-import path from 'path';
+import path from 'node:path';
 
 export const STORAGE_STATE = path.join(__dirname, '.auth.json');
 
