@@ -1,0 +1,226 @@
+name: E2E
+
+on:
+  push:
+    branches: [main, main-nos]
+  pull_request:
+    branches: [main, main-nos]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  e2e:
+    name: E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.3.0
+        with:
+          node-version: "24"
+
+      - name: Enable Corepack & activate Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@4.13.0 --activate
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        id: playwright
+        run: npx playwright test --reporter=line,html,json
+        env:
+          CI: "true"
+          PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-results.json
+        continue-on-error: true
+
+      - name: Write step summary
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const fs = require('fs');
+            try {
+              const raw = fs.readFileSync('playwright-results.json', 'utf8');
+              const results = JSON.parse(raw);
+              const { expected: passed, unexpected: failed, skipped, flaky, duration } = results.stats;
+              const total = passed + failed + skipped;
+              const icon = failed > 0 ? '❌' : '✅';
+              const statusLabel = failed > 0 ? 'Failed' : 'Passed';
+              const durationSec = (duration / 1000).toFixed(1);
+
+              // Collect every test with its status and duration
+              const allTests = [];
+              const failedDetails = [];
+
+              const collectTests = (suites, parentTitle = '') => {
+                for (const suite of suites || []) {
+                  const title = parentTitle ? `${parentTitle} › ${suite.title}` : suite.title;
+                  for (const spec of suite.specs || []) {
+                    for (const test of spec.tests || []) {
+                      const dur = test.results.reduce((s, r) => s + r.duration, 0);
+                      const statusIcon =
+                        test.status === 'expected'   ? '✅' :
+                        test.status === 'unexpected' ? '❌' :
+                        test.status === 'skipped'    ? '⏭️' : '⚡';
+                      allTests.push([title, spec.title, statusIcon, `${(dur / 1000).toFixed(1)}s`]);
+                      if (test.status === 'unexpected') {
+                        const msg = test.results.map(r => r.error?.message || '').filter(Boolean).join('\n');
+                        failedDetails.push({ label: `${title} › ${spec.title}`, msg });
+                      }
+                    }
+                  }
+                  collectTests(suite.suites, title);
+                }
+              };
+              collectTests(results.suites);
+
+              // Stats table
+              await core.summary
+                .addHeading(`${icon} E2E Tests — ${statusLabel}`)
+                .addTable([
+                  [{data: '', header: true}, {data: 'Count', header: true}],
+                  ['✅ Passed',   String(passed)],
+                  ['❌ Failed',   String(failed)],
+                  ['⏭️ Skipped', String(skipped)],
+                  ['⚡ Flaky',   String(flaky)],
+                  ['Total',       String(total)],
+                  ['⏱️ Duration', `${durationSec}s`],
+                ])
+                .write();
+
+              // Per-test results table
+              if (allTests.length > 0) {
+                await core.summary
+                  .addHeading('Test results', 3)
+                  .addTable([
+                    [
+                      {data: 'Suite',    header: true},
+                      {data: 'Test',     header: true},
+                      {data: 'Status',   header: true},
+                      {data: 'Duration', header: true},
+                    ],
+                    ...allTests,
+                  ])
+                  .write();
+              }
+
+              // Collapsible error details for each failed test
+              for (const { label, msg } of failedDetails) {
+                await core.summary
+                  .addDetails(`❌ ${label}`, `\n\`\`\`\n${msg || 'No error message available'}\n\`\`\`\n`)
+                  .write();
+              }
+            } catch (err) {
+              await core.summary
+                .addHeading('❌ E2E Tests — Could not parse results')
+                .write();
+            }
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Comment PR with test results
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const fs = require('fs');
+            const outcome = '${{ steps.playwright.outcome }}';
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+
+            let body;
+            try {
+              const raw = fs.readFileSync('playwright-results.json', 'utf8');
+              const results = JSON.parse(raw);
+              const { expected: passed, unexpected: failed, skipped, flaky, duration } = results.stats;
+              const total = passed + failed + skipped;
+              const icon = failed > 0 ? '❌' : '✅';
+              const statusLabel = failed > 0 ? 'Failed' : 'Passed';
+              const durationSec = (duration / 1000).toFixed(1);
+
+              const failedTests = [];
+              const collectFailed = (suites) => {
+                for (const suite of suites || []) {
+                  for (const spec of suite.specs || []) {
+                    for (const test of spec.tests || []) {
+                      if (test.status === 'unexpected') {
+                        failedTests.push(`\`${suite.title}\` › **${spec.title}**`);
+                      }
+                    }
+                  }
+                  collectFailed(suite.suites);
+                }
+              };
+              collectFailed(results.suites);
+
+              const failedSection = failedTests.length > 0
+                ? `\n### Failed tests\n${failedTests.map(t => `- ${t}`).join('\n')}\n`
+                : '';
+
+              body = [
+                `## ${icon} E2E Tests — ${statusLabel}`,
+                '',
+                `| | Count |`,
+                `|---|---|`,
+                `| ✅ Passed | ${passed} |`,
+                `| ❌ Failed | ${failed} |`,
+                `| ⏭️ Skipped | ${skipped} |`,
+                `| ⚡ Flaky | ${flaky} |`,
+                `| **Total** | **${total}** |`,
+                `| ⏱️ Duration | ${durationSec}s |`,
+                failedSection,
+                `> 📊 [View full Playwright report](${runUrl})`,
+                `<!-- playwright-e2e-comment -->`,
+              ].join('\n');
+            } catch (err) {
+              body = [
+                `## ❌ E2E Tests — Could not parse results`,
+                '',
+                `The test run ${outcome === 'failure' ? 'failed' : 'completed'} but results could not be read.`,
+                '',
+                `> 🔍 [View workflow run](${runUrl})`,
+                `<!-- playwright-e2e-comment -->`,
+              ].join('\n');
+            }
+
+            const marker = '<!-- playwright-e2e-comment -->';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Fail job if tests failed
+        if: steps.playwright.outcome == 'failure'
+        run: exit 1

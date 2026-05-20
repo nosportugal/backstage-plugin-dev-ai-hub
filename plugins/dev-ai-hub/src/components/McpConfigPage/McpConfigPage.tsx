@@ -195,7 +195,7 @@ export function McpConfigPage() {
                   </Text>
                   <TooltipTrigger>
                     <ButtonIcon
-                      aria-label="Copy URL"
+                      aria-label={copiedUrl ? 'Copied!' : 'Copy URL'}
                       icon={copiedUrl ? <RiCheckLine size={14} style={{ color: 'var(--bui-fg-success)' }} /> : <RiFileCopyLine size={14} />}
                       variant="tertiary"
                       onPress={() => copyUrl(mcpUrl)}
