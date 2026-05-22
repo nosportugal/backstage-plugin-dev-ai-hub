@@ -6,8 +6,11 @@ import type { AiAssetInput } from '../types';
 
 export interface ParsedAssetMeta {
   meta: AiAssetFrontmatter;
-  /** Resolved path of the .md content file within the repo tree */
-  mdPath: string;
+  /**
+   * Resolved explicit .md path — only set when the YAML has a `content:` field.
+   * When absent, the sync service resolves the md file by directory junction.
+   */
+  mdPath?: string;
   yamlRaw: string;
 }
 
@@ -34,13 +37,11 @@ export class AssetParser {
 
     const meta = result.data;
 
-    // Resolve .md path: use the `content` field, or fall back to <slugified-name>.md
-    const nameSlug = meta.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '');
-    const mdReference = meta.content ?? `${nameSlug}.md`;
-    const mdPath = path.posix.join(
-      path.posix.dirname(yamlFilePath),
-      mdReference,
-    );
+    // Only resolve mdPath when content: is explicitly set in the YAML.
+    // Otherwise the sync service pairs yaml + md by directory junction.
+    const mdPath = meta.content
+      ? path.posix.join(path.posix.dirname(yamlFilePath), meta.content)
+      : undefined;
 
     return { meta, mdPath, yamlRaw: yamlContent };
   }
@@ -48,6 +49,7 @@ export class AssetParser {
   /**
    * Build the full AiAssetInput from parsed metadata + raw markdown content.
    * The mdContent is stored verbatim — never modified.
+   * actualMdPath is the resolved path of the md file as found by the sync service.
    */
   static buildAsset(
     parsed: ParsedAssetMeta,
@@ -56,6 +58,7 @@ export class AssetParser {
     repoUrl: string,
     branch: string,
     yamlFilePath: string,
+    actualMdPath: string,
     resourcesContent?: Record<string, string>,
   ): AiAssetInput {
     const { meta } = parsed;
@@ -85,7 +88,7 @@ export class AssetParser {
       metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
       resourcesContent,
       yamlPath: yamlFilePath,
-      mdPath: parsed.mdPath,
+      mdPath: actualMdPath,
       repoUrl,
       branch,
     };

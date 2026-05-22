@@ -16,9 +16,18 @@ backend:
 
 devAiHub:
   providers:
-    - id: example
+    - id: backstage-test-01
       type: github
-      target: https://github.com/your-org/your-ai-assets.git
+      target: https://github.com/nosportugal/backstage-test-01.git
+      branch: main
+      schedule:
+        frequency:
+          minutes: 60
+        timeout:
+          minutes: 5
+    - id: flai-ai-dev-coe-toolkit
+      type: github
+      target: https://github.com/nosportugal/flai-ai-dev-coe-toolkit.git
       branch: main
       schedule:
         frequency:
@@ -26,8 +35,15 @@ devAiHub:
         timeout:
           minutes: 5
 
+
 # GitHub integration — required for the sync to fetch files
 integrations:
   github:
     - host: github.com
-      token: ${GITHUB_TOKEN}
+      apps:
+        - appId: ${GITHUB_APP_ID}
+          clientId: ${GITHUB_CLIENT_ID}
+          clientSecret: ${GITHUB_CLIENT_SECRET}
+          privateKey: ${GITHUB_PRIVATE_KEY}
+          allowedInstallationOwners:
+            - nosportugal

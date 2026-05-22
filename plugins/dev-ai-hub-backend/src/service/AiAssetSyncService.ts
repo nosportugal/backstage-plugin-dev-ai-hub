@@ -123,12 +123,44 @@ export class AiAssetSyncService {
           if (!hasMatchingTool) continue;
         }
 
-        const mdFile = fileMap.get(normalizePath(parsed.mdPath));
-        if (!mdFile) {
-          logger.warn(
-            `dev-ai-hub: .md not found for ${filePath} (expected ${parsed.mdPath}), skipping`,
-          );
-          continue;
+        // Resolve the .md file:
+        //   - explicit: yaml has a content: field → use that exact path
+        //   - junction: find the single .md co-located in the same directory
+        const yamlDir = filePath.includes('/')
+          ? filePath.split('/').slice(0, -1).join('/')
+          : '';
+
+        let resolvedMdPath: string;
+        let mdFile: { content(): Promise<Buffer>; path: string } | undefined;
+
+        if (parsed.mdPath) {
+          resolvedMdPath = normalizePath(parsed.mdPath);
+          mdFile = fileMap.get(resolvedMdPath);
+          if (!mdFile) {
+            logger.warn(
+              `dev-ai-hub: content file "${parsed.mdPath}" not found for ${filePath}, skipping`,
+            );
+            continue;
+          }
+        } else {
+          const mdCandidates = [...fileMap.keys()].filter(p => {
+            const dir = p.includes('/') ? p.split('/').slice(0, -1).join('/') : '';
+            return dir === yamlDir && p.endsWith('.md');
+          });
+          if (mdCandidates.length === 1) {
+            resolvedMdPath = mdCandidates[0];
+            mdFile = fileMap.get(resolvedMdPath)!;
+          } else if (mdCandidates.length > 1) {
+            logger.warn(
+              `dev-ai-hub: multiple .md files in "${yamlDir || '.'}" for ${filePath} — add a 'content' field to the YAML to specify which one, skipping`,
+            );
+            continue;
+          } else {
+            logger.warn(
+              `dev-ai-hub: no .md file found for ${filePath}, skipping`,
+            );
+            continue;
+          }
         }
 
         const mdContent = (await mdFile.content()).toString('utf-8');
@@ -138,7 +170,6 @@ export class AiAssetSyncService {
         const resourcePaths = parsed.meta.resources;
         if (resourcePaths && resourcePaths.length > 0) {
           resourcesContent = {};
-          const yamlDir = filePath.split('/').slice(0, -1).join('/');
           for (const resourcePath of resourcePaths) {
             const fullPath = normalizePath(
               yamlDir ? `${yamlDir}/${resourcePath}` : resourcePath,
@@ -162,6 +193,7 @@ export class AiAssetSyncService {
           provider.target,
           provider.branch,
           filePath,
+          resolvedMdPath,
           resourcesContent,
         );
 

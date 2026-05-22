@@ -26,9 +26,9 @@ describe('AssetParser.parseYaml', () => {
     expect(result!.yamlRaw).toBe(VALID_YAML);
   });
 
-  it('derives mdPath from the yaml file name by default', () => {
+  it('leaves mdPath undefined when no content field is set', () => {
     const result = AssetParser.parseYaml(VALID_YAML, 'instructions/my-instruction.yaml');
-    expect(result!.mdPath).toBe('instructions/my-instruction.md');
+    expect(result!.mdPath).toBeUndefined();
   });
 
   it('uses the content field to resolve mdPath when present', () => {
@@ -157,6 +157,7 @@ describe('AssetParser.buildAsset', () => {
       'https://github.com/org/repo',
       'main',
       'instructions/my-instruction.yaml',
+      'instructions/my-instruction.md',
     );
 
     expect(asset.id).toBe(AssetParser.buildId('my-provider', 'instructions/my-instruction.yaml'));
@@ -178,14 +179,14 @@ describe('AssetParser.buildAsset', () => {
   it('sets metadata.mcpServers when mcpServers is present in the YAML', () => {
     const yaml = `${VALID_YAML}mcpServers:\n  my-server:\n    url: http://localhost\n`;
     const parsedWithMcp = AssetParser.parseYaml(yaml, 'agents/agent.yaml')!;
-    const asset = AssetParser.buildAsset(parsedWithMcp, '', 'p', 'url', 'main', 'agents/agent.yaml');
+    const asset = AssetParser.buildAsset(parsedWithMcp, '', 'p', 'url', 'main', 'agents/agent.yaml', 'agents/agent.md');
     expect(asset.metadata?.mcpServers).toEqual({ 'my-server': { url: 'http://localhost' } });
   });
 
   it('sets metadata.steps when steps is present in the YAML', () => {
     const yaml = `${VALID_YAML}steps:\n  - name: step1\n    action: do-something\n`;
     const parsedWithSteps = AssetParser.parseYaml(yaml, 'workflows/w.yaml')!;
-    const asset = AssetParser.buildAsset(parsedWithSteps, '', 'p', 'url', 'main', 'workflows/w.yaml');
+    const asset = AssetParser.buildAsset(parsedWithSteps, '', 'p', 'url', 'main', 'workflows/w.yaml', 'workflows/w.md');
     expect(asset.metadata?.steps).toEqual([{ name: 'step1', action: 'do-something' }]);
   });
 
@@ -197,6 +198,7 @@ describe('AssetParser.buildAsset', () => {
       'url',
       'main',
       'instructions/my-instruction.yaml',
+      'instructions/my-instruction.md',
     );
     expect(asset.metadata).toBeUndefined();
   });
@@ -210,7 +212,7 @@ tools:
   - claude-code
 `;
     const parsedNoTags = AssetParser.parseYaml(yaml, 'instructions/no-tags.yaml')!;
-    const asset = AssetParser.buildAsset(parsedNoTags, '', 'p', 'url', 'main', 'instructions/no-tags.yaml');
+    const asset = AssetParser.buildAsset(parsedNoTags, '', 'p', 'url', 'main', 'instructions/no-tags.yaml', 'instructions/no-tags.md');
     expect(asset.tags).toEqual([]);
   });
 
@@ -223,7 +225,7 @@ tools:
   - claude-code
 `;
     const parsedNoAuthor = AssetParser.parseYaml(yaml, 'instructions/no-author.yaml')!;
-    const asset = AssetParser.buildAsset(parsedNoAuthor, '', 'p', 'url', 'main', 'instructions/no-author.yaml');
+    const asset = AssetParser.buildAsset(parsedNoAuthor, '', 'p', 'url', 'main', 'instructions/no-author.yaml', 'instructions/no-author.md');
     expect(asset.author).toBe('Unknown');
   });
 });
@@ -233,19 +235,19 @@ describe('AssetParser.parseYaml — schema-as-gatekeeper (arbitrary path discove
     const result = AssetParser.parseYaml(VALID_YAML, 'ai-artifacts/my-agent.yaml');
     expect(result).not.toBeNull();
     expect(result!.meta.name).toBe('My Instruction');
-    expect(result!.mdPath).toBe('ai-artifacts/my-instruction.md');
+    expect(result!.mdPath).toBeUndefined();
   });
 
   it('discovers a valid asset at a deeply nested path', () => {
     const result = AssetParser.parseYaml(VALID_YAML, 'team/ai-assets/copilot/my-agent.yaml');
     expect(result).not.toBeNull();
-    expect(result!.mdPath).toBe('team/ai-assets/copilot/my-instruction.md');
+    expect(result!.mdPath).toBeUndefined();
   });
 
   it('discovers a valid asset at the repo root (no subdirectory)', () => {
     const result = AssetParser.parseYaml(VALID_YAML, 'my-instruction.yaml');
     expect(result).not.toBeNull();
-    expect(result!.mdPath).toBe('my-instruction.md');
+    expect(result!.mdPath).toBeUndefined();
   });
 
   it('rejects a GitHub Actions workflow YAML (missing required fields)', () => {
@@ -318,9 +320,10 @@ tools:
       'https://github.com/org/repo',
       'main',
       'ai-artifacts/my-agent.yaml',
+      'ai-artifacts/SKILL.md',
     );
     expect(asset.yamlPath).toBe('ai-artifacts/my-agent.yaml');
-    expect(asset.mdPath).toBe('ai-artifacts/my-instruction.md');
+    expect(asset.mdPath).toBe('ai-artifacts/SKILL.md');
     expect(asset.id).toBe(AssetParser.buildId('my-provider', 'ai-artifacts/my-agent.yaml'));
   });
 });
