@@ -42,7 +42,13 @@ devAiHub:
 integrations:
   github:
     - host: github.com
-      token: ${GITHUB_TOKEN}
+      apps:
+        - appId: ${GITHUB_APP_ID}
+          clientId: ${GITHUB_CLIENT_ID}
+          clientSecret: ${GITHUB_CLIENT_SECRET}
+          privateKey: ${GITHUB_PRIVATE_KEY}
+          allowedInstallationOwners:
+            - nosportugal
 
 # ─────────────────────────────────────────────────────────────────────────────
 # MCP Client Configuration

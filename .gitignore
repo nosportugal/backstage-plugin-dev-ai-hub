@@ -15,3 +15,7 @@ playwright-results.json
 
 # Claude Code
 .claude/
+
+# Local environment secrets
+.envrc
+.env
