@@ -41,8 +41,6 @@ backend.add(import('@nospt/plugin-dev-ai-hub-backend'));
 
 ### 3. Register the frontend plugin
 
-#### New Frontend System (NFS)
-
 In `packages/app/src/App.tsx`:
 
 ```typescript
@@ -57,28 +55,6 @@ const app = createApp({
 ```
 
 The sidebar item is registered automatically — no additional configuration needed.
-
-#### Legacy frontend system
-
-In `packages/app/src/App.tsx`, add the route inside `<FlatRoutes>`:
-
-```typescript
-import { DevAiHubPage } from '@nospt/plugin-dev-ai-hub';
-
-// inside <FlatRoutes>:
-<Route path="/dev-ai-hub" element={<DevAiHubPage />} />
-```
-
-In `packages/app/src/components/Root/Root.tsx`, add the sidebar item:
-
-```typescript
-import HubIcon from '@mui/icons-material/Hub';
-
-// inside <SidebarGroup>:
-<SidebarItem icon={HubIcon} to="dev-ai-hub" text="AI Hub" />
-```
-
-The API client is registered automatically when `DevAiHubPage` is used — no extra plugin registration needed.
 
 ### 4. Configure `app-config.yaml`
 
