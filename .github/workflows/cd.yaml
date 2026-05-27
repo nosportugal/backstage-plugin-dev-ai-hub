@@ -43,22 +43,22 @@ jobs:
         working-directory: plugins/dev-ai-hub-common
         run: |
           yarn pack -o package.tgz
-          npm publish package.tgz --access public --provenance
+          npm publish package.tgz --access public
 
       - name: Publish dev-ai-hub-node
         working-directory: plugins/dev-ai-hub-node
         run: |
           yarn pack -o package.tgz
-          npm publish package.tgz --access public --provenance
+          npm publish package.tgz --access public
 
       - name: Publish dev-ai-hub
         working-directory: plugins/dev-ai-hub
         run: |
           yarn pack -o package.tgz
-          npm publish package.tgz --access public --provenance
+          npm publish package.tgz --access public
 
       - name: Publish dev-ai-hub-backend
         working-directory: plugins/dev-ai-hub-backend
         run: |
           yarn pack -o package.tgz
-          npm publish package.tgz --access public --provenance
+          npm publish package.tgz --access public
