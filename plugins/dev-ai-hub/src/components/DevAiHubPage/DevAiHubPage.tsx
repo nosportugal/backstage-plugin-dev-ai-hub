@@ -2,6 +2,7 @@ import { useState, useMemo, type ElementType } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Box, Flex, Text, Skeleton, TablePagination } from '@backstage/ui';
 import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine } from '@remixicon/react';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import type { AssetType, AiTool } from '@nospt/plugin-dev-ai-hub-common';
 import { AssetCard } from '../AssetCard';
 import { AssetFilters } from '../AssetFilters';
@@ -103,6 +104,12 @@ export function DevAiHubPage() {
 
   return (
     <div className={styles.pageRoot}>
+      <div className={styles.pageHeader}>
+        <Flex gap="3" align="center">
+          <SmartToyIcon className={styles.pageHeaderIcon} />
+          <Text variant="title-large" weight="bold">Dev AI Hub</Text>
+        </Flex>
+      </div>
       <div className={styles.content}>
         {/* Stats row */}
         <div className={styles.statsGrid}>
