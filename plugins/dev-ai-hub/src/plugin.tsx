@@ -7,7 +7,7 @@ import {
   discoveryApiRef,
   fetchApiRef,
 } from '@backstage/frontend-plugin-api';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
+import { RiRobot3Fill } from '@remixicon/react';
 import { devAiHubApiRef, DevAiHubClient } from './api/DevAiHubClient';
 import { rootRouteRef, mcpConfigRouteRef } from './routes';
 
@@ -33,7 +33,7 @@ export const devAiHubPlugin = createFrontendPlugin({
       params: {
         path: '/dev-ai-hub',
         title: 'Dev AI Hub',
-        icon: <SmartToyIcon />,
+        icon: <RiRobot3Fill />,
         routeRef: rootRouteRef,
       },
     }),
