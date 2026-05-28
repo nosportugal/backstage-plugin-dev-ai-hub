@@ -5,6 +5,16 @@
     height: 100%;
   }
 
+  .pageHeader {
+    padding: var(--bui-space-6) var(--bui-space-6) 0;
+    flex-shrink: 0;
+  }
+
+  .pageHeaderIcon {
+    font-size: 28px;
+    opacity: 0.85;
+  }
+
   .content {
     flex: 1;
     padding: var(--bui-space-6);
