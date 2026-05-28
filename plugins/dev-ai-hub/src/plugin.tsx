@@ -8,7 +8,7 @@ import {
   discoveryApiRef,
   fetchApiRef,
 } from '@backstage/frontend-plugin-api';
-import HubIcon from '@mui/icons-material/Hub';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { devAiHubApiRef, DevAiHubClient } from './api/DevAiHubClient';
 import { rootRouteRef, mcpConfigRouteRef } from './routes';
 
@@ -60,7 +60,7 @@ export const devAiHubPlugin = createFrontendPlugin({
       params: {
         title: 'AI Hub',
         routeRef: rootRouteRef,
-        icon: HubIcon,
+        icon: SmartToyIcon,
       },
     }),
   ],
