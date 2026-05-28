@@ -3,7 +3,6 @@ import {
   PageBlueprint,
   SubPageBlueprint,
   ApiBlueprint,
-  NavItemBlueprint,
   createApiFactory,
   discoveryApiRef,
   fetchApiRef,
@@ -34,6 +33,7 @@ export const devAiHubPlugin = createFrontendPlugin({
       params: {
         path: '/dev-ai-hub',
         title: 'Dev AI Hub',
+        icon: <SmartToyIcon />,
         routeRef: rootRouteRef,
       },
     }),
@@ -54,13 +54,6 @@ export const devAiHubPlugin = createFrontendPlugin({
         routeRef: mcpConfigRouteRef,
         loader: () =>
           import('./components/McpConfigPage').then(m => <m.McpConfigPage />),
-      },
-    }),
-    NavItemBlueprint.make({
-      params: {
-        title: 'AI Hub',
-        routeRef: rootRouteRef,
-        icon: SmartToyIcon,
       },
     }),
   ],
