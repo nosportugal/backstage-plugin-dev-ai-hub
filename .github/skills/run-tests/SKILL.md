@@ -17,21 +17,21 @@ yarn test
 
 ### Run tests for a specific plugin
 ```sh
-yarn workspace @nospt/plugin-dev-ai-hub test
-yarn workspace @nospt/plugin-dev-ai-hub-backend test
-yarn workspace @nospt/plugin-dev-ai-hub-common test
-yarn workspace @nospt/plugin-dev-ai-hub-node test
+yarn workspace @julianpedro/plugin-dev-ai-hub test
+yarn workspace @julianpedro/plugin-dev-ai-hub-backend test
+yarn workspace @julianpedro/plugin-dev-ai-hub-common test
+yarn workspace @julianpedro/plugin-dev-ai-hub-node test
 ```
 
 ### Run a specific test file
 ```sh
-yarn workspace @nospt/plugin-dev-ai-hub-backend backstage-cli package test --testPathPattern=AssetParser
-yarn workspace @nospt/plugin-dev-ai-hub-backend backstage-cli package test --testPathPattern=router.smoke
+yarn workspace @julianpedro/plugin-dev-ai-hub-backend backstage-cli package test --testPathPattern=AssetParser
+yarn workspace @julianpedro/plugin-dev-ai-hub-backend backstage-cli package test --testPathPattern=router.smoke
 ```
 
 ### Run in watch mode
 ```sh
-yarn workspace @nospt/plugin-dev-ai-hub-backend backstage-cli package test --watch
+yarn workspace @julianpedro/plugin-dev-ai-hub-backend backstage-cli package test --watch
 ```
 
 ## Test Files

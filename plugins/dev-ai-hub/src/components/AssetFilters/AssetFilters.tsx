@@ -1,7 +1,7 @@
 import type { ElementType } from 'react';
 import { Box, Flex, Text, SearchField, ToggleButton, ToggleButtonGroup } from '@backstage/ui';
 import { RiAppsLine, RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiDatabase2Line } from '@remixicon/react';
-import type { AssetType, AiTool, AiHubProvider } from '@nospt/plugin-dev-ai-hub-common';
+import type { AssetType, AiTool, AiHubProvider } from '@julianpedro/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
 import styles from './AssetFilters.module.css';
 

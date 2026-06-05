@@ -10,7 +10,7 @@ import type {
   AiAssetListResponse,
   AiHubProvider,
   AiHubStats,
-} from '@nospt/plugin-dev-ai-hub-common';
+} from '@julianpedro/plugin-dev-ai-hub-common';
 
 // ── Summary data used in test assertions ──────────────────────────────────────
 

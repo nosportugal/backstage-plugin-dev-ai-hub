@@ -2,8 +2,8 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import type { AiAssetStore } from '../database/AiAssetStore';
 import type { ProviderConfig } from '../types';
-import type { AssetType } from '@nospt/plugin-dev-ai-hub-common';
-import { getInstallPathsForAsset } from '@nospt/plugin-dev-ai-hub-common';
+import type { AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
+import { getInstallPathsForAsset } from '@julianpedro/plugin-dev-ai-hub-common';
 
 /** Derives a human-readable label from a Git target URL. */
 function providerLabel(target: string): string {

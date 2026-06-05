@@ -6,7 +6,7 @@ import {
   Tabs, TabList, Tab, TabPanel,
 } from '@backstage/ui';
 import { RiCloseLine, RiFileCopyLine, RiFolderZipLine, RiExternalLinkLine } from '@remixicon/react';
-import type { AssetType } from '@nospt/plugin-dev-ai-hub-common';
+import type { AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
 import { useAssetDetail } from '../../hooks';
 import styles from './AssetDetailPanel.module.css';
 

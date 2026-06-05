@@ -2,7 +2,7 @@ import type { ElementType } from 'react';
 import { Box, Flex, Text, Card, CardBody, CardFooter, Tag, TagGroup, ButtonIcon, Tooltip, TooltipTrigger } from '@backstage/ui';
 import { RiDownloadLine, RiExternalLinkLine } from '@remixicon/react';
 import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine } from '@remixicon/react';
-import type { AiAssetSummary, AssetType, AiTool } from '@nospt/plugin-dev-ai-hub-common';
+import type { AiAssetSummary, AssetType, AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
 import styles from './AssetCard.module.css';
 

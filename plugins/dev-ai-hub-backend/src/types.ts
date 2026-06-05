@@ -1,4 +1,4 @@
-import type { AiAsset, AssetListFilter } from '@nospt/plugin-dev-ai-hub-common';
+import type { AiAsset, AssetListFilter } from '@julianpedro/plugin-dev-ai-hub-common';
 
 export interface ProviderConfig {
   id: string;

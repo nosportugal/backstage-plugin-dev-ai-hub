@@ -1,5 +1,5 @@
 {
-  "name": "@nospt/plugin-dev-ai-hub-node",
+  "name": "@julianpedro/plugin-dev-ai-hub-node",
   "version": "0.2.4",
   "description": "Node.js extension points for Dev AI Hub",
   "license": "Apache-2.0",
@@ -7,7 +7,7 @@
   "types": "src/index.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nosportugal/backstage-plugin-dev-ai-hub"
+    "url": "https://github.com/JulianPedro/backstage-dev-ai-hub"
   },
   "publishConfig": {
     "access": "public"
@@ -27,10 +27,10 @@
     "role": "node-library",
     "pluginId": "dev-ai-hub",
     "pluginPackages": [
-      "@nospt/plugin-dev-ai-hub",
-      "@nospt/plugin-dev-ai-hub-backend",
-      "@nospt/plugin-dev-ai-hub-common",
-      "@nospt/plugin-dev-ai-hub-node"
+      "@julianpedro/plugin-dev-ai-hub",
+      "@julianpedro/plugin-dev-ai-hub-backend",
+      "@julianpedro/plugin-dev-ai-hub-common",
+      "@julianpedro/plugin-dev-ai-hub-node"
     ]
   },
   "scripts": {
@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@backstage/backend-plugin-api": "^1.7.0",
-    "@nospt/plugin-dev-ai-hub-common": "workspace:^"
+    "@julianpedro/plugin-dev-ai-hub-common": "workspace:^"
   },
   "devDependencies": {
     "@backstage/cli": "^0.36.1",

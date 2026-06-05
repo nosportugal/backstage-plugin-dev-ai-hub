@@ -36,7 +36,7 @@ yarn install
 In `packages/backend/src/index.ts`:
 
 ```typescript
-backend.add(import('@nospt/plugin-dev-ai-hub-backend'));
+backend.add(import('@julianpedro/plugin-dev-ai-hub-backend'));
 ```
 
 ### 3. Register the frontend plugin
@@ -44,7 +44,7 @@ backend.add(import('@nospt/plugin-dev-ai-hub-backend'));
 In `packages/app/src/App.tsx`:
 
 ```typescript
-import { devAiHubPlugin } from '@nospt/plugin-dev-ai-hub';
+import { devAiHubPlugin } from '@julianpedro/plugin-dev-ai-hub';
 
 const app = createApp({
   features: [
@@ -270,10 +270,10 @@ DELETE /api/dev-ai-hub/mcp                    Terminate MCP session
 
 | Package | Role | Description |
 |---------|------|-------------|
-| `@nospt/plugin-dev-ai-hub` | `frontend-plugin` | React UI — page, cards, filters, install dialog |
-| `@nospt/plugin-dev-ai-hub-backend` | `backend-plugin` | Sync service, REST API, embedded MCP server |
-| `@nospt/plugin-dev-ai-hub-common` | `common-library` | Shared TypeScript types, Zod schemas, install path conventions |
-| `@nospt/plugin-dev-ai-hub-node` | `node-library` | Extension points for external provider modules |
+| `@julianpedro/plugin-dev-ai-hub` | `frontend-plugin` | React UI — page, cards, filters, install dialog |
+| `@julianpedro/plugin-dev-ai-hub-backend` | `backend-plugin` | Sync service, REST API, embedded MCP server |
+| `@julianpedro/plugin-dev-ai-hub-common` | `common-library` | Shared TypeScript types, Zod schemas, install path conventions |
+| `@julianpedro/plugin-dev-ai-hub-node` | `node-library` | Extension points for external provider modules |
 
 ---
 

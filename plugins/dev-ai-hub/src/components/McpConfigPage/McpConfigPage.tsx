@@ -8,7 +8,7 @@ import { RiFileCopyLine, RiCheckLine, RiDatabase2Line } from '@remixicon/react';
 import { useApi, discoveryApiRef } from '@backstage/core-plugin-api';
 import { ToolIcon } from '../ToolIcon';
 import { useCopyToClipboard, useProviders } from '../../hooks';
-import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
+import type { AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 import styles from './McpConfigPage.module.css';
 
 interface ToolConfig {

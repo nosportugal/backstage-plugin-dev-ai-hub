@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
+import type { AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 interface ToolIconProps {
     tool: AiTool;
     /** Use the brand's official color. Defaults to true. */

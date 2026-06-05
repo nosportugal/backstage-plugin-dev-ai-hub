@@ -2,7 +2,7 @@ import { useState, useMemo, type ElementType } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Box, Flex, Text, Skeleton, TablePagination } from '@backstage/ui';
 import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine } from '@remixicon/react';
-import type { AssetType, AiTool } from '@nospt/plugin-dev-ai-hub-common';
+import type { AssetType, AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 import { AssetCard } from '../AssetCard';
 import { AssetFilters } from '../AssetFilters';
 import type { AssetFiltersValue } from '../AssetFilters';

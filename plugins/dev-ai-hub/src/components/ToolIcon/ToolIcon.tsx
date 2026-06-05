@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 import { RiInfinityLine, RiNavigationLine } from '@remixicon/react';
 import { siAnthropic, siGithub, siGooglegemini } from 'simple-icons';
-import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
+import type { AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 
 type SvgTool = Exclude<AiTool, 'all' | 'cursor'>;
 

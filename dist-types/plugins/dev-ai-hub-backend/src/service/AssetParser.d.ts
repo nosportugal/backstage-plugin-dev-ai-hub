@@ -1,4 +1,4 @@
-import type { AiAssetFrontmatter } from '@nospt/plugin-dev-ai-hub-common';
+import type { AiAssetFrontmatter } from '@julianpedro/plugin-dev-ai-hub-common';
 import type { AiAssetInput } from '../types';
 export interface ParsedAssetMeta {
     meta: AiAssetFrontmatter;

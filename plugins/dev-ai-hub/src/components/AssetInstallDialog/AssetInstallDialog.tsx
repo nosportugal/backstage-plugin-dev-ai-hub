@@ -5,8 +5,8 @@ import {
   Tooltip, TooltipTrigger,
 } from '@backstage/ui';
 import { RiFileCopyLine, RiDownloadLine, RiCheckLine, RiFolderZipLine } from '@remixicon/react';
-import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
-import { getInstallPathsForAsset } from '@nospt/plugin-dev-ai-hub-common';
+import type { AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
+import { getInstallPathsForAsset } from '@julianpedro/plugin-dev-ai-hub-common';
 import { useApi } from '@backstage/core-plugin-api';
 import { devAiHubApiRef } from '../../api/DevAiHubClient';
 import { useAssetDetail } from '../../hooks';
