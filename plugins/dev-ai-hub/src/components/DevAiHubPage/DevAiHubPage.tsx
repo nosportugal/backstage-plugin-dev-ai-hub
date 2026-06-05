@@ -1,13 +1,14 @@
 import { useState, useMemo, type ElementType } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Box, Flex, Text, Skeleton, TablePagination } from '@backstage/ui';
-import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine } from '@remixicon/react';
+import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiStackLine } from '@remixicon/react';
 import type { AssetType, AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 import { AssetCard } from '../AssetCard';
 import { AssetFilters } from '../AssetFilters';
 import type { AssetFiltersValue } from '../AssetFilters';
 import { AssetDetailPanel } from '../AssetDetailPanel';
 import { AssetInstallDialog } from '../AssetInstallDialog';
+import { AssetHelpDialog } from '../AssetHelpDialog';
 import { useAssets, useStats, useProviders } from '../../hooks';
 import styles from './DevAiHubPage.module.css';
 
@@ -30,6 +31,8 @@ const STATS_CONFIG: { key: AssetType; label: string; Icon: ElementType; gradient
     gradient: 'linear-gradient(135deg, #6AB04C 0%, #4A8F2E 100%)', shadow: '#6AB04C40' },
   { key: 'workflow',    label: 'Workflows',    Icon: RiGitBranchLine,
     gradient: 'linear-gradient(135deg, #F9CA24 0%, #D4A800 100%)', shadow: '#F9CA2440' },
+  { key: 'bundle',      label: 'Bundles',      Icon: RiStackLine,
+    gradient: 'linear-gradient(135deg, #A55EEA 0%, #8438D6 100%)', shadow: '#A55EEA40' },
 ];
 
 export function DevAiHubPage() {
@@ -39,6 +42,7 @@ export function DevAiHubPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedAssetId = searchParams.get('assetId');
   const installAssetId = searchParams.get('installId');
+  const helpAssetId = searchParams.get('helpId');
 
   const handleViewAsset = (id: string) =>
     setSearchParams(p => { const n = new URLSearchParams(p); n.set('assetId', id); return n; });
@@ -51,6 +55,12 @@ export function DevAiHubPage() {
 
   const handleCloseInstall = () =>
     setSearchParams(p => { const n = new URLSearchParams(p); n.delete('installId'); return n; });
+
+  const handleHelpAsset = (id: string) =>
+    setSearchParams(p => { const n = new URLSearchParams(p); n.set('helpId', id); return n; });
+
+  const handleCloseHelp = () =>
+    setSearchParams(p => { const n = new URLSearchParams(p); n.delete('helpId'); return n; });
 
   const { stats } = useStats();
   const { providers } = useProviders();
@@ -76,6 +86,11 @@ export function DevAiHubPage() {
   };
 
   const totalPages = result ? Math.ceil(result.totalCount / PAGE_SIZE) : 0;
+
+  const helpAsset = useMemo(
+    () => result?.items.find(a => a.id === helpAssetId) ?? null,
+    [result, helpAssetId],
+  );
 
   const availableTags = useMemo(() => {
     if (!result) return [];
@@ -152,6 +167,7 @@ export function DevAiHubPage() {
                   asset={asset}
                   onView={handleViewAsset}
                   onInstall={handleInstallAsset}
+                  onHelp={handleHelpAsset}
                 />
               ))}
         </div>
@@ -191,6 +207,11 @@ export function DevAiHubPage() {
       <AssetInstallDialog
         assetId={installAssetId}
         onClose={handleCloseInstall}
+      />
+
+      <AssetHelpDialog
+        asset={helpAsset}
+        onClose={handleCloseHelp}
       />
     </div>
   );

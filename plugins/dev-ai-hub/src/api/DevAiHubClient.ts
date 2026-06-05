@@ -9,6 +9,7 @@ import type {
   AiHubProvider,
   AiHubStats,
   AssetListFilter,
+  McpCatalogEntry,
 } from '@julianpedro/plugin-dev-ai-hub-common';
 
 export const devAiHubApiRef = createApiRef<DevAiHubApi>({
@@ -19,13 +20,14 @@ export interface DevAiHubApi {
   listAssets(filter?: AssetListFilter): Promise<AiAssetListResponse>;
   getAsset(id: string): Promise<AiAsset>;
   getAssetRaw(id: string): Promise<string>;
-  /** Returns the absolute URL for the download endpoint (zip for skills, md for others). */
-  getDownloadUrl(id: string): Promise<string>;
+  /** Returns the absolute URL for the download endpoint (zip for skills/bundles, md for others). */
+  getDownloadUrl(id: string, tool?: string): Promise<string>;
   trackInstall(id: string): Promise<void>;
   listProviders(): Promise<AiHubProvider[]>;
   getProviderStatus(id: string): Promise<AiHubProvider>;
   triggerSync(id: string): Promise<void>;
   getStats(): Promise<AiHubStats>;
+  getMcpCatalog(): Promise<McpCatalogEntry[]>;
 }
 
 export class DevAiHubClient implements DevAiHubApi {
@@ -77,9 +79,10 @@ export class DevAiHubClient implements DevAiHubApi {
     return response.text();
   }
 
-  async getDownloadUrl(id: string): Promise<string> {
+  async getDownloadUrl(id: string, tool?: string): Promise<string> {
     const base = await this.baseUrl();
-    return `${base}/assets/${encodeURIComponent(id)}/download`;
+    const url = `${base}/assets/${encodeURIComponent(id)}/download`;
+    return tool ? `${url}?tool=${encodeURIComponent(tool)}` : url;
   }
 
   async trackInstall(id: string): Promise<void> {
@@ -106,5 +109,9 @@ export class DevAiHubClient implements DevAiHubApi {
 
   async getStats(): Promise<AiHubStats> {
     return this.fetch<AiHubStats>('/stats');
+  }
+
+  async getMcpCatalog(): Promise<McpCatalogEntry[]> {
+    return this.fetch<McpCatalogEntry[]>('/mcp-catalog');
   }
 }

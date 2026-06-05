@@ -1,6 +1,6 @@
 import type { ElementType } from 'react';
 import { Box, Flex, Text, Card, CardBody, CardFooter, Tag, TagGroup, ButtonIcon, Tooltip, TooltipTrigger } from '@backstage/ui';
-import { RiDownloadLine, RiExternalLinkLine } from '@remixicon/react';
+import { RiDownloadLine, RiExternalLinkLine, RiQuestionLine } from '@remixicon/react';
 import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiStackLine } from '@remixicon/react';
 import type { AiAssetSummary, AssetType, AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
@@ -29,13 +29,15 @@ interface AssetCardProps {
   asset: AiAssetSummary;
   onView: (id: string) => void;
   onInstall: (id: string) => void;
+  onHelp?: (id: string) => void;
 }
 
-export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
+export function AssetCard({ asset, onView, onInstall, onHelp }: AssetCardProps) {
   const cfg = TYPE_CONFIG[asset.type];
   const TypeIcon = cfg.Icon;
   const isPopular = asset.installCount >= POPULAR_THRESHOLD;
   const isNew = Date.now() - new Date(asset.updatedAt).getTime() < NEW_DAYS_MS;
+  const hasHelp = !!asset.helpText && !!onHelp;
 
   return (
     <Card
@@ -92,6 +94,17 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
           ))}
         </TagGroup>
 
+        {/* Required MCP servers */}
+        {asset.mcps && asset.mcps.length > 0 && (
+          <TagGroup aria-label="Required MCP servers" className={styles.tagsRow}>
+            {asset.mcps.map(mcp => (
+              <Tag key={mcp.id} id={mcp.id} size="small" className={styles.tagChip}>
+                {mcp.name ?? mcp.id}
+              </Tag>
+            ))}
+          </TagGroup>
+        )}
+
         {/* Tags */}
         {asset.tags.length > 0 && (
           <>
@@ -128,6 +141,17 @@ export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
           )}
         </Flex>
         <Flex className={styles.actionsRow}>
+          {hasHelp && (
+            <TooltipTrigger>
+              <ButtonIcon
+                aria-label="How to use"
+                icon={<RiQuestionLine size={16} />}
+                variant="tertiary"
+                onPress={() => onHelp!(asset.id)}
+              />
+              <Tooltip>How to use</Tooltip>
+            </TooltipTrigger>
+          )}
           <TooltipTrigger>
             <ButtonIcon
               aria-label="Install in editor"

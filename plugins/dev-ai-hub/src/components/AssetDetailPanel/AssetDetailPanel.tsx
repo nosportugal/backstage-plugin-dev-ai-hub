@@ -186,6 +186,49 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                         </Box>
                       )}
 
+                      {asset.type === 'bundle' && asset.items && asset.items.length > 0 && (
+                        <>
+                          <hr className={styles.divider} />
+                          <Box>
+                            <Text variant="body-small" color="secondary">
+                              Bundle items ({asset.items.length})
+                            </Text>
+                            <Flex direction="column" style={{ gap: 'var(--bui-space-1)', marginTop: 'var(--bui-space-1)' }}>
+                              {asset.items.map(item => (
+                                <Flex key={item.ref} className={styles.metaRow} style={{ gap: 'var(--bui-space-2)' }}>
+                                  <Text variant="body-medium" weight="bold">
+                                    {item.label ?? item.name ?? item.ref}
+                                  </Text>
+                                  {item.type && (
+                                    <Tag id={`${item.ref}-type`} size="small">{item.type}</Tag>
+                                  )}
+                                </Flex>
+                              ))}
+                            </Flex>
+                          </Box>
+                        </>
+                      )}
+
+                      {asset.mcps && asset.mcps.length > 0 && (
+                        <>
+                          <hr className={styles.divider} />
+                          <Box>
+                            <Text variant="body-small" color="secondary">
+                              Required MCP servers
+                            </Text>
+                            <Flex className={styles.chipsRow}>
+                              <TagGroup aria-label="Required MCP servers">
+                                {asset.mcps.map(mcp => (
+                                  <Tag key={mcp.id} id={mcp.id} size="small">
+                                    {mcp.name ?? mcp.id}
+                                  </Tag>
+                                ))}
+                              </TagGroup>
+                            </Flex>
+                          </Box>
+                        </>
+                      )}
+
                       {asset.type === 'skill' && (
                         <>
                           <hr className={styles.divider} />
