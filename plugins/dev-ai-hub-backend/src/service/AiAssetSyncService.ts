@@ -3,10 +3,12 @@ import type {
   SchedulerService,
   UrlReaderService,
 } from '@backstage/backend-plugin-api';
+import yaml from 'js-yaml';
 import type { AiAssetStore } from '../database/AiAssetStore';
 import type { ProviderConfig } from '../types';
 import type { AiAssetProvider } from '@julianpedro/plugin-dev-ai-hub-node';
 import { AssetParser } from './AssetParser';
+import { McpCatalogFileSchema } from '@julianpedro/plugin-dev-ai-hub-common';
 
 interface Options {
   logger: LoggerService;
@@ -95,6 +97,37 @@ export class AiAssetSyncService {
         fileMap.set(normalizePath(file.path), file);
       }
 
+      // ── Sync mcp-catalog.yaml if present ───────────────────────────────────
+      const mcpCatalogFile = fileMap.get('mcp-catalog.yaml');
+      if (mcpCatalogFile) {
+        try {
+          const raw = (await mcpCatalogFile.content()).toString('utf-8');
+          const parsedCatalog = McpCatalogFileSchema.safeParse(yaml.load(raw));
+          if (parsedCatalog.success) {
+            const entries = parsedCatalog.data.servers;
+            await store.upsertMcpCatalogEntries(entries, provider.id);
+            await store.deleteMcpCatalogEntriesNotIn(
+              provider.id,
+              entries.map(e => e.id),
+            );
+            logger.info(
+              `dev-ai-hub: synced ${entries.length} MCP catalog entries from provider "${provider.id}"`,
+            );
+          } else {
+            logger.warn(
+              `dev-ai-hub: invalid mcp-catalog.yaml in provider "${provider.id}": ${parsedCatalog.error.message}`,
+            );
+          }
+        } catch (err) {
+          logger.warn(
+            `dev-ai-hub: failed to parse mcp-catalog.yaml in provider "${provider.id}": ${err}`,
+          );
+        }
+      } else {
+        // No mcp-catalog.yaml — remove any previously synced entries for this provider
+        await store.deleteMcpCatalogEntriesNotIn(provider.id, []);
+      }
+
       const syncedIds: string[] = [];
 
       for (const [filePath, file] of fileMap) {
@@ -124,6 +157,7 @@ export class AiAssetSyncService {
         }
 
         // Resolve the .md file:
+        //   - bundle: no .md required — the YAML describes a collection
         //   - explicit: yaml has a content: field → use that exact path
         //   - junction: find the single .md co-located in the same directory
         const yamlDir = filePath.includes('/')
@@ -131,39 +165,47 @@ export class AiAssetSyncService {
           : '';
 
         let resolvedMdPath: string;
-        let mdFile: { content(): Promise<Buffer>; path: string } | undefined;
+        let mdContent: string;
 
-        if (parsed.mdPath) {
-          resolvedMdPath = normalizePath(parsed.mdPath);
-          mdFile = fileMap.get(resolvedMdPath);
-          if (!mdFile) {
-            logger.warn(
-              `dev-ai-hub: content file "${parsed.mdPath}" not found for ${filePath}, skipping`,
-            );
-            continue;
-          }
+        if (parsed.meta.type === 'bundle') {
+          // Bundles have no markdown content of their own.
+          resolvedMdPath = filePath;
+          mdContent = '';
         } else {
-          const mdCandidates = [...fileMap.keys()].filter(p => {
-            const dir = p.includes('/') ? p.split('/').slice(0, -1).join('/') : '';
-            return dir === yamlDir && p.endsWith('.md');
-          });
-          if (mdCandidates.length === 1) {
-            resolvedMdPath = mdCandidates[0];
-            mdFile = fileMap.get(resolvedMdPath)!;
-          } else if (mdCandidates.length > 1) {
-            logger.warn(
-              `dev-ai-hub: multiple .md files in "${yamlDir || '.'}" for ${filePath} — add a 'content' field to the YAML to specify which one, skipping`,
-            );
-            continue;
-          } else {
-            logger.warn(
-              `dev-ai-hub: no .md file found for ${filePath}, skipping`,
-            );
-            continue;
-          }
-        }
+          let mdFile: { content(): Promise<Buffer>; path: string } | undefined;
 
-        const mdContent = (await mdFile.content()).toString('utf-8');
+          if (parsed.mdPath) {
+            resolvedMdPath = normalizePath(parsed.mdPath);
+            mdFile = fileMap.get(resolvedMdPath);
+            if (!mdFile) {
+              logger.warn(
+                `dev-ai-hub: content file "${parsed.mdPath}" not found for ${filePath}, skipping`,
+              );
+              continue;
+            }
+          } else {
+            const mdCandidates = [...fileMap.keys()].filter(p => {
+              const dir = p.includes('/') ? p.split('/').slice(0, -1).join('/') : '';
+              return dir === yamlDir && p.endsWith('.md');
+            });
+            if (mdCandidates.length === 1) {
+              resolvedMdPath = mdCandidates[0];
+              mdFile = fileMap.get(resolvedMdPath)!;
+            } else if (mdCandidates.length > 1) {
+              logger.warn(
+                `dev-ai-hub: multiple .md files in "${yamlDir || '.'}" for ${filePath} — add a 'content' field to the YAML to specify which one, skipping`,
+              );
+              continue;
+            } else {
+              logger.warn(
+                `dev-ai-hub: no .md file found for ${filePath}, skipping`,
+              );
+              continue;
+            }
+          }
+
+          mdContent = (await mdFile.content()).toString('utf-8');
+        }
 
         // For skills: read bundled resource files and store their content
         let resourcesContent: Record<string, string> | undefined;

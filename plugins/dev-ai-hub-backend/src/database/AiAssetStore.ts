@@ -1,6 +1,15 @@
 import type { Knex } from 'knex';
 import { resolvePackagePath, type DatabaseService } from '@backstage/backend-plugin-api';
-import type { AiAsset, AiAssetSummary, AiHubStats, AssetListFilter, AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
+import type {
+  AiAsset,
+  AiAssetSummary,
+  AiHubStats,
+  AssetListFilter,
+  AssetType,
+  AiTool,
+  BundleItem,
+  McpCatalogEntry,
+} from '@julianpedro/plugin-dev-ai-hub-common';
 import type { AiAssetInput, SyncStatus } from '../types';
 
 export class AiAssetStore {
@@ -35,6 +44,9 @@ export class AiAssetStore {
       yaml_raw: input.yamlRaw,
       metadata: input.metadata ? JSON.stringify(input.metadata) : null,
       resources_content: input.resourcesContent ? JSON.stringify(input.resourcesContent) : null,
+      bundle_items: input.bundleRefs ? JSON.stringify(input.bundleRefs) : null,
+      help_text: input.helpText ?? null,
+      mcps: input.mcps?.length ? JSON.stringify(input.mcps) : null,
       yaml_path: input.yamlPath,
       md_path: input.mdPath,
       repo_url: input.repoUrl,
@@ -95,8 +107,9 @@ export class AiAssetStore {
 
     const rows = await query
       .select('id', 'provider_id', 'name', 'label', 'description', 'type', 'tools', 'tags',
-              'author', 'icon', 'version', 'install_count', 'synced_at', 'created_at', 'updated_at')
-      .orderBy('name', 'asc')
+              'author', 'icon', 'version', 'install_count', 'bundle_items', 'help_text', 'mcps',
+              'synced_at', 'created_at', 'updated_at')
+      .orderByRaw("CASE WHEN type = 'bundle' THEN 0 ELSE 1 END, name ASC")
       .limit(pageSize)
       .offset((page - 1) * pageSize);
 
@@ -105,7 +118,16 @@ export class AiAssetStore {
 
   async getAsset(id: string): Promise<AiAsset | null> {
     const row = await this.db('ai_assets').where('id', id).first();
-    return row ? this.rowToAsset(row) : null;
+    if (!row) return null;
+
+    const asset = this.rowToAsset(row);
+
+    if (asset.type === 'bundle' && row.bundle_items) {
+      const bundleRefs: Array<{ ref: string }> = JSON.parse(row.bundle_items as string);
+      asset.items = await this.resolveBundleItems(bundleRefs, asset.providerId);
+    }
+
+    return asset;
   }
 
   async incrementInstallCount(id: string): Promise<void> {
@@ -198,7 +220,101 @@ export class AiAssetStore {
     };
   }
 
+  // ─── MCP Catalog ─────────────────────────────────────────────
+
+  async upsertMcpCatalogEntries(
+    entries: McpCatalogEntry[],
+    providerId: string,
+  ): Promise<void> {
+    const now = new Date().toISOString();
+    for (const entry of entries) {
+      const row = {
+        id: entry.id,
+        provider_id: providerId,
+        name: entry.name,
+        description: entry.description ?? null,
+        icon: entry.icon ?? null,
+        type: entry.type,
+        url: entry.url ?? null,
+        command: entry.command ?? null,
+        args: entry.args ? JSON.stringify(entry.args) : null,
+        env: entry.env ? JSON.stringify(entry.env) : null,
+        updated_at: now,
+      };
+      await this.db('mcp_catalog_entries')
+        .insert(row)
+        .onConflict(['id', 'provider_id'])
+        .merge(Object.keys(row) as (keyof typeof row)[]);
+    }
+  }
+
+  async deleteMcpCatalogEntriesNotIn(
+    providerId: string,
+    ids: string[],
+  ): Promise<void> {
+    let query = this.db('mcp_catalog_entries').where('provider_id', providerId);
+    if (ids.length > 0) {
+      query = query.whereNotIn('id', ids);
+    }
+    await query.delete();
+  }
+
+  async listMcpCatalogEntries(): Promise<McpCatalogEntry[]> {
+    const rows = await this.db('mcp_catalog_entries').select('*').orderBy('name', 'asc');
+    return rows.map(row => ({
+      id: row.id as string,
+      name: row.name as string,
+      description: (row.description as string | null) ?? undefined,
+      icon: (row.icon as string | null) ?? undefined,
+      type: row.type as 'http' | 'stdio',
+      url: (row.url as string | null) ?? undefined,
+      command: (row.command as string | null) ?? undefined,
+      args: row.args ? (JSON.parse(row.args as string) as string[]) : undefined,
+      env: row.env ? (JSON.parse(row.env as string) as Record<string, string>) : undefined,
+    }));
+  }
+
+  /** Resolves raw bundle refs to BundleItem objects by looking up assets in the same provider. */
+  private async resolveBundleItems(
+    bundleRefs: Array<{ ref: string }>,
+    providerId: string,
+  ): Promise<BundleItem[]> {
+    const resolved: BundleItem[] = [];
+
+    for (const { ref } of bundleRefs) {
+      const normalizedRef = ref.replace(/^\.\//, '');
+      const row = await this.db('ai_assets')
+        .where('provider_id', providerId)
+        .where(function matchRef(this: Knex.QueryBuilder) {
+          this.where('yaml_path', normalizedRef)
+            .orWhere('yaml_path', 'like', `%/${normalizedRef}`);
+        })
+        .first();
+
+      if (row) {
+        resolved.push({
+          ref,
+          assetId: row.id as string,
+          name: row.name as string,
+          label: (row.label as string | null) ?? undefined,
+          type: row.type as Exclude<AssetType, 'bundle'>,
+          description: row.description as string,
+          tools: JSON.parse((row.tools as string) || '[]') as AiTool[],
+        });
+      } else {
+        resolved.push({ ref });
+      }
+    }
+
+    return resolved;
+  }
+
   private rowToAssetSummary(row: Record<string, unknown>): AiAssetSummary {
+    const bundleItemsRaw = row.bundle_items as string | null;
+    const itemCount = bundleItemsRaw
+      ? (JSON.parse(bundleItemsRaw) as unknown[]).length
+      : undefined;
+
     return {
       id: row.id as string,
       providerId: row.provider_id as string,
@@ -212,6 +328,9 @@ export class AiAssetStore {
       icon: (row.icon as string | null) ?? undefined,
       version: row.version as string,
       installCount: (row.install_count as number) ?? 0,
+      itemCount,
+      helpText: (row.help_text as string | null) ?? undefined,
+      mcps: row.mcps ? JSON.parse(row.mcps as string) : undefined,
       syncedAt: row.synced_at as string,
       createdAt: row.created_at as string,
       updatedAt: row.updated_at as string,
@@ -243,6 +362,8 @@ export class AiAssetStore {
       resourcesContent: row.resources_content
         ? JSON.parse(row.resources_content as string)
         : undefined,
+      helpText: (row.help_text as string | null) ?? undefined,
+      mcps: row.mcps ? JSON.parse(row.mcps as string) : undefined,
       yamlPath: row.yaml_path as string,
       mdPath: row.md_path as string,
       repoUrl: row.repo_url as string,

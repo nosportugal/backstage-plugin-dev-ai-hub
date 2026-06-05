@@ -69,6 +69,10 @@ export class AssetParser {
     if ((meta as any).mcpServers) metadata.mcpServers = (meta as any).mcpServers;
     if ((meta as any).steps) metadata.steps = (meta as any).steps;
 
+    const bundleRefs = meta.type === 'bundle' && meta.items
+      ? (meta.items as Array<{ ref: string }>)
+      : undefined;
+
     return {
       id: AssetParser.buildId(providerId, yamlFilePath),
       providerId,
@@ -86,7 +90,14 @@ export class AssetParser {
       content: mdContent,
       yamlRaw: parsed.yamlRaw,
       metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+      helpText: meta.help,
+      mcps: meta.mcps?.map(entry =>
+        typeof entry === 'string'
+          ? { id: entry }
+          : { id: entry.id, name: entry.name, icon: entry.icon },
+      ),
       resourcesContent,
+      bundleRefs,
       yamlPath: yamlFilePath,
       mdPath: actualMdPath,
       repoUrl,

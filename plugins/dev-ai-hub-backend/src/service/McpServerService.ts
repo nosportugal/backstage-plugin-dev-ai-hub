@@ -460,5 +460,105 @@ export function createMcpServer(
     },
   );
 
+  // ── install_bundle ────────────────────────────────────────────────────────
+  //
+  // Installs every asset in a bundle in a single MCP call. The agent receives an
+  // array of files (each with recommended_path + content + resources) and writes
+  // them all at once — no need to call install_asset once per item.
+
+  server.tool(
+    'install_bundle',
+    [
+      'Install all assets in a bundle at once — one MCP call for the entire bundle.',
+      'Returns an array of files, each with a recommended path and verbatim content.',
+      'Use list_assets with type="bundle" to discover available bundles first.',
+      'IMPORTANT: After calling this tool you MUST write each file yourself:',
+      '1. For every entry in "files", use its recommended_path as the destination.',
+      '2. Create all parent directories if they do not exist.',
+      '3. Write the value of "content" verbatim to that path.',
+      'Calling this tool alone does NOT write any file — you must perform the writes.',
+    ].join(' '),
+    {
+      id: z.string().describe('Bundle asset ID'),
+    },
+    async ({ id }) => {
+      const bundle = await store.getAsset(id);
+      if (!bundle || bundle.type !== 'bundle') {
+        return {
+          content: [{ type: 'text' as const, text: JSON.stringify({ error: `Bundle not found: ${id}` }) }],
+          isError: true,
+        };
+      }
+
+      const resolvedItems = bundle.items ?? [];
+      const files: Array<Record<string, unknown>> = [];
+      const notResolved: string[] = [];
+
+      for (const item of resolvedItems) {
+        if (!item.assetId) {
+          notResolved.push(item.ref);
+          continue;
+        }
+
+        const asset = await store.getAsset(item.assetId);
+        if (!asset) {
+          notResolved.push(item.ref);
+          continue;
+        }
+
+        await store.incrementInstallCount(asset.id);
+
+        const installPaths = getInstallPathsForAsset(asset.type, asset.tools, asset.name, {
+          installPath: asset.installPath,
+          installPaths: asset.installPaths,
+        });
+        const recommendedPath = toolParam
+          ? (installPaths[toolParam] ?? Object.values(installPaths)[0])
+          : Object.values(installPaths)[0];
+
+        const resources = asset.resourcesContent
+          ? Object.entries(asset.resourcesContent).map(([filePath, fileContent]) => ({
+              path: filePath,
+              content: fileContent,
+            }))
+          : undefined;
+
+        files.push({
+          id: asset.id,
+          name: displayName(asset),
+          type: asset.type,
+          recommended_path: recommendedPath ?? `${asset.name.replace(/\s+/g, '-').toLowerCase()}.md`,
+          all_install_paths: installPaths,
+          content: asset.content,
+          resources,
+        });
+      }
+
+      await store.incrementInstallCount(bundle.id);
+
+      return {
+        content: [{
+          type: 'text' as const,
+          text: JSON.stringify({
+            action_required: [
+              'For EACH file in "files", write the "content" field to its "recommended_path".',
+              'Create parent directories if needed. Also write each file in "resources" to its "path".',
+              'Process all files. Do not skip any.',
+            ].join(' '),
+            bundle: {
+              id: bundle.id,
+              name: displayName(bundle),
+              description: bundle.description,
+              provider: { id: bundle.providerId, label: resolveProviderLabel(bundle.providerId) },
+            },
+            total: files.length,
+            not_resolved: notResolved.length > 0 ? notResolved : undefined,
+            files,
+          }, null, 2),
+        }],
+      };
+    },
+  );
+
   return server;
 }

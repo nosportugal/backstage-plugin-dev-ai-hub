@@ -8,6 +8,7 @@ import type { AiAssetSyncService } from './service/AiAssetSyncService';
 import { createMcpServer } from './service/McpServerService';
 import type { ProviderConfig, AssetListFilter } from './types';
 import type { AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
+import { getInstallPathsForAsset } from '@julianpedro/plugin-dev-ai-hub-common';
 
 interface RouterOptions {
   logger: LoggerService;
@@ -80,8 +81,10 @@ export function createRouter(options: RouterOptions): express.Router {
   });
 
   /**
-   * For skills: returns a zip with the markdown + metadata about bundled resources.
+   * For bundles: returns a zip with all item assets placed at their recommended paths.
+   * For skills: returns a zip with the markdown + bundled resource files.
    * For other types: returns the markdown as a text file.
+   * Optional ?tool= query param selects the install-path convention for bundles.
    */
   router.get('/assets/:id/download', async (req, res) => {
     try {
@@ -89,8 +92,47 @@ export function createRouter(options: RouterOptions): express.Router {
       if (!asset) return res.status(404).json({ error: 'Asset not found' });
 
       const filename = `${asset.name.replace(/\s+/g, '-').toLowerCase()}`;
+      const toolHint = req.query.tool as string | undefined;
 
-      if (asset.type === 'skill') {
+      if (asset.type === 'bundle') {
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${filename}-bundle.zip"`,
+        );
+        const archive = archiver('zip');
+        archive.pipe(res);
+
+        const items = asset.items ?? [];
+        for (const item of items) {
+          if (!item.assetId) continue;
+          const itemAsset = await store.getAsset(item.assetId);
+          if (!itemAsset) continue;
+
+          const installPaths = getInstallPathsForAsset(
+            itemAsset.type,
+            itemAsset.tools,
+            itemAsset.name,
+            { installPath: itemAsset.installPath, installPaths: itemAsset.installPaths },
+          );
+          const resolvedPath =
+            toolHint && installPaths[toolHint]
+              ? installPaths[toolHint]
+              : Object.values(installPaths)[0] ??
+                `${itemAsset.name.replace(/\s+/g, '-').toLowerCase()}.md`;
+
+          archive.append(itemAsset.content, { name: resolvedPath });
+
+          if (itemAsset.type === 'skill' && itemAsset.resourcesContent) {
+            const dir = resolvedPath.split('/').slice(0, -1).join('/');
+            for (const [rPath, rContent] of Object.entries(itemAsset.resourcesContent)) {
+              archive.append(rContent, { name: dir ? `${dir}/${rPath}` : rPath });
+            }
+          }
+        }
+
+        await archive.finalize();
+      } else if (asset.type === 'skill') {
         res.setHeader('Content-Type', 'application/zip');
         res.setHeader(
           'Content-Disposition',
@@ -207,7 +249,17 @@ export function createRouter(options: RouterOptions): express.Router {
       res.status(500).json({ error: 'Internal server error' });
     }
   });
+  // ── MCP Catalog ───────────────────────────────────────────────
 
+  router.get('/mcp-catalog', async (_req, res) => {
+    try {
+      const entries = await store.listMcpCatalogEntries();
+      res.json(entries);
+    } catch (err) {
+      options.logger.error('GET /mcp-catalog failed', err as Error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
   // ── MCP — StreamableHTTP transport ────────────────────────────────────────
   //
   // Clients connect to /mcp?tool=<ai-tool-name> using the MCP HTTP protocol.
