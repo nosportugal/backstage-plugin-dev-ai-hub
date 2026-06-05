@@ -6,8 +6,10 @@ import {
   Tabs, TabList, Tab, TabPanel,
 } from '@backstage/ui';
 import { RiCloseLine, RiFileCopyLine, RiFolderZipLine, RiExternalLinkLine } from '@remixicon/react';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import type { AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
 import { useAssetDetail } from '../../hooks';
+import { devAiHubTranslationRef } from '../../translation';
 import styles from './AssetDetailPanel.module.css';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -29,13 +31,14 @@ interface AssetDetailPanelProps {
 }
 
 export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
+  const { t } = useTranslationRef(devAiHubTranslationRef);
   const [snackbar, setSnackbar] = useState<string | null>(null);
   const { asset, loading } = useAssetDetail(assetId);
 
   const handleCopy = () => {
     if (!asset) return;
     navigator.clipboard.writeText(asset.content).then(() =>
-      setSnackbar('Markdown copied to clipboard!'),
+      setSnackbar(t('assetDetailPanel.copiedMessage')),
     );
   };
 
@@ -56,7 +59,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                 <Flex className={styles.loadingRow}>
                   <Skeleton style={{ width: 16, height: 16 }} />
                   <Text variant="body-small" color="secondary">
-                    Loading...
+                    {t('assetDetailPanel.loading')}
                   </Text>
                 </Flex>
               ) : (
@@ -96,9 +99,9 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
           {/* Tabs */}
           <Tabs defaultSelectedKey="preview">
             <TabList className={styles.tabBar}>
-              <Tab id="preview">Preview</Tab>
-              <Tab id="metadata">Metadata</Tab>
-              <Tab id="raw">Raw YAML</Tab>
+              <Tab id="preview">{t('assetDetailPanel.tabPreview')}</Tab>
+              <Tab id="metadata">{t('assetDetailPanel.tabMetadata')}</Tab>
+              <Tab id="raw">{t('assetDetailPanel.tabRawYaml')}</Tab>
             </TabList>
 
             <Box className={styles.contentArea}>
@@ -147,25 +150,25 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
 
                   <TabPanel id="metadata">
                     <Flex className={styles.metaSection}>
-                      <MetaRow label="Author" value={asset.author} />
-                      <MetaRow label="Version" value={asset.version} />
-                      <MetaRow label="Provider" value={asset.providerId} />
+                      <MetaRow label={t('assetDetailPanel.metaAuthor')} value={asset.author} />
+                      <MetaRow label={t('assetDetailPanel.metaVersion')} value={asset.version} />
+                      <MetaRow label={t('assetDetailPanel.metaProvider')} value={asset.providerId} />
                       {asset.commitSha && (
-                        <MetaRow label="Commit" value={asset.commitSha.slice(0, 8)} />
+                        <MetaRow label={t('assetDetailPanel.metaCommit')} value={asset.commitSha.slice(0, 8)} />
                       )}
-                      <MetaRow label="Last synced" value={new Date(asset.syncedAt).toLocaleString()} />
-                      <MetaRow label="Branch" value={asset.branch} />
+                      <MetaRow label={t('assetDetailPanel.metaLastSynced')} value={new Date(asset.syncedAt).toLocaleString()} />
+                      <MetaRow label={t('assetDetailPanel.metaBranch')} value={asset.branch} />
 
                       <hr className={styles.divider} />
 
                       <Box>
                         <Text variant="body-small" color="secondary">
-                          Compatible tools
+                          {t('assetDetailPanel.compatibleTools')}
                         </Text>
                         <Flex className={styles.chipsRow}>
                           <TagGroup aria-label="Compatible tools">
-                            {asset.tools.map(t => (
-                              <Tag key={t} id={t} size="small">{t}</Tag>
+                            {asset.tools.map(tool => (
+                              <Tag key={tool} id={tool} size="small">{tool}</Tag>
                             ))}
                           </TagGroup>
                         </Flex>
@@ -174,12 +177,12 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                       {asset.tags.length > 0 && (
                         <Box>
                           <Text variant="body-small" color="secondary">
-                            Tags
+                            {t('assetDetailPanel.tagsLabel')}
                           </Text>
                           <Flex className={styles.chipsRow}>
                             <TagGroup aria-label="Tags">
-                              {asset.tags.map(t => (
-                                <Tag key={t} id={t} size="small">{t}</Tag>
+                              {asset.tags.map(tag => (
+                                <Tag key={tag} id={tag} size="small">{tag}</Tag>
                               ))}
                             </TagGroup>
                           </Flex>
@@ -191,7 +194,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                           <hr className={styles.divider} />
                           <Box>
                             <Text variant="body-small" color="secondary">
-                              Bundle items ({asset.items.length})
+                              {t('assetDetailPanel.bundleContents', { n: String(asset.items.length) })}
                             </Text>
                             <Flex direction="column" style={{ gap: 'var(--bui-space-1)', marginTop: 'var(--bui-space-1)' }}>
                               {asset.items.map(item => (
@@ -214,7 +217,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                           <hr className={styles.divider} />
                           <Box>
                             <Text variant="body-small" color="secondary">
-                              Required MCP servers
+                              {t('assetDetailPanel.requiredMcps')}
                             </Text>
                             <Flex className={styles.chipsRow}>
                               <TagGroup aria-label="Required MCP servers">
@@ -236,7 +239,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                             <Flex className={styles.bundledHeader}>
                               <RiFolderZipLine size={14} style={{ color: 'var(--bui-fg-secondary)' }} />
                               <Text variant="body-small" color="secondary">
-                                Bundled files
+                                {t('assetDetailPanel.bundledFiles')}
                               </Text>
                             </Flex>
                             {asset.resourcesContent && Object.keys(asset.resourcesContent).length > 0 ? (
@@ -254,7 +257,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
                                   </Flex>
                                 </TagGroup>
                                 <Text variant="body-small" color="secondary">
-                                  Downloads as .zip containing all files above.
+                                  {t('assetDetailPanel.zipDescription')}
                                 </Text>
                               </Flex>
                             ) : (
@@ -274,7 +277,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
 
                       <Box>
                         <Text variant="body-small" color="secondary">
-                          Repository
+                          {t('assetDetailPanel.repository')}
                         </Text>
                         <Box>
                           <Link
@@ -308,7 +311,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
               isDisabled={!asset}
             >
               <RiFileCopyLine size={16} />
-              Copy Markdown
+              {t('assetDetailPanel.copyMarkdown')}
             </Button>
 
             <Button
@@ -317,7 +320,7 @@ export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
               isDisabled={!asset}
             >
               <RiExternalLinkLine size={16} />
-              Open in Repo
+              {t('assetDetailPanel.openInRepo')}
             </Button>
           </Flex>
         </Flex>

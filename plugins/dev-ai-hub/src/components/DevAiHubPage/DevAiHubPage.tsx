@@ -2,6 +2,7 @@ import { useState, useMemo, type ElementType } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Box, Flex, Text, Skeleton, TablePagination } from '@backstage/ui';
 import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiStackLine } from '@remixicon/react';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import type { AssetType, AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 import { AssetCard } from '../AssetCard';
 import { AssetFilters } from '../AssetFilters';
@@ -10,6 +11,7 @@ import { AssetDetailPanel } from '../AssetDetailPanel';
 import { AssetInstallDialog } from '../AssetInstallDialog';
 import { AssetHelpDialog } from '../AssetHelpDialog';
 import { useAssets, useStats, useProviders } from '../../hooks';
+import { devAiHubTranslationRef } from '../../translation';
 import styles from './DevAiHubPage.module.css';
 
 const DEFAULT_FILTERS: AssetFiltersValue = {
@@ -36,6 +38,7 @@ const STATS_CONFIG: { key: AssetType; label: string; Icon: ElementType; gradient
 ];
 
 export function DevAiHubPage() {
+  const { t } = useTranslationRef(devAiHubTranslationRef);
   const [filters, setFilters] = useState<AssetFiltersValue>(DEFAULT_FILTERS);
   const [page, setPage] = useState(1);
 
@@ -95,7 +98,7 @@ export function DevAiHubPage() {
   const availableTags = useMemo(() => {
     if (!result) return [];
     const tagSet = new Set<string>();
-    result.items.forEach(a => a.tags.forEach(t => tagSet.add(t)));
+    result.items.forEach(a => a.tags.forEach(tag => tagSet.add(tag)));
     return Array.from(tagSet).sort();
   }, [result]);
 
@@ -151,7 +154,7 @@ export function DevAiHubPage() {
         {/* Results summary */}
         {result && !loading && (
           <Text variant="body-x-small" color="secondary" style={{ marginBottom: 'var(--bui-space-4)', display: 'block' }}>
-            {result.totalCount} asset{result.totalCount !== 1 ? 's' : ''} found
+            {t('devAiHubPage.resultsFound', { n: String(result.totalCount) })}
           </Text>
         )}
 
@@ -176,9 +179,9 @@ export function DevAiHubPage() {
         {!loading && result?.items.length === 0 && (
           <div className={styles.emptyState}>
             <div className={styles.emptyEmoji}>🤖</div>
-            <Text variant="title-small" color="secondary" weight="bold">No assets found</Text>
+            <Text variant="title-small" color="secondary" weight="bold">{t('devAiHubPage.noAssetsTitle')}</Text>
             <Text variant="body-small" color="secondary" style={{ marginTop: 'var(--bui-space-1)' }}>
-              Try adjusting your filters or search terms.
+              {t('devAiHubPage.noAssetsSubtitle')}
             </Text>
           </div>
         )}

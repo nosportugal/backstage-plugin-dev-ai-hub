@@ -1,7 +1,9 @@
 import type { CSSProperties } from 'react';
 import { RiInfinityLine, RiNavigationLine } from '@remixicon/react';
 import { siAnthropic, siGithub, siGooglegemini } from 'simple-icons';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import type { AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
+import { devAiHubTranslationRef } from '../../translation';
 
 type SvgTool = Exclude<AiTool, 'all' | 'cursor'>;
 
@@ -22,13 +24,14 @@ interface ToolIconProps {
 }
 
 export function ToolIcon({ tool, branded = true, className, style, size = 20 }: ToolIconProps) {
+  const { t } = useTranslationRef(devAiHubTranslationRef);
   if (tool === 'all') {
     return (
       <RiInfinityLine
         size={size}
         className={className}
         style={{ color: 'var(--bui-fg-secondary)', ...style }}
-        aria-label="Universal"
+        aria-label={t('toolIcon.universal')}
       />
     );
   }

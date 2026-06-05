@@ -2,8 +2,10 @@ import type { ElementType } from 'react';
 import { Box, Flex, Text, Card, CardBody, CardFooter, Tag, TagGroup, ButtonIcon, Tooltip, TooltipTrigger } from '@backstage/ui';
 import { RiDownloadLine, RiExternalLinkLine, RiQuestionLine } from '@remixicon/react';
 import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiStackLine } from '@remixicon/react';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import type { AiAssetSummary, AssetType, AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
+import { devAiHubTranslationRef } from '../../translation';
 import styles from './AssetCard.module.css';
 
 const POPULAR_THRESHOLD = 5;
@@ -33,6 +35,7 @@ interface AssetCardProps {
 }
 
 export function AssetCard({ asset, onView, onInstall, onHelp }: AssetCardProps) {
+  const { t } = useTranslationRef(devAiHubTranslationRef);
   const cfg = TYPE_CONFIG[asset.type];
   const TypeIcon = cfg.Icon;
   const isPopular = asset.installCount >= POPULAR_THRESHOLD;
@@ -70,7 +73,7 @@ export function AssetCard({ asset, onView, onInstall, onHelp }: AssetCardProps) 
               </Text>
               {isNew && (
                 <TagGroup aria-label="Status">
-                  <Tag id="new" size="small" className={styles.newBadge}>New</Tag>
+                  <Tag id="new" size="small" className={styles.newBadge}>{t('assetCard.newBadge')}</Tag>
                 </TagGroup>
               )}
             </Flex>
@@ -117,7 +120,7 @@ export function AssetCard({ asset, onView, onInstall, onHelp }: AssetCardProps) 
             </TagGroup>
             {asset.tags.length > 3 && (
               <Text variant="body-x-small" color="secondary" style={{ alignSelf: 'center' }}>
-                +{asset.tags.length - 3}
+                {t('assetCard.moreTags', { n: String(asset.tags.length - 3) })}
               </Text>
             )}
           </>
@@ -127,7 +130,9 @@ export function AssetCard({ asset, onView, onInstall, onHelp }: AssetCardProps) 
       <CardFooter className={styles.cardActions}>
         <Flex className={styles.metaRow}>
           <Text variant="body-x-small" color="secondary" className={styles.metaText}>
-            v{asset.version} · {asset.author}
+            {asset.type === 'bundle'
+              ? t('assetCard.bundleFooter', { n: String(asset.itemCount ?? 0), author: asset.author })
+              : t('assetCard.versionFooter', { version: asset.version, author: asset.author })}
           </Text>
           {asset.installCount > 0 && (
             <Flex className={styles.installCountRow}>
@@ -144,31 +149,31 @@ export function AssetCard({ asset, onView, onInstall, onHelp }: AssetCardProps) 
           {hasHelp && (
             <TooltipTrigger>
               <ButtonIcon
-                aria-label="How to use"
+                aria-label={t('assetCard.helpTooltip')}
                 icon={<RiQuestionLine size={16} />}
                 variant="tertiary"
                 onPress={() => onHelp!(asset.id)}
               />
-              <Tooltip>How to use</Tooltip>
+              <Tooltip>{t('assetCard.helpTooltip')}</Tooltip>
             </TooltipTrigger>
           )}
           <TooltipTrigger>
             <ButtonIcon
-              aria-label="Install in editor"
+              aria-label={t('assetCard.installTooltip')}
               icon={<RiDownloadLine size={16} />}
               variant="tertiary"
               onPress={() => onInstall(asset.id)}
             />
-            <Tooltip>Install in editor</Tooltip>
+            <Tooltip>{t('assetCard.installTooltip')}</Tooltip>
           </TooltipTrigger>
           <TooltipTrigger>
             <ButtonIcon
-              aria-label="View details"
+              aria-label={t('assetCard.detailsTooltip')}
               icon={<RiExternalLinkLine size={16} />}
               variant="tertiary"
               onPress={() => onView(asset.id)}
             />
-            <Tooltip>View details</Tooltip>
+            <Tooltip>{t('assetCard.detailsTooltip')}</Tooltip>
           </TooltipTrigger>
         </Flex>
       </CardFooter>

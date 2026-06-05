@@ -9,5 +9,6 @@ import type { ProviderConfig } from '../types';
  * @param providerFilter   - Captured from `?provider=` at session init; scopes assets to a single provider
  * @param providers        - Full provider config list (for `list_providers` and label resolution)
  * @param proactiveEnabled - When false, the `check_for_assets` prompt and `suggest_assets` tool are not registered
+ * @param baseUrl          - Base URL of the plugin (e.g. http://backstage:7007/api/dev-ai-hub), used to generate raw_url
  */
-export declare function createMcpServer(store: AiAssetStore, toolFilter: string, providerFilter: string, providers: ProviderConfig[], proactiveEnabled?: boolean): McpServer;
+export declare function createMcpServer(store: AiAssetStore, toolFilter: string, providerFilter: string, providers: ProviderConfig[], proactiveEnabled?: boolean, baseUrl?: string): McpServer;

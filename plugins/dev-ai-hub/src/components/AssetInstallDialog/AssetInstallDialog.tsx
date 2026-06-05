@@ -8,9 +8,11 @@ import { RiFileCopyLine, RiDownloadLine, RiCheckLine, RiFolderZipLine } from '@r
 import type { AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 import { getInstallPathsForAsset } from '@julianpedro/plugin-dev-ai-hub-common';
 import { useApi } from '@backstage/core-plugin-api';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { devAiHubApiRef } from '../../api/DevAiHubClient';
 import { useAssetDetail } from '../../hooks';
 import { ToolIcon } from '../ToolIcon';
+import { devAiHubTranslationRef } from '../../translation';
 import styles from './AssetInstallDialog.module.css';
 
 const TOOL_LABELS: Record<string, string> = {
@@ -26,6 +28,7 @@ interface AssetInstallDialogProps {
 }
 
 export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps) {
+  const { t } = useTranslationRef(devAiHubTranslationRef);
   const [copiedTool, setCopiedTool] = useState<string | null>(null);
   const api = useApi(devAiHubApiRef);
   const { asset, loading } = useAssetDetail(assetId);
@@ -85,9 +88,9 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
         onOpenChange={open => { if (!open) handleClose(); }}
       >
         <DialogHeader>
-          {asset ? `Install: ${asset.name}` : 'Install'}
+          {asset ? t('assetInstallDialog.dialogTitle', { name: asset.name }) : 'Install'}
           <Text variant="body-small" color="secondary" className={styles.subtitle}>
-            Copy the content and place the file at the path shown for your tool.
+            {t('assetInstallDialog.dialogSubtitle')}
           </Text>
         </DialogHeader>
 
@@ -104,12 +107,11 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
                 <Flex className={styles.zipHeader}>
                   <RiFolderZipLine size={16} style={{ color: 'var(--bui-fg-info)' }} />
                   <Text variant="body-small" weight="bold" style={{ color: 'var(--bui-fg-info)' }}>
-                    Bundled skill — downloads as .zip
+                    {t('assetInstallDialog.bundledSkillTitle')}
                   </Text>
                 </Flex>
                 <Text variant="body-x-small" color="secondary" style={{ display: 'block', marginBottom: 'var(--bui-space-2)' }}>
-                  This skill includes resource files alongside <code>SKILL.md</code>.
-                  Extract the zip and place all files in the skill directory.
+                  {t('assetInstallDialog.bundledSkillDescription')}
                 </Text>
                 <TagGroup aria-label="Bundled files">
                   <Flex className={styles.zipFiles}>
@@ -132,7 +134,7 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
                 </Flex>
 
                 <Text variant="body-x-small" color="secondary" style={{ display: 'block', marginBottom: 'var(--bui-space-1)' }}>
-                  Install path
+                  {t('assetInstallDialog.installPathLabel')}
                 </Text>
                 <Box className={styles.installPathBox}>
                   {installPath}
@@ -145,9 +147,9 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
                       onClick={() => handleCopy(tool)}
                     >
                       {copiedTool === tool ? <RiCheckLine size={14} /> : <RiFileCopyLine size={14} />}
-                      {copiedTool === tool ? 'Copied!' : 'Copy Content'}
+                      {copiedTool === tool ? t('assetInstallDialog.copied') : t('assetInstallDialog.copyContent')}
                     </Button>
-                    <Tooltip>{copiedTool === tool ? 'Copied!' : 'Copy markdown content'}</Tooltip>
+                    <Tooltip>{copiedTool === tool ? t('assetInstallDialog.copied') : t('assetInstallDialog.copyTooltip')}</Tooltip>
                   </TooltipTrigger>
                   <TooltipTrigger>
                     <Button
@@ -155,9 +157,9 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
                       onClick={() => handleDownload(tool, installPath)}
                     >
                       {isZipSkill ? <RiFolderZipLine size={14} /> : <RiDownloadLine size={14} />}
-                      {isZipSkill ? 'Download .zip' : 'Download'}
+                      {isZipSkill ? t('assetInstallDialog.downloadZip') : t('assetInstallDialog.download')}
                     </Button>
-                    <Tooltip>{isZipSkill ? 'Download as .zip with all bundled files' : 'Download file with correct name'}</Tooltip>
+                    <Tooltip>{isZipSkill ? t('assetInstallDialog.downloadZipTooltip') : t('assetInstallDialog.downloadTooltip')}</Tooltip>
                   </TooltipTrigger>
                 </Flex>
               </Box>
@@ -167,7 +169,7 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
 
         <DialogFooter>
           <Button onClick={handleClose} variant="secondary" slot="close">
-            Close
+            {t('assetInstallDialog.close')}
           </Button>
         </DialogFooter>
       </Dialog>

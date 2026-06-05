@@ -1,8 +1,10 @@
 import type { ElementType } from 'react';
 import { Box, Flex, Text, SearchField, ToggleButton, ToggleButtonGroup } from '@backstage/ui';
 import { RiAppsLine, RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiDatabase2Line } from '@remixicon/react';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import type { AssetType, AiTool, AiHubProvider } from '@julianpedro/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
+import { devAiHubTranslationRef } from '../../translation';
 import styles from './AssetFilters.module.css';
 
 const ASSET_TYPES: { value: AssetType | 'all'; label: string; color: string; Icon: ElementType }[] = [
@@ -37,6 +39,7 @@ interface AssetFiltersProps {
 }
 
 export function AssetFilters({ value, onChange, availableTags = [], providers }: AssetFiltersProps) {
+  const { t } = useTranslationRef(devAiHubTranslationRef);
   const selectedType = value.types.length === 1 ? value.types[0] : 'all';
   const selectedTool = value.tools.length === 1 ? value.tools[0] : 'all';
   const showProviderFilter = providers && providers.length > 1;
@@ -51,7 +54,7 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
 
   const handleTagToggle = (tag: string) => {
     const next = value.tags.includes(tag)
-      ? value.tags.filter(t => t !== tag)
+      ? value.tags.filter(existing => existing !== tag)
       : [...value.tags, tag];
     onChange({ ...value, tags: next });
   };
@@ -65,7 +68,7 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
       <SearchField
         aria-label="Search assets"
         className={styles.searchField}
-        placeholder="Search assets by name, description or content…"
+        placeholder={t('assetFilters.searchPlaceholder')}
         value={value.search}
         onChange={v => onChange({ ...value, search: v })}
       />
@@ -74,28 +77,28 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
         {/* Type filter */}
         <Box>
           <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
-            Type
+            {t('assetFilters.typeHeader')}
           </Text>
           <Flex className={styles.filterChips}>
-              {ASSET_TYPES.map(t => {
-                const isSelected = selectedType === t.value;
-                const TypeIcon = t.Icon;
+              {ASSET_TYPES.map(opt => {
+                const isSelected = selectedType === opt.value;
+                const TypeIcon = opt.Icon;
                 return (
                   <ToggleButton
-                    key={t.value}
-                    id={t.value}
+                    key={opt.value}
+                    id={opt.value}
                     size="small"
                     className={`${styles.filterChip} ${isSelected ? styles.filterChipSelected : ''}`}
-                    iconStart={<TypeIcon size={14} style={{ color: isSelected ? '#fff' : t.color }} />}
+                    iconStart={<TypeIcon size={14} style={{ color: isSelected ? '#fff' : opt.color }} />}
                     isSelected={isSelected}
-                    onChange={() => handleTypeClick(t.value as AssetType | 'all')}
+                    onChange={() => handleTypeClick(opt.value as AssetType | 'all')}
                     style={{
-                      borderColor: isSelected ? t.color : `${t.color}30`,
-                      backgroundColor: isSelected ? t.color : `${t.color}10`,
-                      color: isSelected ? '#fff' : t.color,
+                      borderColor: isSelected ? opt.color : `${opt.color}30`,
+                      backgroundColor: isSelected ? opt.color : `${opt.color}10`,
+                      color: isSelected ? '#fff' : opt.color,
                     }}
                   >
-                    {t.label}
+                    {opt.value === 'all' ? t('assetFilters.typeAll') : opt.label}
                   </ToggleButton>
                 );
               })}
@@ -105,30 +108,30 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
         {/* AI Tool filter */}
         <Box>
           <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
-            AI Tool
+            {t('assetFilters.aiToolHeader')}
           </Text>
           <Flex className={styles.filterChips}>
-              {AI_TOOLS.map(t => {
-                const isSelected = selectedTool === t.value;
-                const iconEl = t.value !== 'all'
-                  ? <ToolIcon tool={t.value as AiTool} branded size={14} />
+              {AI_TOOLS.map(opt => {
+                const isSelected = selectedTool === opt.value;
+                const iconEl = opt.value !== 'all'
+                  ? <ToolIcon tool={opt.value as AiTool} branded size={14} />
                   : undefined;
                 return (
                   <ToggleButton
-                    key={t.value}
-                    id={t.value}
+                    key={opt.value}
+                    id={opt.value}
                     size="small"
                     className={`${styles.filterChip} ${isSelected ? styles.toolChipSelected : ''}`}
                     iconStart={iconEl}
                     isSelected={isSelected}
-                    onChange={() => handleToolClick(t.value as AiTool | 'all')}
+                    onChange={() => handleToolClick(opt.value as AiTool | 'all')}
                     style={{
                       borderColor: isSelected ? 'var(--bui-fg-link)' : 'var(--bui-border-1)',
                       backgroundColor: isSelected ? 'var(--bui-bg-accent-1)' : 'transparent',
                       color: isSelected ? 'var(--bui-fg-link)' : 'var(--bui-fg-secondary)',
                     }}
                   >
-                    {t.label}
+                    {opt.value === 'all' ? t('assetFilters.allTools') : opt.label}
                   </ToggleButton>
                 );
               })}
@@ -139,7 +142,7 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
         {showProviderFilter && (
           <Box>
             <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
-              Provider
+              {t('assetFilters.providerHeader')}
             </Text>
             <Flex className={styles.filterChips}>
                 <ToggleButton
@@ -155,7 +158,7 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
                     color: !value.providerId ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
                   }}
                 >
-                  All
+                  {t('assetFilters.typeAll')}
                 </ToggleButton>
                 {providers.map(p => {
                   const isSelected = value.providerId === p.id;
@@ -187,7 +190,7 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
       {availableTags.length > 0 && (
         <Box>
           <Text variant="body-x-small" color="secondary" className={styles.filterLabel}>
-            Tags
+            {t('assetFilters.tagsHeader')}
           </Text>
           <Flex className={styles.filterChips}>
               {availableTags.map(tag => {

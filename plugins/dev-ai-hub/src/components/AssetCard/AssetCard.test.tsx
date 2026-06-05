@@ -7,6 +7,25 @@ jest.mock('../ToolIcon', () => ({
   ToolIcon: ({ tool }: { tool: string }) => <span data-testid={`tool-icon-${tool}`} />,
 }));
 
+jest.mock('@backstage/core-plugin-api/alpha', () => ({
+  ...jest.requireActual('@backstage/core-plugin-api/alpha'),
+  useTranslationRef: () => ({
+    t: (key: string, params?: Record<string, unknown>) => {
+      const map: Record<string, string> = {
+        'assetCard.newBadge':       'New',
+        'assetCard.updatedBadge':   'Updated',
+        'assetCard.installTooltip': 'Install in editor',
+        'assetCard.detailsTooltip': 'View details',
+        'assetCard.helpTooltip':    'Usage guide',
+        'assetCard.moreTags':       `+${params?.n ?? ''}`,
+        'assetCard.bundleFooter':   `${params?.n ?? ''} assets · ${params?.author ?? ''}`,
+        'assetCard.versionFooter':  `v${params?.version ?? ''} · ${params?.author ?? ''}`,
+      };
+      return map[key] ?? key;
+    },
+  }),
+}));
+
 const NOW = new Date('2026-03-14T12:00:00Z').getTime();
 
 function makeAsset(overrides?: Partial<AiAssetSummary>): AiAssetSummary {

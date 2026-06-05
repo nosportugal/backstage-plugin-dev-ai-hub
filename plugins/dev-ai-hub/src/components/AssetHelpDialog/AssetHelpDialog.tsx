@@ -5,7 +5,9 @@ import {
   Dialog, DialogTrigger, DialogHeader, DialogBody, DialogFooter,
 } from '@backstage/ui';
 import { RiQuestionLine } from '@remixicon/react';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import type { AiAssetSummary } from '@julianpedro/plugin-dev-ai-hub-common';
+import { devAiHubTranslationRef } from '../../translation';
 import styles from './AssetHelpDialog.module.css';
 
 interface AssetHelpDialogProps {
@@ -14,6 +16,7 @@ interface AssetHelpDialogProps {
 }
 
 export function AssetHelpDialog({ asset, onClose }: AssetHelpDialogProps) {
+  const { t } = useTranslationRef(devAiHubTranslationRef);
   return (
     <DialogTrigger>
       <Dialog
@@ -29,7 +32,7 @@ export function AssetHelpDialog({ asset, onClose }: AssetHelpDialogProps) {
                 {asset?.label ?? asset?.name ?? ''}
               </Text>
               <Text variant="body-small" color="secondary" style={{ display: 'block' }}>
-                How to use this asset
+                {t('assetHelpDialog.subtitle')}
               </Text>
             </Box>
           </Flex>
@@ -45,7 +48,7 @@ export function AssetHelpDialog({ asset, onClose }: AssetHelpDialogProps) {
 
         <DialogFooter>
           <Button variant="secondary" onPress={onClose}>
-            Close
+            {t('assetHelpDialog.close')}
           </Button>
         </DialogFooter>
       </Dialog>

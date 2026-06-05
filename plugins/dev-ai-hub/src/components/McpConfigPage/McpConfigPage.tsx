@@ -6,9 +6,11 @@ import {
 } from '@backstage/ui';
 import { RiFileCopyLine, RiCheckLine, RiDatabase2Line, RiServerLine } from '@remixicon/react';
 import { useApi, discoveryApiRef } from '@backstage/core-plugin-api';
+import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { ToolIcon } from '../ToolIcon';
 import { useCopyToClipboard, useProviders, useMcpCatalog } from '../../hooks';
 import type { AiTool, McpCatalogEntry } from '@julianpedro/plugin-dev-ai-hub-common';
+import { devAiHubTranslationRef } from '../../translation';
 import styles from './McpConfigPage.module.css';
 
 interface ToolConfig {
@@ -54,6 +56,7 @@ function providerLabel(target: string): string {
 }
 
 function CatalogEntryCard({ entry }: { entry: McpCatalogEntry }) {
+  const { t } = useTranslationRef(devAiHubTranslationRef);
   const handleInstallVscode = () => {
     const config: Record<string, unknown> = { name: entry.id, type: entry.type };
     if (entry.type === 'http') config.url = entry.url;
@@ -107,10 +110,10 @@ function CatalogEntryCard({ entry }: { entry: McpCatalogEntry }) {
       )}
       <Flex style={{ gap: 'var(--bui-space-2)', marginTop: 'auto' }}>
         <Button size="small" variant="secondary" isDisabled={!canInstall} onPress={handleInstallVscode}>
-          VS Code
+          {t('mcpConfigDialog.catalogVscode')}
         </Button>
         <Button size="small" variant="secondary" isDisabled={!canInstall} onPress={handleInstallCursor}>
-          Cursor
+          {t('mcpConfigDialog.catalogCursor')}
         </Button>
       </Flex>
     </Box>
@@ -118,6 +121,7 @@ function CatalogEntryCard({ entry }: { entry: McpCatalogEntry }) {
 }
 
 export function McpConfigPage() {
+  const { t } = useTranslationRef(devAiHubTranslationRef);
   const discoveryApi = useApi(discoveryApiRef);
   const { copy: copyUrl, copied: copiedUrl } = useCopyToClipboard();
   const { copy: copySnippet, copied: copiedSnippet } = useCopyToClipboard();
@@ -134,7 +138,7 @@ export function McpConfigPage() {
     discoveryApi.getBaseUrl('dev-ai-hub').then(url => setBaseUrl(url));
   }, [discoveryApi]);
 
-  const cfg = TOOL_CONFIGS.find(t => t.tool === selectedToolKey) ?? TOOL_CONFIGS[0];
+  const cfg = TOOL_CONFIGS.find(c => c.tool === selectedToolKey) ?? TOOL_CONFIGS[0];
 
   const buildMcpUrl = () => {
     if (!baseUrl) return 'loading...';
@@ -167,22 +171,22 @@ export function McpConfigPage() {
 
   return (
     <div className={styles.pageRoot}>
-      <Text variant="title-small" weight="bold">Configure MCP Server</Text>
+      <Text variant="title-small" weight="bold">{t('mcpConfigDialog.configureTitle')}</Text>
       <Text variant="body-small" color="secondary" className={styles.subtitle}>
-        Connect your AI tool to the Dev AI Hub via Model Context Protocol.
+        {t('mcpConfigDialog.configureSubtitle')}
       </Text>
 
       {catalog.length > 0 && (
         <Box className={styles.catalogSection}>
           <Flex align="center" style={{ gap: 'var(--bui-space-2)', marginBottom: 'var(--bui-space-2)' }}>
             <RiServerLine size={16} style={{ color: 'var(--bui-fg-secondary)' }} />
-            <Text variant="body-medium" weight="bold">MCP Catalog</Text>
+            <Text variant="body-medium" weight="bold">{t('mcpConfigDialog.catalogTab')}</Text>
             <Text variant="body-x-small" color="secondary">
-              {catalog.length} server{catalog.length !== 1 ? 's' : ''} available
+              {t('mcpConfigDialog.catalogAvailable', { n: String(catalog.length) })}
             </Text>
           </Flex>
           <Text variant="body-x-small" color="secondary" style={{ display: 'block', marginBottom: 'var(--bui-space-3)' }}>
-            One-click install MCP servers published by your providers into VS Code or Cursor.
+            {t('mcpConfigDialog.catalogDescription')}
           </Text>
           <div className={styles.catalogGrid}>
             {catalog.map(entry => (
@@ -195,22 +199,22 @@ export function McpConfigPage() {
       <div className={styles.configContent}>
         <Tabs selectedKey={selectedToolKey} onSelectionChange={key => setSelectedToolKey(key as string)}>
           <TabList className={styles.tabBar}>
-            {TOOL_CONFIGS.map(t => (
-              <Tab key={t.tool} id={t.tool}>
+            {TOOL_CONFIGS.map(cfgItem => (
+              <Tab key={cfgItem.tool} id={cfgItem.tool}>
                 <span className={styles.tabContent}>
-                  <ToolIcon tool={t.tool} size={16} />
-                  <span>{t.label}</span>
+                  <ToolIcon tool={cfgItem.tool} size={16} />
+                  <span>{cfgItem.label}</span>
                 </span>
               </Tab>
             ))}
           </TabList>
 
-          {TOOL_CONFIGS.map(t => (
-            <TabPanel key={t.tool} id={t.tool}>
+          {TOOL_CONFIGS.map(cfgItem => (
+            <TabPanel key={cfgItem.tool} id={cfgItem.tool}>
               {showProviderFilter && (
                 <Box className={styles.providerSection}>
                   <Text variant="body-x-small" color="secondary" className={styles.sectionLabel}>
-                    Scope to Provider
+                    {t('mcpConfigDialog.scopeToProvider')}
                   </Text>
                   <Flex className={styles.chipsRow}>
                     <ToggleButton
@@ -225,7 +229,7 @@ export function McpConfigPage() {
                         color: !selectedProvider ? 'var(--bui-bg-neutral-1)' : 'var(--bui-fg-secondary)',
                       }}
                     >
-                      All providers
+                      {t('mcpConfigDialog.allProviders')}
                     </ToggleButton>
                     {providers.map(p => {
                       const isSelected = selectedProvider === p.id;
@@ -258,13 +262,12 @@ export function McpConfigPage() {
                   <Switch
                     isSelected={proactiveEnabled}
                     onChange={setProactiveEnabled}
-                    aria-label="Proactive suggestions"
+                    aria-label={t('mcpConfigDialog.proactiveSuggestions')}
                   />
                   <Box>
-                    <Text variant="body-small" weight="bold">Proactive suggestions</Text>
+                    <Text variant="body-small" weight="bold">{t('mcpConfigDialog.proactiveSuggestions')}</Text>
                     <Text variant="body-x-small" color="secondary">
-                      The AI will automatically suggest relevant assets based on your project context.
-                      Disable if you prefer to search manually.
+                      {t('mcpConfigDialog.proactiveDescription')}
                     </Text>
                   </Box>
                 </Flex>
@@ -272,7 +275,7 @@ export function McpConfigPage() {
 
               <Box className={styles.urlSection}>
                 <Text variant="body-x-small" color="secondary" className={styles.sectionLabel}>
-                  MCP Endpoint
+                  {t('mcpConfigDialog.mcpEndpoint')}
                 </Text>
                 <Flex className={styles.urlBox}>
                   <Text variant="body-small" className={styles.urlText}>
@@ -280,21 +283,25 @@ export function McpConfigPage() {
                   </Text>
                   <TooltipTrigger>
                     <ButtonIcon
-                      aria-label={copiedUrl ? 'Copied!' : 'Copy URL'}
+                      aria-label={copiedUrl ? t('mcpConfigDialog.copied') : t('mcpConfigDialog.copyUrl')}
                       icon={copiedUrl ? <RiCheckLine size={14} style={{ color: 'var(--bui-fg-success)' }} /> : <RiFileCopyLine size={14} />}
                       variant="tertiary"
                       onPress={() => copyUrl(mcpUrl)}
                     />
-                    <Tooltip>{copiedUrl ? 'Copied!' : 'Copy URL'}</Tooltip>
+                    <Tooltip>{copiedUrl ? t('mcpConfigDialog.copied') : t('mcpConfigDialog.copyUrl')}</Tooltip>
                   </TooltipTrigger>
                 </Flex>
               </Box>
 
               <Text variant="body-x-small" color="secondary" className={styles.sectionLabel}>
-                {t.file}
+                {cfgItem.file}
               </Text>
               <Text variant="body-x-small" color="secondary" style={{ display: 'block', marginBottom: 'var(--bui-space-2)', marginTop: 'var(--bui-space-1)' }}>
-                {t.description}
+                {(() => {
+                  if (cfgItem.tool === 'claude-code') return t('mcpConfigDialog.claudeConfigDesc');
+                  if (cfgItem.tool === 'github-copilot') return t('mcpConfigDialog.copilotConfigDesc');
+                  return t('mcpConfigDialog.geminiConfigDesc');
+                })()}
               </Text>
               <div className={styles.snippetContainer}>
                 <pre className={`${styles.snippetPre} ${isDark ? styles.snippetPreDark : styles.snippetPreLight}`}>
@@ -302,13 +309,13 @@ export function McpConfigPage() {
                 </pre>
                 <TooltipTrigger>
                   <ButtonIcon
-                    aria-label="Copy config"
+                    aria-label={t('mcpConfigDialog.copyConfig')}
                     className={styles.copySnippetButton}
                     icon={copiedSnippet ? <RiCheckLine size={14} style={{ color: 'var(--bui-fg-success)' }} /> : <RiFileCopyLine size={14} />}
                     variant="tertiary"
                     onPress={() => copySnippet(configSnippet)}
                   />
-                  <Tooltip>{copiedSnippet ? 'Copied!' : 'Copy config'}</Tooltip>
+                  <Tooltip>{copiedSnippet ? t('mcpConfigDialog.copied') : t('mcpConfigDialog.copyConfig')}</Tooltip>
                 </TooltipTrigger>
               </div>
 
