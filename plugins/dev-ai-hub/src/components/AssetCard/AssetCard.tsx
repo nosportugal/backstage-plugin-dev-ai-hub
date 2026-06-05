@@ -1,7 +1,7 @@
 import type { ElementType } from 'react';
 import { Box, Flex, Text, Card, CardBody, CardFooter, Tag, TagGroup, ButtonIcon, Tooltip, TooltipTrigger } from '@backstage/ui';
 import { RiDownloadLine, RiExternalLinkLine } from '@remixicon/react';
-import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine } from '@remixicon/react';
+import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiStackLine } from '@remixicon/react';
 import type { AiAssetSummary, AssetType, AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
 import styles from './AssetCard.module.css';
@@ -22,6 +22,7 @@ const TYPE_CONFIG: Record<AssetType, { label: string; color: string; bg: string;
   agent:       { label: 'Agent',       color: '#FF6B9D', bg: 'rgba(255, 107, 157, 0.15)', Icon: RiRobot2Line },
   skill:       { label: 'Skill',       color: '#6AB04C', bg: 'rgba(106, 176, 76, 0.15)',  Icon: RiToolsLine },
   workflow:    { label: 'Workflow',    color: '#F9CA24', bg: 'rgba(249, 202, 36, 0.15)',  Icon: RiGitBranchLine },
+  bundle:      { label: 'Bundle',      color: '#A55EEA', bg: 'rgba(165, 94, 234, 0.15)',  Icon: RiStackLine },
 };
 
 interface AssetCardProps {

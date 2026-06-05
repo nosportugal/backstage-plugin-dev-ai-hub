@@ -20,6 +20,7 @@ const TYPE_COLORS: Record<AssetType, string> = {
   agent: '#7b1fa2',
   skill: '#388e3c',
   workflow: '#f57c00',
+  bundle: '#a55eea',
 };
 
 interface AssetDetailPanelProps {

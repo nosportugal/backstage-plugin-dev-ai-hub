@@ -170,6 +170,7 @@ export class AiAssetStore {
       agent: 0,
       skill: 0,
       workflow: 0,
+      bundle: 0,
     };
     const byTool: Record<string, number> = {};
     const byProvider: Record<string, number> = {};
