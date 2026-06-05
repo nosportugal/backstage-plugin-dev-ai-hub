@@ -2,7 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import type { AiAssetStore } from '../database/AiAssetStore';
 import type { ProviderConfig } from '../types';
-import type { AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
+import type { AssetType, AiAsset } from '@julianpedro/plugin-dev-ai-hub-common';
 import { getInstallPathsForAsset } from '@julianpedro/plugin-dev-ai-hub-common';
 
 /** Derives a human-readable label from a Git target URL. */
@@ -18,6 +18,7 @@ function providerLabel(target: string): string {
  * @param providerFilter   - Captured from `?provider=` at session init; scopes assets to a single provider
  * @param providers        - Full provider config list (for `list_providers` and label resolution)
  * @param proactiveEnabled - When false, the `check_for_assets` prompt and `suggest_assets` tool are not registered
+ * @param baseUrl          - Base URL of the plugin (e.g. http://backstage:7007/api/dev-ai-hub), used to generate raw_url
  */
 export function createMcpServer(
   store: AiAssetStore,
@@ -25,6 +26,7 @@ export function createMcpServer(
   providerFilter: string,
   providers: ProviderConfig[],
   proactiveEnabled = false,
+  baseUrl = '',
 ): McpServer {
   const server = new McpServer({ name: 'dev-ai-hub', version: '0.1.0' });
 
@@ -39,6 +41,37 @@ export function createMcpServer(
 
   /** Returns the human-readable display name for an asset. */
   const displayName = (a: { name: string; label?: string }) => a.label ?? a.name;
+
+  /** Returns the raw-content URL for an asset (undefined when baseUrl is not configured). */
+  const rawUrl = (assetId: string) =>
+    baseUrl ? `${baseUrl}/assets/${encodeURIComponent(assetId)}/raw` : undefined;
+
+  /**
+   * Builds the install payload shared by install_asset, install_bundle and install_assets.
+   * curl is built-in on Windows 10+ (since 2018), macOS, and Linux.
+   * --create-dirs creates parent directories; -fsSL follows redirects silently.
+   */
+  const buildInstallPayload = (asset: AiAsset, recommendedPath: string) => {
+    const url = rawUrl(asset.id);
+    const resources = asset.resourcesContent
+      ? Object.entries(asset.resourcesContent).map(([filePath, fileContent]) => ({
+          path: filePath,
+          content: fileContent,
+        }))
+      : undefined;
+
+    const curlCmd = url
+      ? `curl -fsSL --create-dirs -o ${JSON.stringify(recommendedPath)} ${JSON.stringify(url)}`
+      : undefined;
+
+    return {
+      recommended_path: recommendedPath,
+      raw_url: url,
+      install_command: curlCmd,
+      content: asset.content,
+      resources,
+    };
+  };
 
   /**
    * Resolves an asset by name: tries exact match on name/label first,
@@ -369,13 +402,11 @@ export function createMcpServer(
   server.tool(
     'install_asset',
     [
-      'Fetches asset content and the recommended install path for this tool.',
-      'Accepts asset ID or name (partial match supported).',
-      'IMPORTANT: After calling this tool you MUST write the file yourself:',
-      '1. Use recommended_path as the destination.',
-      '2. Create all parent directories if they do not exist.',
-      '3. Write the value of "content" verbatim to that path.',
-      'Calling this tool alone does NOT write any file — you must perform the write.',
+      'Returns the install path and a pre-built install_command (curl) for a single asset.',
+      'IMPORTANT: Run install_command via your terminal/shell tool (execute, run_terminal, Bash).',
+      'This writes the file directly without content going through the model — prevents truncation.',
+      'Fallback: use web tool (Copilot) or WebFetch (Claude Code) to fetch raw_url, then write.',
+      'Last resort only: write the "content" field if no terminal or web tool is available.',
       'After installing, offer the assets listed in related_assets to complement the installation.',
     ].join(' '),
     {
@@ -425,34 +456,32 @@ export function createMcpServer(
         .slice(0, 3)
         .map(a => ({ id: a.id, name: displayName(a), type: a.type, description: a.description }));
 
-      const resources = asset.resourcesContent
-        ? Object.entries(asset.resourcesContent).map(([filePath, fileContent]) => ({
-            path: filePath,
-            content: fileContent,
-          }))
-        : undefined;
+      const payload = buildInstallPayload(asset, recommendedPath);
 
       return {
         content: [{
           type: 'text' as const,
           text: JSON.stringify({
             action_required: [
-              'Write the "content" field to "recommended_path". Create parent directories if needed.',
-              resources?.length
-                ? 'Also write each file in "resources" to its "path" relative to the skill directory.'
+              'Write the file. Choose the FIRST option available to you:',
+              '  [A] Run install_command in your terminal tool (execute, run_terminal, or Bash).',
+              '      curl downloads and writes the file atomically — no content passes through the model.',
+              '  [B] Use the web tool (Copilot) or WebFetch (Claude Code) to fetch raw_url,',
+              '      then write the fetched bytes to recommended_path. Create parent dirs if needed.',
+              '  [C] Last resort: write the "content" field verbatim to recommended_path.',
+              payload.resources?.length
+                ? '\nFor each file in resources[]: repeat using resources[].path as destination.'
                 : null,
-            ].filter(Boolean).join(' '),
+            ].filter(Boolean).join('\n'),
             installed: {
               id: asset.id,
               name: displayName(asset),
               type: asset.type,
               provider: { id: asset.providerId, label: resolveProviderLabel(asset.providerId) },
             },
-            recommended_path: recommendedPath,
             all_install_paths: installPaths,
             path_override_hint: 'Paths can be customised per-tool in the asset YAML: installPaths: { claude-code: ".claude/rules/custom.md" }',
-            content: asset.content,
-            resources,
+            ...payload,
             related_assets: related,
           }, null, 2),
         }],
@@ -516,21 +545,12 @@ export function createMcpServer(
           ? (installPaths[toolParam] ?? Object.values(installPaths)[0])
           : Object.values(installPaths)[0];
 
-        const resources = asset.resourcesContent
-          ? Object.entries(asset.resourcesContent).map(([filePath, fileContent]) => ({
-              path: filePath,
-              content: fileContent,
-            }))
-          : undefined;
-
         files.push({
           id: asset.id,
           name: displayName(asset),
           type: asset.type,
-          recommended_path: recommendedPath ?? `${asset.name.replace(/\s+/g, '-').toLowerCase()}.md`,
           all_install_paths: installPaths,
-          content: asset.content,
-          resources,
+          ...buildInstallPayload(asset, recommendedPath ?? `${asset.name.replace(/\s+/g, '-').toLowerCase()}.md`),
         });
       }
 
@@ -541,10 +561,12 @@ export function createMcpServer(
           type: 'text' as const,
           text: JSON.stringify({
             action_required: [
-              'For EACH file in "files", write the "content" field to its "recommended_path".',
-              'Create parent directories if needed. Also write each file in "resources" to its "path".',
-              'Process all files. Do not skip any.',
-            ].join(' '),
+              'For EACH file in files[], write the file. Choose the first available option:',
+              '  [A] Run install_command in your terminal tool — atomic, no content through the model.',
+              '  [B] Fetch raw_url and write to recommended_path.',
+              '  [C] Last resort: write the "content" field verbatim to recommended_path.',
+              'Also write each file in resources[] to its path. Process all files. Do not skip any.',
+            ].join('\n'),
             bundle: {
               id: bundle.id,
               name: displayName(bundle),
@@ -553,6 +575,71 @@ export function createMcpServer(
             },
             total: files.length,
             not_resolved: notResolved.length > 0 ? notResolved : undefined,
+            files,
+          }, null, 2),
+        }],
+      };
+    },
+  );
+
+  // ── install_assets ──────────────────────────────────────────────────────────
+  //
+  // Batch installation: one MCP round-trip for N assets.
+  // Use instead of calling install_asset N times.
+
+  server.tool(
+    'install_assets',
+    [
+      'Install multiple assets at once — one MCP call instead of N.',
+      'ALWAYS prefer this over calling install_asset individually when installing 2 or more assets.',
+      'Each file includes an install_command (curl) — run it via your terminal tool (execute, run_terminal, Bash) for atomic, truncation-free install.',
+    ].join(' '),
+    {
+      ids: z.array(z.string()).min(1).max(20).describe('List of asset IDs to install'),
+    },
+    async ({ ids }) => {
+      const results = await Promise.all(ids.map(id => store.getAsset(id)));
+
+      const found    = results.filter((a): a is AiAsset => a !== null);
+      const notFound = ids.filter((_, i) => results[i] === null);
+
+      // Track installs for all found assets in parallel
+      await Promise.all(found.map(a => store.incrementInstallCount(a.id)));
+
+      const files = found.map(asset => {
+        const installPaths = getInstallPathsForAsset(asset.type, asset.tools, asset.name, {
+          installPath: asset.installPath,
+          installPaths: asset.installPaths,
+        });
+        const recommendedPath = toolParam
+          ? (installPaths[toolParam] ?? Object.values(installPaths)[0])
+          : Object.values(installPaths)[0];
+
+        return {
+          id: asset.id,
+          name: displayName(asset),
+          type: asset.type,
+          all_install_paths: installPaths,
+          ...buildInstallPayload(asset, recommendedPath),
+        };
+      });
+
+      return {
+        content: [{
+          type: 'text' as const,
+          text: JSON.stringify({
+            action_required: [
+              'For EACH file in files[], write the file. Choose the first available option:',
+              '  [A] Run install_command in your terminal tool (execute, run_terminal, or Bash).',
+              '      curl downloads and writes the file atomically — no content passes through the model.',
+              '  [B] Use the web tool (Copilot) or WebFetch (Claude Code) to fetch raw_url,',
+              '      then write the fetched bytes to recommended_path. Create parent dirs if needed.',
+              '  [C] Last resort: write the "content" field verbatim to recommended_path.',
+              '',
+              'Process all files. Do not skip any.',
+            ].join('\n'),
+            total: found.length,
+            not_found: notFound.length > 0 ? notFound : undefined,
             files,
           }, null, 2),
         }],

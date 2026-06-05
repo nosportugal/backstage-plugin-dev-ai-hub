@@ -114,6 +114,7 @@ function makeApp(storeOverrides: Partial<AiAssetStore> = {}) {
     store,
     syncService,
     providers: [PROVIDER],
+    baseUrl: 'http://localhost:7007/api/dev-ai-hub',
   });
 
   const app = express();
