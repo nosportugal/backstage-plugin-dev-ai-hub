@@ -136,27 +136,6 @@ export function useStats() {
   return { stats, loading, error };
 }
 
-export function useMcpCatalog() {
-  const api = useApi(devAiHubApiRef);
-  const [catalog, setCatalog] = useState<McpCatalogEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    setLoading(true);
-    api
-      .getMcpCatalog()
-      .then(data => {
-        setCatalog(data);
-        setError(null);
-      })
-      .catch(err => setError(err))
-      .finally(() => setLoading(false));
-  }, [api]);
-
-  return { catalog, loading, error };
-}
-
 export function useCopyToClipboard() {
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

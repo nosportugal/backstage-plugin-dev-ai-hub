@@ -1,4 +1,3 @@
-import yaml from 'js-yaml';
 import type {
   LoggerService,
   SchedulerService,
@@ -8,7 +7,6 @@ import type { AiAssetStore } from '../database/AiAssetStore';
 import type { ProviderConfig } from '../types';
 import type { AiAssetProvider } from '@nospt/plugin-dev-ai-hub-node';
 import { AssetParser } from './AssetParser';
-import { McpCatalogFileSchema } from '@julianpedro/plugin-dev-ai-hub-common';
 
 interface Options {
   logger: LoggerService;
@@ -23,28 +21,13 @@ export class AiAssetSyncService {
   constructor(private readonly options: Options) {}
 
   async start(): Promise<void> {
-    const { scheduler, logger, store, providers, externalProviders } = this.options;
+    const { scheduler, logger, providers, externalProviders } = this.options;
 
     if (providers.length === 0 && externalProviders.length === 0) {
       logger.warn(
         'dev-ai-hub: no providers configured under devAiHub.providers',
       );
-    }
-
-    // Purge assets for providers that were removed from config.
-    // Runs before scheduling any syncs so removed providers are cleaned up on restart.
-    const configuredIds = new Set([
-      ...providers.map(p => p.id),
-      ...externalProviders.map(p => p.id),
-    ]);
-    const knownStatuses = await store.getAllSyncStatuses();
-    for (const status of knownStatuses) {
-      if (!configuredIds.has(status.providerId)) {
-        await store.purgeProvider(status.providerId);
-        logger.info(
-          `dev-ai-hub: purged removed provider "${status.providerId}" and its assets`,
-        );
-      }
+      return;
     }
 
     for (const provider of providers) {
@@ -110,34 +93,6 @@ export class AiAssetSyncService {
       >();
       for (const file of files) {
         fileMap.set(normalizePath(file.path), file);
-      }
-
-      // ── Sync mcp-catalog.yaml if present ────────────────────────────────────
-      const mcpCatalogFile = fileMap.get('mcp-catalog.yaml');
-      if (mcpCatalogFile) {
-        try {
-          const raw = (await mcpCatalogFile.content()).toString('utf-8');
-          const parsed = McpCatalogFileSchema.safeParse(yaml.load(raw));
-          if (parsed.success) {
-            const entries = parsed.data.servers;
-            await store.upsertMcpCatalogEntries(entries, provider.id);
-            await store.deleteMcpCatalogEntriesNotIn(provider.id, entries.map(e => e.id));
-            logger.info(
-              `dev-ai-hub: synced ${entries.length} MCP catalog entries from provider "${provider.id}"`,
-            );
-          } else {
-            logger.warn(
-              `dev-ai-hub: invalid mcp-catalog.yaml in provider "${provider.id}": ${parsed.error.message}`,
-            );
-          }
-        } catch (err) {
-          logger.warn(
-            `dev-ai-hub: failed to parse mcp-catalog.yaml in provider "${provider.id}": ${err}`,
-          );
-        }
-      } else {
-        // No mcp-catalog.yaml — remove any previously synced entries for this provider
-        await store.deleteMcpCatalogEntriesNotIn(provider.id, []);
       }
 
       const syncedIds: string[] = [];
@@ -208,7 +163,7 @@ export class AiAssetSyncService {
           }
         }
 
-        const mdContent = mdFile ? (await mdFile.content()).toString('utf-8') : '';
+        const mdContent = (await mdFile.content()).toString('utf-8');
 
         // For skills: read bundled resource files and store their content
         let resourcesContent: Record<string, string> | undefined;

@@ -12,7 +12,6 @@ export interface DevAiHubApi {
     getProviderStatus(id: string): Promise<AiHubProvider>;
     triggerSync(id: string): Promise<void>;
     getStats(): Promise<AiHubStats>;
-    getMcpCatalog(): Promise<McpCatalogEntry[]>;
 }
 export declare class DevAiHubClient implements DevAiHubApi {
     private readonly discoveryApi;
@@ -29,5 +28,4 @@ export declare class DevAiHubClient implements DevAiHubApi {
     getProviderStatus(id: string): Promise<AiHubProvider>;
     triggerSync(id: string): Promise<void>;
     getStats(): Promise<AiHubStats>;
-    getMcpCatalog(): Promise<McpCatalogEntry[]>;
 }

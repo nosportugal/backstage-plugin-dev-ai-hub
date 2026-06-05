@@ -8,8 +8,6 @@ export interface ParsedAssetMeta {
      */
     mdPath?: string;
     yamlRaw: string;
-    /** False for bundle assets — .md is optional, not required */
-    requiresMd: boolean;
 }
 export declare class AssetParser {
     /**

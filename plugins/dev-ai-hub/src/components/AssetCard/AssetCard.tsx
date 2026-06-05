@@ -7,8 +7,7 @@ import { ToolIcon } from '../ToolIcon';
 import styles from './AssetCard.module.css';
 
 const POPULAR_THRESHOLD = 5;
-const NEW_DAYS_MS     = 14 * 24 * 60 * 60 * 1000;
-const UPDATED_DAYS_MS =  7 * 24 * 60 * 60 * 1000;
+const NEW_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 
 const TOOL_LABELS: Record<AiTool, string> = {
   'all':            'Universal',
@@ -25,32 +24,17 @@ const TYPE_CONFIG: Record<AssetType, { label: string; color: string; bg: string;
   workflow:    { label: 'Workflow',    color: '#F9CA24', bg: 'rgba(249, 202, 36, 0.15)',  Icon: RiGitBranchLine },
 };
 
-function resolveMcp(req: McpRequirement, catalog: McpCatalogEntry[]): { name: string; icon?: string } {
-  const entry = catalog.find(e => e.id === req.id);
-  return {
-    name: req.name ?? entry?.name ?? req.id,
-    icon: req.icon ?? entry?.icon,
-  };
-}
-
 interface AssetCardProps {
   asset: AiAssetSummary;
   onView: (id: string) => void;
   onInstall: (id: string) => void;
-  onHelp?: (id: string) => void;
-  onOpenMcpCatalog?: () => void;
-  mcpCatalog?: McpCatalogEntry[];
 }
 
-export function AssetCard({ asset, onView, onInstall, onHelp, onOpenMcpCatalog, mcpCatalog = [] }: AssetCardProps) {
-  const { t } = useTranslationRef(devAiHubTranslationRef);
-  const theme = useTheme();
-  const isDark = (theme.palette as any).mode === 'dark' || (theme.palette as any).type === 'dark';
+export function AssetCard({ asset, onView, onInstall }: AssetCardProps) {
   const cfg = TYPE_CONFIG[asset.type];
   const TypeIcon = cfg.Icon;
   const isPopular = asset.installCount >= POPULAR_THRESHOLD;
-  const isNew     = Date.now() - new Date(asset.createdAt).getTime() < NEW_DAYS_MS;
-  const isUpdated = !isNew && Date.now() - new Date(asset.updatedAt).getTime() < UPDATED_DAYS_MS;
+  const isNew = Date.now() - new Date(asset.updatedAt).getTime() < NEW_DAYS_MS;
 
   return (
     <Card

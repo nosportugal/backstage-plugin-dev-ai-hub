@@ -15,10 +15,8 @@ export interface ProviderConfig {
   };
 }
 
-export interface AiAssetInput extends Omit<AiAsset, 'id' | 'syncedAt' | 'createdAt' | 'updatedAt' | 'installCount' | 'items'> {
+export interface AiAssetInput extends Omit<AiAsset, 'id' | 'syncedAt' | 'createdAt' | 'updatedAt' | 'installCount'> {
   id: string;
-  /** Raw item refs for bundle-type assets. Stored in DB; resolved lazily at read time. */
-  bundleRefs?: Array<{ ref: string }>;
 }
 
 export interface SyncStatus {

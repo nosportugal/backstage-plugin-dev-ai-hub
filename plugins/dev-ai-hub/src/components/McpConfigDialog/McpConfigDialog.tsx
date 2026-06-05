@@ -7,7 +7,6 @@ import {
 } from '@backstage/ui';
 import { RiFileCopyLine, RiCheckLine, RiDatabase2Line } from '@remixicon/react';
 import { useApi, discoveryApiRef } from '@backstage/core-plugin-api';
-import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { ToolIcon } from '../ToolIcon';
 import { useCopyToClipboard, useProviders } from '../../hooks';
 import type { AiTool } from '@nospt/plugin-dev-ai-hub-common';
@@ -21,188 +20,39 @@ interface ToolConfig {
   buildConfig: (mcpUrl: string) => string;
 }
 
-const TYPE_ACCENT: Record<string, string> = {
-  http: '#2563EB',
-  stdio: '#059669',
-};
+const TOOL_CONFIGS: ToolConfig[] = [
+  {
+    tool: 'claude-code',
+    label: 'Claude Code',
+    file: '.mcp.json',
+    description: 'Add to .mcp.json in your project root (or run via claude mcp add):',
+    buildConfig: url => JSON.stringify({
+      mcpServers: { 'dev-ai-hub': { type: 'http', url } },
+    }, null, 2),
+  },
+  {
+    tool: 'github-copilot',
+    label: 'GitHub Copilot',
+    file: '.vscode/settings.json',
+    description: 'Add to your VS Code settings (.vscode/settings.json or user settings):',
+    buildConfig: url => JSON.stringify({
+      'github.copilot.chat.mcp.servers': { 'dev-ai-hub': { type: 'http', url } },
+    }, null, 2),
+  },
+  {
+    tool: 'google-gemini',
+    label: 'Google Gemini',
+    file: 'gemini-config.json',
+    description: 'Add to your Gemini CLI configuration:',
+    buildConfig: url => JSON.stringify({
+      mcpServers: { 'dev-ai-hub': { url } },
+    }, null, 2),
+  },
+];
 
 function providerLabel(target: string): string {
   return target.split('/').pop()?.replace(/\.git$/, '') ?? target;
 }
-
-// ─── MCP Catalog entry card ───────────────────────────────────────────────────
-
-interface CatalogEntryCardProps {
-  entry: McpCatalogEntry;
-}
-
-function CatalogEntryCard({ entry }: CatalogEntryCardProps) {
-  const { t } = useTranslationRef(devAiHubTranslationRef);
-  const accent = TYPE_ACCENT[entry.type] ?? '#64748b';
-
-  const handleInstallVscode = () => {
-    const config: Record<string, unknown> = { name: entry.id, type: entry.type };
-    if (entry.type === 'http') config.url = entry.url;
-    if (entry.type === 'stdio') {
-      config.command = entry.command;
-      if (entry.args?.length) config.args = entry.args;
-      if (entry.env && Object.keys(entry.env).length) config.env = entry.env;
-    }
-    window.location.href = `vscode:mcp/install?${encodeURIComponent(JSON.stringify(config))}`;
-  };
-
-  const handleInstallCursor = () => {
-    const config: Record<string, unknown> = { type: entry.type };
-    if (entry.type === 'http') config.url = entry.url;
-    if (entry.type === 'stdio') {
-      config.command = entry.command;
-      if (entry.args?.length) config.args = entry.args;
-      if (entry.env && Object.keys(entry.env).length) config.env = entry.env;
-    }
-    window.location.href = `cursor://anysphere.cursor-deeplink/mcp/install?name=${encodeURIComponent(entry.name)}&config=${btoa(JSON.stringify(config))}`;
-  };
-
-  const canInstall =
-    (entry.type === 'http' && !!entry.url) ||
-    (entry.type === 'stdio' && !!entry.command);
-
-  return (
-    <Box
-      sx={{
-        border: '1px solid',
-        borderColor: 'divider',
-        borderLeft: `3px solid ${accent}`,
-        borderRadius: 2,
-        p: 2,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 1.25,
-        height: '100%',
-        minHeight: 148,
-        transition: 'all 0.15s ease',
-        '&:hover': {
-          boxShadow: `0 4px 16px ${accent}25`,
-          borderColor: `${accent}60`,
-        },
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.25 }}>
-        <Box
-          sx={{
-            width: 48,
-            height: 48,
-            borderRadius: 2,
-            backgroundColor: `${accent}18`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            boxShadow: `0 2px 8px ${accent}20`,
-          }}
-        >
-          {entry.icon ? (
-            <Box
-              component="img"
-              src={entry.icon}
-              alt={entry.name}
-              sx={{ width: 32, height: 32, objectFit: 'contain' }}
-              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-            />
-          ) : (
-            <StorageIcon sx={{ fontSize: '1.4rem', color: accent }} />
-          )}
-        </Box>
-
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.25, flexWrap: 'wrap' }}>
-            <Typography variant="subtitle2" fontWeight={700} noWrap title={entry.name} sx={{ flex: 1 }}>
-              {entry.name}
-            </Typography>
-            <Chip
-              label={entry.type}
-              size="small"
-              sx={{
-                height: 18,
-                fontSize: '0.6rem',
-                fontFamily: 'monospace',
-                fontWeight: 700,
-                bgcolor: `${accent}18`,
-                color: accent,
-                border: '1px solid',
-                borderColor: `${accent}40`,
-              }}
-            />
-          </Box>
-          {entry.description && (
-            <Typography variant="caption" color="text.secondary" title={entry.description} sx={{ display: 'block', lineHeight: 1.4 }}>
-              {entry.description}
-            </Typography>
-          )}
-          {entry.type === 'http' && entry.url && (
-            <Typography
-              variant="caption"
-              sx={{ display: 'block', fontFamily: 'monospace', fontSize: '0.68rem', color: 'text.disabled', mt: 0.25, wordBreak: 'break-all' }}
-            >
-              {entry.url}
-            </Typography>
-          )}
-          {entry.type === 'stdio' && entry.command && (
-            <Typography
-              variant="caption"
-              sx={{ display: 'block', fontFamily: 'monospace', fontSize: '0.68rem', color: 'text.disabled', mt: 0.25 }}
-            >
-              {[entry.command, ...(entry.args ?? [])].join(' ')}
-            </Typography>
-          )}
-        </Box>
-      </Box>
-
-      {canInstall && (
-        <Divider sx={{ mt: 'auto' }} />
-      )}
-      {canInstall && (
-        <Box sx={{ display: 'flex', gap: 0.75 }}>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<OpenInBrowserIcon sx={{ fontSize: '0.85rem !important' }} />}
-            onClick={handleInstallVscode}
-            fullWidth
-            sx={{
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              py: 0.5,
-              borderColor: `${accent}50`,
-              color: accent,
-              '&:hover': { borderColor: accent, bgcolor: `${accent}0a` },
-            }}
-          >
-            {t('mcpConfigDialog.installInVscode')}
-          </Button>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<ToolIcon tool="cursor" branded={false} sx={{ fontSize: '0.85rem !important', color: `${accent} !important` }} />}
-            onClick={handleInstallCursor}
-            fullWidth
-            sx={{
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              py: 0.5,
-              borderColor: `${accent}50`,
-              color: accent,
-              '&:hover': { borderColor: accent, bgcolor: `${accent}0a` },
-            }}
-          >
-            {t('mcpConfigDialog.installInCursor')}
-          </Button>
-        </Box>
-      )}
-    </Box>
-  );
-}
-
-// ─── Main dialog ──────────────────────────────────────────────────────────────
 
 interface McpConfigDialogProps {
   open: boolean;
@@ -217,51 +67,9 @@ export function McpConfigDialog({ open, onClose }: McpConfigDialogProps) {
   const [baseUrl, setBaseUrl] = useState('');
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [proactiveEnabled, setProactiveEnabled] = useState(false);
-  const [toolConfigExpanded, setToolConfigExpanded] = useState(false);
-  const [manualExpanded, setManualExpanded] = useState(false);
 
   const { providers } = useProviders();
-  const { catalog } = useMcpCatalog();
   const showProviderFilter = providers.length > 1;
-
-  const toolConfigs = useMemo<ToolConfig[]>(() => [
-    {
-      tool: 'claude-code',
-      label: 'Claude Code',
-      file: '.mcp.json',
-      description: t('mcpConfigDialog.claudeConfigDesc'),
-      buildConfig: url => JSON.stringify({
-        mcpServers: { 'dev-ai-hub': { type: 'http', url } },
-      }, null, 2),
-    },
-    {
-      tool: 'github-copilot',
-      label: 'GitHub Copilot',
-      file: '.vscode/settings.json',
-      description: t('mcpConfigDialog.copilotConfigDesc'),
-      buildConfig: url => JSON.stringify({
-        'github.copilot.chat.mcp.servers': { 'dev-ai-hub': { type: 'http', url } },
-      }, null, 2),
-    },
-    {
-      tool: 'google-gemini',
-      label: 'Google Gemini',
-      file: 'gemini-config.json',
-      description: t('mcpConfigDialog.geminiConfigDesc'),
-      buildConfig: url => JSON.stringify({
-        mcpServers: { 'dev-ai-hub': { url } },
-      }, null, 2),
-    },
-    {
-      tool: 'cursor',
-      label: 'Cursor',
-      file: '.cursor/mcp.json',
-      description: t('mcpConfigDialog.cursorConfigDesc'),
-      buildConfig: url => JSON.stringify({
-        mcpServers: { 'dev-ai-hub': { type: 'http', url } },
-      }, null, 2),
-    },
-  ], [t]);
 
   useEffect(() => {
     if (open) {

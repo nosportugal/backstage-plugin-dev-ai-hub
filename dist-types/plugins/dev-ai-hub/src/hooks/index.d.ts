@@ -1,11 +1,11 @@
 import type { AiAsset, AiAssetListResponse, AiHubProvider, AiHubStats, AssetListFilter } from '@nospt/plugin-dev-ai-hub-common';
 export declare function useAssets(filter: AssetListFilter): {
-    result: any;
+    result: AiAssetListResponse | null;
     loading: boolean;
     error: Error | null;
 };
 export declare function useAssetDetail(id: string | null): {
-    asset: any;
+    asset: AiAsset | null;
     loading: boolean;
     error: Error | null;
 };
@@ -16,12 +16,7 @@ export declare function useProviders(): {
     reload: () => void;
 };
 export declare function useStats(): {
-    stats: any;
-    loading: boolean;
-    error: Error | null;
-};
-export declare function useMcpCatalog(): {
-    catalog: McpCatalogEntry[];
+    stats: AiHubStats | null;
     loading: boolean;
     error: Error | null;
 };

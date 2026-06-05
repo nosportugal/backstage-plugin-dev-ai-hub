@@ -5,14 +5,10 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/JulianPedro/backstage-dev-ai-hub"
+    "url": "https://github.com/nosportugal/backstage-plugin-dev-ai-hub"
   },
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nosportugal/backstage-plugin-dev-ai-hub"
-  },
   "publishConfig": {
     "access": "public"
   },

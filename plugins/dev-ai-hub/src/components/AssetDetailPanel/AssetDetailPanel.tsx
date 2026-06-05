@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { useTheme } from '@mui/material/styles';
+import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import {
@@ -14,25 +13,13 @@ import styles from './AssetDetailPanel.module.css';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const SyntaxHighlighter = require('react-syntax-highlighter/dist/esm/prism').default;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { oneLight, oneDark } = require('react-syntax-highlighter/dist/esm/styles/prism');
-
-function parseFrontmatter(md: string): { meta: Record<string, string> | null; body: string } {
-  const match = md.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-  if (!match) return { meta: null, body: md };
-  const meta: Record<string, string> = {};
-  for (const line of match[1].split('\n')) {
-    const m = line.match(/^([^:#\s][^:]*?):\s*(.+)$/);
-    if (m) meta[m[1].trim()] = m[2].trim().replace(/^["']|["']$/g, '');
-  }
-  return { meta: Object.keys(meta).length > 0 ? meta : null, body: match[2].trimStart() };
-}
+const { oneLight } = require('react-syntax-highlighter/dist/esm/styles/prism');
 
 const TYPE_COLORS: Record<AssetType, string> = {
   instruction: '#1976d2',
   agent: '#7b1fa2',
   skill: '#388e3c',
   workflow: '#f57c00',
-  bundle: '#8B5CF6',
 };
 
 interface AssetDetailPanelProps {
@@ -42,20 +29,12 @@ interface AssetDetailPanelProps {
 
 export function AssetDetailPanel({ assetId, onClose }: AssetDetailPanelProps) {
   const [snackbar, setSnackbar] = useState<string | null>(null);
-  const [frontmatterOpen, setFrontmatterOpen] = useState(false);
   const { asset, loading } = useAssetDetail(assetId);
-  const theme = useTheme();
-  const { t } = useTranslationRef(devAiHubTranslationRef);
-  const syntaxTheme = theme.palette.mode === 'dark' ? oneDark : oneLight;
-
-  useEffect(() => { setFrontmatterOpen(false); }, [assetId]);
-
-  const parsed = asset ? parseFrontmatter(asset.content) : null;
 
   const handleCopy = () => {
     if (!asset) return;
     navigator.clipboard.writeText(asset.content).then(() =>
-      setSnackbar(t('assetDetailPanel.copiedMessage')),
+      setSnackbar('Markdown copied to clipboard!'),
     );
   };
 

@@ -36,25 +36,10 @@ interface AssetFiltersProps {
   providers?: AiHubProvider[];
 }
 
-const TAG_LIMIT = 10;
-
 export function AssetFilters({ value, onChange, availableTags = [], providers }: AssetFiltersProps) {
-  const { t } = useTranslationRef(devAiHubTranslationRef);
-  const [tagsExpanded, setTagsExpanded] = useState(false);
   const selectedType = value.types.length === 1 ? value.types[0] : 'all';
   const selectedTool = value.tools.length === 1 ? value.tools[0] : 'all';
   const showProviderFilter = providers && providers.length > 1;
-
-  // Selected tags always appear first so they're never hidden when collapsed
-  const sortedTags = [...availableTags].sort((a, b) => {
-    const aSelected = value.tags.includes(a);
-    const bSelected = value.tags.includes(b);
-    if (aSelected && !bSelected) return -1;
-    if (!aSelected && bSelected) return 1;
-    return 0;
-  });
-  const visibleTags = tagsExpanded ? sortedTags : sortedTags.slice(0, TAG_LIMIT);
-  const hiddenCount = sortedTags.length - TAG_LIMIT;
 
   const handleTypeClick = (type: AssetType | 'all') => {
     onChange({ ...value, types: type === 'all' ? [] : [type] });
@@ -66,7 +51,7 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
 
   const handleTagToggle = (tag: string) => {
     const next = value.tags.includes(tag)
-      ? value.tags.filter(tagItem => tagItem !== tag)
+      ? value.tags.filter(t => t !== tag)
       : [...value.tags, tag];
     onChange({ ...value, tags: next });
   };

@@ -14,12 +14,10 @@ interface RouterOptions {
   store: AiAssetStore;
   syncService: AiAssetSyncService;
   providers: ProviderConfig[];
-  /** Base URL of this plugin, e.g. http://backstage:7007/api/dev-ai-hub */
-  baseUrl: string;
 }
 
 export function createRouter(options: RouterOptions): express.Router {
-  const { store, syncService, providers, baseUrl } = options;
+  const { store, syncService, providers } = options;
   const router = express.Router();
 
   /** Active MCP sessions: sessionId → transport */
@@ -68,72 +66,6 @@ export function createRouter(options: RouterOptions): express.Router {
     }
   });
 
-  /**
-   * Returns the asset formatted as a .agent.md file for VSCode Copilot one-click install.
-   * Generates YAML front matter from the asset metadata + appends the markdown content.
-   * No authentication required — VSCode fetches this URL directly during install.
-   */
-  router.get('/assets/:id/agent-md/:filename?', async (req, res) => {
-    try {
-      const asset = await store.getAsset(req.params.id);
-      if (!asset) return res.status(404).json({ error: 'Asset not found' });
-
-      // VS Code Copilot .agent.md format: name + description in frontmatter.
-      // Values are single-quoted (YAML) to survive colons, hashes, and other special chars.
-      // `tools` in this format refers to VS Code built-in tool names — we omit it.
-      const q = (v: string) => `'${v.replace(/'/g, "''")}'`;
-      const frontmatter = [
-        '---',
-        `name: ${q(asset.label ?? asset.name)}`,
-        `description: ${q(asset.description ?? '')}`,
-        '---',
-      ].join('\n');
-
-      const agentMdContent = `${frontmatter}\n\n${asset.content}`;
-      const filename = `${asset.name.replace(/\s+/g, '-').toLowerCase()}.agent.md`;
-
-      res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      return res.send(agentMdContent);
-    } catch (err) {
-      options.logger.error('GET /assets/:id/agent-md failed', err as Error);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
-  });
-
-  /**
-   * Returns the asset as a SKILL.md file for one-click install in VSCode Copilot.
-   * Adds YAML front matter (name + description) if the content does not already have it.
-   * No authentication required — VSCode fetches this URL directly during install.
-   */
-  router.get('/assets/:id/skill-md/:filename?', async (req, res) => {
-    try {
-      const asset = await store.getAsset(req.params.id);
-      if (!asset) return res.status(404).json({ error: 'Asset not found' });
-
-      const q = (v: string) => `'${v.replace(/'/g, "''")}'`;
-      const content = asset.content.trimStart().startsWith('---')
-        ? asset.content
-        : [
-            '---',
-            `name: ${q(asset.label ?? asset.name)}`,
-            `description: ${q(asset.description ?? '')}`,
-            '---',
-            '',
-            asset.content,
-          ].join('\n');
-
-      res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Content-Disposition', 'attachment; filename="SKILL.md"');
-      return res.send(content);
-    } catch (err) {
-      options.logger.error('GET /assets/:id/skill-md failed', err as Error);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
-  });
-
   /** Returns the pure markdown content of the asset */
   router.get('/assets/:id/raw', async (req, res) => {
     try {
@@ -148,10 +80,8 @@ export function createRouter(options: RouterOptions): express.Router {
   });
 
   /**
-   * For bundles: returns a zip with all item assets placed at their recommended paths.
-   * For skills: returns a zip with the markdown + bundled resource files.
+   * For skills: returns a zip with the markdown + metadata about bundled resources.
    * For other types: returns the markdown as a text file.
-   * Optional ?tool= query param selects the install-path convention for bundles.
    */
   router.get('/assets/:id/download', async (req, res) => {
     try {
@@ -159,45 +89,13 @@ export function createRouter(options: RouterOptions): express.Router {
       if (!asset) return res.status(404).json({ error: 'Asset not found' });
 
       const filename = `${asset.name.replace(/\s+/g, '-').toLowerCase()}`;
-      const toolHint = req.query.tool as string | undefined;
 
-      if (asset.type === 'bundle') {
+      if (asset.type === 'skill') {
         res.setHeader('Content-Type', 'application/zip');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}-bundle.zip"`);
-
-        const archive = archiver('zip');
-        archive.pipe(res);
-
-        const items = asset.items ?? [];
-        for (const item of items) {
-          if (!item.assetId) continue;
-          const itemAsset = await store.getAsset(item.assetId);
-          if (!itemAsset) continue;
-
-          const installPaths = getInstallPathsForAsset(
-            itemAsset.type as any,
-            itemAsset.tools,
-            itemAsset.name,
-            { installPath: itemAsset.installPath, installPaths: itemAsset.installPaths },
-          );
-          const resolvedPath = (toolHint && installPaths[toolHint])
-            ? installPaths[toolHint]
-            : (Object.values(installPaths)[0] ?? `${itemAsset.name.replace(/\s+/g, '-').toLowerCase()}.md`);
-
-          archive.append(itemAsset.content, { name: resolvedPath });
-
-          if (itemAsset.type === 'skill' && itemAsset.resourcesContent) {
-            const dir = resolvedPath.split('/').slice(0, -1).join('/');
-            for (const [rPath, rContent] of Object.entries(itemAsset.resourcesContent)) {
-              archive.append(rContent, { name: dir ? `${dir}/${rPath}` : rPath });
-            }
-          }
-        }
-
-        await archive.finalize();
-      } else if (asset.type === 'skill') {
-        res.setHeader('Content-Type', 'application/zip');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}.zip"`);
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${filename}.zip"`,
+        );
         const archive = archiver('zip');
         archive.pipe(res);
         archive.append(asset.content, { name: 'SKILL.md' });
@@ -209,7 +107,10 @@ export function createRouter(options: RouterOptions): express.Router {
         await archive.finalize();
       } else {
         res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}.md"`);
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${filename}.md"`,
+        );
         return res.send(asset.content);
       }
 
@@ -307,18 +208,6 @@ export function createRouter(options: RouterOptions): express.Router {
     }
   });
 
-  // ── MCP Catalog ───────────────────────────────────────────────────────────
-
-  router.get('/mcp-catalog', async (_req, res) => {
-    try {
-      const entries = await store.listMcpCatalogEntries();
-      res.json(entries);
-    } catch (err) {
-      options.logger.error('GET /mcp-catalog failed', err as Error);
-      res.status(500).json({ error: 'Failed to load MCP catalog' });
-    }
-  });
-
   // ── MCP — StreamableHTTP transport ────────────────────────────────────────
   //
   // Clients connect to /mcp?tool=<ai-tool-name> using the MCP HTTP protocol.
@@ -390,7 +279,7 @@ export function createRouter(options: RouterOptions): express.Router {
         options.logger.debug(`dev-ai-hub MCP: session ${newSessionId} closed`);
       };
 
-      const server = createMcpServer(store, toolFilter, providerFilter, providers, proactiveEnabled, baseUrl);
+      const server = createMcpServer(store, toolFilter, providerFilter, providers, proactiveEnabled);
       await server.connect(transport);
 
       await transport.handleRequest(req, res, req.body);

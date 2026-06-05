@@ -30,9 +30,8 @@ export const devAiHubPlugin = createBackendPlugin({
         scheduler: coreServices.scheduler,
         httpRouter: coreServices.httpRouter,
         urlReader: coreServices.urlReader,
-        discovery: coreServices.discovery,
       },
-      async init({ config, logger, database, scheduler, httpRouter, urlReader, discovery }) {
+      async init({ config, logger, database, scheduler, httpRouter, urlReader }) {
         const store = await AiAssetStore.create({ database });
 
         const providers: ProviderConfig[] = (
@@ -71,8 +70,7 @@ export const devAiHubPlugin = createBackendPlugin({
 
         await syncService.start();
 
-        const baseUrl = await discovery.getBaseUrl('dev-ai-hub');
-        const router = createRouter({ logger, store, syncService, providers, baseUrl });
+        const router = createRouter({ logger, store, syncService, providers });
 
         httpRouter.use(router);
 
@@ -80,7 +78,6 @@ export const devAiHubPlugin = createBackendPlugin({
         httpRouter.addAuthPolicy({ path: '/providers', allow: 'unauthenticated' });
         httpRouter.addAuthPolicy({ path: '/stats', allow: 'unauthenticated' });
         httpRouter.addAuthPolicy({ path: '/mcp', allow: 'unauthenticated' });
-        httpRouter.addAuthPolicy({ path: '/mcp-catalog', allow: 'unauthenticated' });
       },
     });
   },

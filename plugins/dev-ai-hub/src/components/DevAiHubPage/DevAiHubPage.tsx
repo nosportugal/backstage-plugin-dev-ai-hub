@@ -33,22 +33,12 @@ const STATS_CONFIG: { key: AssetType; label: string; Icon: ElementType; gradient
 ];
 
 export function DevAiHubPage() {
-  const { t } = useTranslationRef(devAiHubTranslationRef);
   const [filters, setFilters] = useState<AssetFiltersValue>(DEFAULT_FILTERS);
   const [page, setPage] = useState(1);
-
-  function timeAgo(iso: string): string {
-    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-    if (diff < 60) return t('devAiHubPage.timeJustNow');
-    if (diff < 3600) return t('devAiHubPage.timeMinutesAgo', { count: Math.floor(diff / 60) });
-    if (diff < 86400) return t('devAiHubPage.timeHoursAgo', { count: Math.floor(diff / 3600) });
-    return t('devAiHubPage.timeDaysAgo', { count: Math.floor(diff / 86400) });
-  }
 
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedAssetId = searchParams.get('assetId');
   const installAssetId = searchParams.get('installId');
-  const helpAssetId = searchParams.get('helpId');
 
   const handleViewAsset = (id: string) =>
     setSearchParams(p => { const n = new URLSearchParams(p); n.set('assetId', id); return n; });
@@ -62,15 +52,8 @@ export function DevAiHubPage() {
   const handleCloseInstall = () =>
     setSearchParams(p => { const n = new URLSearchParams(p); n.delete('installId'); return n; });
 
-  const handleHelpAsset = (id: string) =>
-    setSearchParams(p => { const n = new URLSearchParams(p); n.set('helpId', id); return n; });
-
-  const handleCloseHelp = () =>
-    setSearchParams(p => { const n = new URLSearchParams(p); n.delete('helpId'); return n; });
-
   const { stats } = useStats();
   const { providers } = useProviders();
-  const { catalog } = useMcpCatalog();
 
   const apiFilter = useMemo(
     () => ({
@@ -97,7 +80,7 @@ export function DevAiHubPage() {
   const availableTags = useMemo(() => {
     if (!result) return [];
     const tagSet = new Set<string>();
-    result.items.forEach(a => a.tags.forEach(tag => tagSet.add(tag)));
+    result.items.forEach(a => a.tags.forEach(t => tagSet.add(t)));
     return Array.from(tagSet).sort();
   }, [result]);
 

@@ -15,17 +15,10 @@ export declare class AiAssetStore {
     getAsset(id: string): Promise<AiAsset | null>;
     incrementInstallCount(id: string): Promise<void>;
     deleteAssetsNotIn(providerId: string, ids: string[]): Promise<void>;
-    /**
-     * Removes all assets and sync status for a provider in a single transaction.
-     * Called when a provider is no longer present in the Backstage config.
-     */
-    purgeProvider(providerId: string): Promise<void>;
     upsertSyncStatus(status: SyncStatus): Promise<void>;
     getSyncStatus(providerId: string): Promise<SyncStatus | null>;
     getAllSyncStatuses(): Promise<SyncStatus[]>;
     getStats(): Promise<AiHubStats>;
-    /** Resolves raw bundle refs to BundleItem objects by looking up assets in the same provider. */
-    private resolveBundleItems;
     private rowToAssetSummary;
     private rowToAsset;
 }
