@@ -292,3 +292,136 @@ describe('getStats', () => {
     expect(stats.lastSync).toBeUndefined();
   });
 });
+
+describe('helpText + mcps round-trip', () => {
+  it('persists and returns helpText and mcps on getAsset', async () => {
+    await store.upsertAsset(
+      makeInput({
+        helpText: '## How to use\nDo the thing.',
+        mcps: [{ id: 'github', name: 'GitHub' }, { id: 'filesystem' }],
+      }),
+    );
+    const asset = await store.getAsset('test-id');
+    expect(asset!.helpText).toBe('## How to use\nDo the thing.');
+    expect(asset!.mcps).toEqual([{ id: 'github', name: 'GitHub' }, { id: 'filesystem' }]);
+  });
+
+  it('exposes helpText and mcps on listAssets summaries', async () => {
+    await store.upsertAsset(
+      makeInput({ helpText: 'help here', mcps: [{ id: 'github' }] }),
+    );
+    const { items } = await store.listAssets({});
+    expect(items[0].helpText).toBe('help here');
+    expect(items[0].mcps).toEqual([{ id: 'github' }]);
+  });
+
+  it('returns undefined helpText/mcps when not set', async () => {
+    await store.upsertAsset(makeInput());
+    const asset = await store.getAsset('test-id');
+    expect(asset!.helpText).toBeUndefined();
+    expect(asset!.mcps).toBeUndefined();
+  });
+});
+
+describe('bundle items', () => {
+  it('resolves bundle refs to their target assets and exposes itemCount', async () => {
+    await store.upsertAsset(
+      makeInput({ id: 'child-1', name: 'Child One', yamlPath: 'instructions/a.yaml' }),
+    );
+    await store.upsertAsset(
+      makeInput({ id: 'child-2', name: 'Child Two', type: 'agent', yamlPath: 'agents/b.yaml' }),
+    );
+    await store.upsertAsset(
+      makeInput({
+        id: 'bundle-1',
+        name: 'My Bundle',
+        type: 'bundle',
+        yamlPath: 'bundles/my-bundle.yaml',
+        bundleRefs: [{ ref: 'instructions/a.yaml' }, { ref: 'agents/b.yaml' }],
+      }),
+    );
+
+    const bundle = await store.getAsset('bundle-1');
+    expect(bundle!.type).toBe('bundle');
+    expect(bundle!.items).toHaveLength(2);
+    expect(bundle!.items!.map(i => i.assetId)).toEqual(['child-1', 'child-2']);
+    expect(bundle!.items!.map(i => i.name)).toEqual(['Child One', 'Child Two']);
+
+    const { items } = await store.listAssets({ type: 'bundle' });
+    expect(items[0].itemCount).toBe(2);
+  });
+
+  it('returns an unresolved ref when the target asset is missing', async () => {
+    await store.upsertAsset(
+      makeInput({
+        id: 'bundle-2',
+        type: 'bundle',
+        yamlPath: 'bundles/b2.yaml',
+        bundleRefs: [{ ref: 'instructions/missing.yaml' }],
+      }),
+    );
+    const bundle = await store.getAsset('bundle-2');
+    expect(bundle!.items).toEqual([{ ref: 'instructions/missing.yaml' }]);
+  });
+});
+
+describe('MCP catalog entries', () => {
+  beforeEach(async () => {
+    await knex('mcp_catalog_entries').delete();
+  });
+
+  it('upserts and lists catalog entries', async () => {
+    await store.upsertMcpCatalogEntries(
+      [
+        { id: 'github', name: 'GitHub', type: 'http', url: 'https://api.example/mcp' },
+        { id: 'fs', name: 'Filesystem', type: 'stdio', command: 'npx', args: ['-y', 'fs-mcp'] },
+      ],
+      'provider-1',
+    );
+
+    const entries = await store.listMcpCatalogEntries();
+    expect(entries).toHaveLength(2);
+    const fs = entries.find(e => e.id === 'fs')!;
+    expect(fs.type).toBe('stdio');
+    expect(fs.command).toBe('npx');
+    expect(fs.args).toEqual(['-y', 'fs-mcp']);
+  });
+
+  it('updates an existing entry on conflict', async () => {
+    await store.upsertMcpCatalogEntries(
+      [{ id: 'github', name: 'GitHub', type: 'http', url: 'old' }],
+      'provider-1',
+    );
+    await store.upsertMcpCatalogEntries(
+      [{ id: 'github', name: 'GitHub v2', type: 'http', url: 'new' }],
+      'provider-1',
+    );
+    const entries = await store.listMcpCatalogEntries();
+    expect(entries).toHaveLength(1);
+    expect(entries[0].name).toBe('GitHub v2');
+    expect(entries[0].url).toBe('new');
+  });
+
+  it('deletes catalog entries not in the provided id list', async () => {
+    await store.upsertMcpCatalogEntries(
+      [
+        { id: 'keep', name: 'Keep', type: 'http', url: 'u' },
+        { id: 'drop', name: 'Drop', type: 'http', url: 'u' },
+      ],
+      'provider-1',
+    );
+    await store.deleteMcpCatalogEntriesNotIn('provider-1', ['keep']);
+    const entries = await store.listMcpCatalogEntries();
+    expect(entries.map(e => e.id)).toEqual(['keep']);
+  });
+
+  it('deletes all provider entries when id list is empty', async () => {
+    await store.upsertMcpCatalogEntries(
+      [{ id: 'a', name: 'A', type: 'http', url: 'u' }],
+      'provider-1',
+    );
+    await store.deleteMcpCatalogEntriesNotIn('provider-1', []);
+    const entries = await store.listMcpCatalogEntries();
+    expect(entries).toHaveLength(0);
+  });
+});

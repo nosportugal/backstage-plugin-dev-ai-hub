@@ -22,3 +22,24 @@ installPath: ".github/agents/api-architect.agent.md"  # Use for all tools
 #installPaths:                                      # Use for specific tools
 #  claude-code: ".claude/rules/api-architect.agent.md"
 #  github-copilot: ".github/agents/api-architect.agent.md"
+
+# Optional - Usage guide shown when the user clicks the help (?) button.
+# Markdown is supported.
+help: |
+  ## How to use the API Architect
+
+  1. Install the agent into your editor using the **Install** button.
+  2. Open your API specification (OpenAPI / proto / GraphQL SDL).
+  3. Ask the agent to review endpoints, naming, versioning and error contracts.
+
+  > Tip: pair it with the GitHub MCP server to let it open PRs with the
+  > suggested changes.
+
+# Optional - MCP servers this agent expects to be available.
+# Entries can be a plain id (matched against the MCP Catalog) or an object
+# with a friendly name and icon.
+mcps:
+  - id: github
+    name: GitHub
+    icon: "https://img.icons8.com/color/48/github.png"
+  - filesystem

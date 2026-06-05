@@ -327,3 +327,62 @@ tools:
     expect(asset.id).toBe(AssetParser.buildId('my-provider', 'ai-artifacts/my-agent.yaml'));
   });
 });
+
+describe('AssetParser — help / mcps / bundle items', () => {
+  it('maps the help field to helpText on the built asset', () => {
+    const yaml = `${VALID_YAML}help: |\n  ## Usage\n  Run it like this.\n`;
+    const parsed = AssetParser.parseYaml(yaml, 'instructions/with-help.yaml')!;
+    const asset = AssetParser.buildAsset(parsed, '', 'p', 'url', 'main', 'instructions/with-help.yaml', 'instructions/with-help.md');
+    expect(asset.helpText).toBe('## Usage\nRun it like this.\n');
+  });
+
+  it('leaves helpText undefined when help is not present', () => {
+    const parsed = AssetParser.parseYaml(VALID_YAML, 'instructions/no-help.yaml')!;
+    const asset = AssetParser.buildAsset(parsed, '', 'p', 'url', 'main', 'instructions/no-help.yaml', 'instructions/no-help.md');
+    expect(asset.helpText).toBeUndefined();
+  });
+
+  it('normalises string mcps entries to { id }', () => {
+    const yaml = `${VALID_YAML}mcps:\n  - github\n  - filesystem\n`;
+    const parsed = AssetParser.parseYaml(yaml, 'agents/with-mcps.yaml')!;
+    const asset = AssetParser.buildAsset(parsed, '', 'p', 'url', 'main', 'agents/with-mcps.yaml', 'agents/with-mcps.md');
+    expect(asset.mcps).toEqual([{ id: 'github' }, { id: 'filesystem' }]);
+  });
+
+  it('preserves object mcps entries with name and icon', () => {
+    const yaml = `${VALID_YAML}mcps:\n  - id: github\n    name: GitHub\n    icon: github-icon\n`;
+    const parsed = AssetParser.parseYaml(yaml, 'agents/with-mcps.yaml')!;
+    const asset = AssetParser.buildAsset(parsed, '', 'p', 'url', 'main', 'agents/with-mcps.yaml', 'agents/with-mcps.md');
+    expect(asset.mcps).toEqual([{ id: 'github', name: 'GitHub', icon: 'github-icon' }]);
+  });
+
+  it('leaves mcps undefined when not present', () => {
+    const parsed = AssetParser.parseYaml(VALID_YAML, 'agents/no-mcps.yaml')!;
+    const asset = AssetParser.buildAsset(parsed, '', 'p', 'url', 'main', 'agents/no-mcps.yaml', 'agents/no-mcps.md');
+    expect(asset.mcps).toBeUndefined();
+  });
+
+  it('extracts bundleRefs from a bundle asset items field', () => {
+    const yaml = `
+name: My Bundle
+description: A bundle of assets
+type: bundle
+tools:
+  - claude-code
+items:
+  - ref: instructions/a.yaml
+  - ref: agents/b.yaml
+`;
+    const parsed = AssetParser.parseYaml(yaml, 'bundles/my-bundle.yaml')!;
+    const asset = AssetParser.buildAsset(parsed, '', 'p', 'url', 'main', 'bundles/my-bundle.yaml', 'bundles/my-bundle.md');
+    expect(asset.type).toBe('bundle');
+    expect(asset.bundleRefs).toEqual([{ ref: 'instructions/a.yaml' }, { ref: 'agents/b.yaml' }]);
+  });
+
+  it('leaves bundleRefs undefined for non-bundle assets even when items are present', () => {
+    const yaml = `${VALID_YAML}items:\n  - ref: instructions/a.yaml\n`;
+    const parsed = AssetParser.parseYaml(yaml, 'instructions/not-a-bundle.yaml')!;
+    const asset = AssetParser.buildAsset(parsed, '', 'p', 'url', 'main', 'instructions/not-a-bundle.yaml', 'instructions/not-a-bundle.md');
+    expect(asset.bundleRefs).toBeUndefined();
+  });
+});
