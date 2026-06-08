@@ -1,7 +1,7 @@
 import { useState, useMemo, type ElementType } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Box, Flex, Text, Skeleton, TablePagination } from '@backstage/ui';
-import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine, RiStackLine } from '@remixicon/react';
+import { RiArticleLine, RiRobot2Line, RiToolsLine, RiGitBranchLine } from '@remixicon/react';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import type { AssetType, AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 import { AssetCard } from '../AssetCard';
@@ -33,8 +33,6 @@ const STATS_CONFIG: { key: AssetType; label: string; Icon: ElementType; gradient
     gradient: 'linear-gradient(135deg, #6AB04C 0%, #4A8F2E 100%)', shadow: '#6AB04C40' },
   { key: 'workflow',    label: 'Workflows',    Icon: RiGitBranchLine,
     gradient: 'linear-gradient(135deg, #F9CA24 0%, #D4A800 100%)', shadow: '#F9CA2440' },
-  { key: 'bundle',      label: 'Bundles',      Icon: RiStackLine,
-    gradient: 'linear-gradient(135deg, #A55EEA 0%, #8438D6 100%)', shadow: '#A55EEA40' },
 ];
 
 export function DevAiHubPage() {
@@ -154,7 +152,12 @@ export function DevAiHubPage() {
         {/* Results summary */}
         {result && !loading && (
           <Text variant="body-x-small" color="secondary" style={{ marginBottom: 'var(--bui-space-4)', display: 'block' }}>
-            {t('devAiHubPage.resultsFound', { n: String(result.totalCount) })}
+            {t(
+              result.totalCount === 1
+                ? 'devAiHubPage.resultsFoundOne'
+                : 'devAiHubPage.resultsFoundOther',
+              { n: String(result.totalCount) },
+            )}
           </Text>
         )}
 

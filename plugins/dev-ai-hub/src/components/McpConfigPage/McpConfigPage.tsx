@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import {
-  Box, Flex, Text, Button, ButtonIcon, ToggleButton, Switch,
+  Box, Flex, Text, ButtonIcon, ToggleButton, Switch,
   Tabs, TabList, Tab, TabPanel,
   Tooltip, TooltipTrigger,
 } from '@backstage/ui';
-import { RiFileCopyLine, RiCheckLine, RiDatabase2Line, RiServerLine } from '@remixicon/react';
+import { RiFileCopyLine, RiCheckLine, RiDatabase2Line } from '@remixicon/react';
 import { useApi, discoveryApiRef } from '@backstage/core-plugin-api';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { ToolIcon } from '../ToolIcon';
-import { useCopyToClipboard, useProviders, useMcpCatalog } from '../../hooks';
-import type { AiTool, McpCatalogEntry } from '@julianpedro/plugin-dev-ai-hub-common';
+import { useCopyToClipboard, useProviders } from '../../hooks';
+import type { AiTool } from '@julianpedro/plugin-dev-ai-hub-common';
 import { devAiHubTranslationRef } from '../../translation';
 import styles from './McpConfigPage.module.css';
 
@@ -55,71 +55,6 @@ function providerLabel(target: string): string {
   return target.split('/').pop()?.replace(/\.git$/, '') ?? target;
 }
 
-function CatalogEntryCard({ entry }: { entry: McpCatalogEntry }) {
-  const { t } = useTranslationRef(devAiHubTranslationRef);
-  const handleInstallVscode = () => {
-    const config: Record<string, unknown> = { name: entry.id, type: entry.type };
-    if (entry.type === 'http') config.url = entry.url;
-    if (entry.type === 'stdio') {
-      config.command = entry.command;
-      if (entry.args?.length) config.args = entry.args;
-      if (entry.env && Object.keys(entry.env).length) config.env = entry.env;
-    }
-    window.location.href = `vscode:mcp/install?${encodeURIComponent(JSON.stringify(config))}`;
-  };
-
-  const handleInstallCursor = () => {
-    const config: Record<string, unknown> = { type: entry.type };
-    if (entry.type === 'http') config.url = entry.url;
-    if (entry.type === 'stdio') {
-      config.command = entry.command;
-      if (entry.args?.length) config.args = entry.args;
-      if (entry.env && Object.keys(entry.env).length) config.env = entry.env;
-    }
-    window.location.href = `cursor://anysphere.cursor-deeplink/mcp/install?name=${encodeURIComponent(entry.name)}&config=${btoa(JSON.stringify(config))}`;
-  };
-
-  const canInstall =
-    (entry.type === 'http' && !!entry.url) ||
-    (entry.type === 'stdio' && !!entry.command);
-
-  return (
-    <Box className={styles.catalogCard}>
-      <Flex align="center" style={{ gap: 'var(--bui-space-2)' }}>
-        <Box className={styles.catalogIcon}>
-          {entry.icon ? (
-            <img
-              src={entry.icon}
-              alt={entry.name}
-              className={styles.catalogIconImage}
-              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-            />
-          ) : (
-            <RiServerLine size={20} style={{ color: 'var(--bui-fg-secondary)' }} />
-          )}
-        </Box>
-        <Box style={{ minWidth: 0, flex: 1 }}>
-          <Text variant="body-small" weight="bold">{entry.name}</Text>
-          <Text variant="body-x-small" color="secondary">{entry.type.toUpperCase()}</Text>
-        </Box>
-      </Flex>
-      {entry.description && (
-        <Text variant="body-x-small" color="secondary" className={styles.catalogDescription}>
-          {entry.description}
-        </Text>
-      )}
-      <Flex style={{ gap: 'var(--bui-space-2)', marginTop: 'auto' }}>
-        <Button size="small" variant="secondary" isDisabled={!canInstall} onPress={handleInstallVscode}>
-          {t('mcpConfigDialog.catalogVscode')}
-        </Button>
-        <Button size="small" variant="secondary" isDisabled={!canInstall} onPress={handleInstallCursor}>
-          {t('mcpConfigDialog.catalogCursor')}
-        </Button>
-      </Flex>
-    </Box>
-  );
-}
-
 export function McpConfigPage() {
   const { t } = useTranslationRef(devAiHubTranslationRef);
   const discoveryApi = useApi(discoveryApiRef);
@@ -132,7 +67,6 @@ export function McpConfigPage() {
 
   const { providers } = useProviders();
   const showProviderFilter = providers.length > 1;
-  const { catalog } = useMcpCatalog();
 
   useEffect(() => {
     discoveryApi.getBaseUrl('dev-ai-hub').then(url => setBaseUrl(url));
@@ -175,26 +109,6 @@ export function McpConfigPage() {
       <Text variant="body-small" color="secondary" className={styles.subtitle}>
         {t('mcpConfigDialog.configureSubtitle')}
       </Text>
-
-      {catalog.length > 0 && (
-        <Box className={styles.catalogSection}>
-          <Flex align="center" style={{ gap: 'var(--bui-space-2)', marginBottom: 'var(--bui-space-2)' }}>
-            <RiServerLine size={16} style={{ color: 'var(--bui-fg-secondary)' }} />
-            <Text variant="body-medium" weight="bold">{t('mcpConfigDialog.catalogTab')}</Text>
-            <Text variant="body-x-small" color="secondary">
-              {t('mcpConfigDialog.catalogAvailable', { n: String(catalog.length) })}
-            </Text>
-          </Flex>
-          <Text variant="body-x-small" color="secondary" style={{ display: 'block', marginBottom: 'var(--bui-space-3)' }}>
-            {t('mcpConfigDialog.catalogDescription')}
-          </Text>
-          <div className={styles.catalogGrid}>
-            {catalog.map(entry => (
-              <CatalogEntryCard key={entry.id} entry={entry} />
-            ))}
-          </div>
-        </Box>
-      )}
 
       <div className={styles.configContent}>
         <Tabs selectedKey={selectedToolKey} onSelectionChange={key => setSelectedToolKey(key as string)}>

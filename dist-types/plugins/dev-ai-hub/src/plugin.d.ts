@@ -1,6 +1,7 @@
 export declare const devAiHubPlugin: import("@backstage/frontend-plugin-api").OverridableFrontendPlugin<{
     root: import("@backstage/frontend-plugin-api").RouteRef<undefined>;
     mcpConfig: import("@backstage/frontend-plugin-api").RouteRef<undefined>;
+    mcpCatalog: import("@backstage/frontend-plugin-api").RouteRef<undefined>;
 }, {}, {
     "api:dev-ai-hub": import("@backstage/frontend-plugin-api").OverridableExtensionDefinition<{
         kind: "api";

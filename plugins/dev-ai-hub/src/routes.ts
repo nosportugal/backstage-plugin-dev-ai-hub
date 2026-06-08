@@ -2,3 +2,4 @@ import { createRouteRef } from '@backstage/frontend-plugin-api';
 
 export const rootRouteRef = createRouteRef();
 export const mcpConfigRouteRef = createRouteRef();
+export const mcpCatalogRouteRef = createRouteRef();

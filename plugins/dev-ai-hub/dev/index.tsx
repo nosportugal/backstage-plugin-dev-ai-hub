@@ -2,6 +2,7 @@ import { createDevApp } from '@backstage/dev-utils';
 import { discoveryApiRef, fetchApiRef } from '@backstage/core-plugin-api';
 import { DevAiHubPage } from '../src/components/DevAiHubPage';
 import { McpConfigPage } from '../src/components/McpConfigPage';
+import { McpCatalogPage } from '../src/components/McpCatalogPage';
 import { devAiHubApiRef, DevAiHubClient } from '../src/api/DevAiHubClient';
 
 // Bypass Backstage guest auth without a running auth backend.
@@ -28,5 +29,10 @@ createDevApp()
     element: <McpConfigPage />,
     title: 'MCP Config',
     path: '/mcp-config',
+  })
+  .addPage({
+    element: <McpCatalogPage />,
+    title: 'MCP Catalog',
+    path: '/mcp-catalog',
   })
   .render();

@@ -9,13 +9,14 @@ import {
 } from '@backstage/frontend-plugin-api';
 import { RiRobot3Fill } from '@remixicon/react';
 import { devAiHubApiRef, DevAiHubClient } from './api/DevAiHubClient';
-import { rootRouteRef, mcpConfigRouteRef } from './routes';
+import { rootRouteRef, mcpConfigRouteRef, mcpCatalogRouteRef } from './routes';
 
 export const devAiHubPlugin = createFrontendPlugin({
   pluginId: 'dev-ai-hub',
   routes: {
     root: rootRouteRef,
     mcpConfig: mcpConfigRouteRef,
+    mcpCatalog: mcpCatalogRouteRef,
   },
   extensions: [
     ApiBlueprint.make({
@@ -54,6 +55,16 @@ export const devAiHubPlugin = createFrontendPlugin({
         routeRef: mcpConfigRouteRef,
         loader: () =>
           import('./components/McpConfigPage').then(m => <m.McpConfigPage />),
+      },
+    }),
+    SubPageBlueprint.make({
+      name: 'mcp-catalog',
+      params: {
+        path: 'mcp-catalog',
+        title: 'MCP Catalog',
+        routeRef: mcpCatalogRouteRef,
+        loader: () =>
+          import('./components/McpCatalogPage').then(m => <m.McpCatalogPage />),
       },
     }),
   ],
