@@ -2,7 +2,7 @@ name: E2E
 
 on:
   push:
-    branches: [main, main-nos]
+    branches: [main, feature/*]
   pull_request:
     branches: [main, main-nos]
 
