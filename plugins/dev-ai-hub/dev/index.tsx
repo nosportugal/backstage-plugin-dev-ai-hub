@@ -156,6 +156,7 @@ const MOCK_STATS: AiHubStats = {
     agent: MOCK_ASSETS.filter(a => a.type === 'agent').length,
     skill: MOCK_ASSETS.filter(a => a.type === 'skill').length,
     workflow: MOCK_ASSETS.filter(a => a.type === 'workflow').length,
+    prompt: MOCK_ASSETS.filter(a => a.type === 'prompt').length,
     bundle: MOCK_ASSETS.filter(a => a.type === 'bundle').length,
   },
   byTool: {
@@ -225,8 +226,9 @@ createDevApp()
       },
       getStats: async (): Promise<AiHubStats> => MOCK_STATS,
       getAgentMdUrl: async (id: string): Promise<string> =>
-        `/api/dev-ai-hub/assets/${encodeURIComponent(id)}/agent.md`,
+        `/api/dev-ai-hub/assets/${encodeURIComponent(id)}/raw`,
       getMcpCatalog: async (): Promise<McpCatalogEntry[]> => [],
+      getUiConfig: async () => ({ typeColors: {}, statsCards: [] }),
     }),
   })
   .addPage({

@@ -20,8 +20,10 @@
   },
   "files": [
     "dist",
-    "migrations"
+    "migrations",
+    "config.d.ts"
   ],
+  "configSchema": "config.d.ts",
   "backstage": {
     "role": "backend-plugin",
     "pluginId": "dev-ai-hub",
@@ -43,6 +45,7 @@
     "tsc": "tsc --noEmit"
   },
   "dependencies": {
+    "@backstage/plugin-permission-common": "*",
     "@julianpedro/plugin-dev-ai-hub-common": "^0.1.0",
     "@julianpedro/plugin-dev-ai-hub-node": "^0.1.0",
     "@modelcontextprotocol/sdk": "^1.5.0",
@@ -64,7 +67,7 @@
     "knex": "^3.1.0"
   },
   "peerDependencies": {
-    "@backstage/backend-plugin-api": ">=1.40.0"
+    "@backstage/backend-plugin-api": ">=1.7.0"
   },
   "jest": {
     "moduleNameMapper": {

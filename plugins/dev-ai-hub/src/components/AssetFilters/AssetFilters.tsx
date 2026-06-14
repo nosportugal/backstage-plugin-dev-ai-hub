@@ -11,8 +11,9 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import BuildIcon from '@mui/icons-material/Build';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
+import ChatIcon from '@mui/icons-material/Chat';
 import AppsIcon from '@mui/icons-material/Apps';
-import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
+import { useTranslationRef } from '@backstage/frontend-plugin-api';
 import type { AssetType, AiTool, AiHubProvider } from '@julianpedro/plugin-dev-ai-hub-common';
 import { ToolIcon } from '../ToolIcon';
 import { devAiHubTranslationRef } from '../../translation';
@@ -23,6 +24,7 @@ const ASSET_TYPES: { value: AssetType | 'all'; label: string; color: string; Ico
   { value: 'agent', label: 'Agents', color: '#7C3AED', Icon: SmartToyIcon },
   { value: 'skill', label: 'Skills', color: '#059669', Icon: BuildIcon },
   { value: 'workflow', label: 'Workflows', color: '#D97706', Icon: AccountTreeIcon },
+  { value: 'prompt',   label: 'Prompts',   color: '#EC4899', Icon: ChatIcon },
   { value: 'bundle',   label: 'Bundles',   color: '#8B5CF6', Icon: Inventory2Icon },
 ];
 
@@ -79,7 +81,7 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
 
   const handleTagToggle = (tag: string) => {
     const next = value.tags.includes(tag)
-      ? value.tags.filter(tagItem => tagItem !== tag)
+      ? value.tags.filter(tag_ => tag_ !== tag)
       : [...value.tags, tag];
     onChange({ ...value, tags: next });
   };
@@ -276,7 +278,7 @@ export function AssetFilters({ value, onChange, availableTags = [], providers }:
             ))}
             {!tagsExpanded && hiddenCount > 0 && (
               <Chip
-                label={t('assetFilters.tagsShowMore', { count: hiddenCount })}
+                label={t('assetFilters.tagsShowMore', { remaining: String(hiddenCount) })}
                 size="small"
                 clickable
                 onClick={() => setTagsExpanded(true)}

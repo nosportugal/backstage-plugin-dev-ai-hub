@@ -2,13 +2,19 @@ import { randomUUID } from 'crypto';
 import express from 'express';
 import archiver from 'archiver';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import type { LoggerService } from '@backstage/backend-plugin-api';
+import type { HttpAuthService, LoggerService, PermissionsService } from '@backstage/backend-plugin-api';
+import { AuthorizeResult } from '@backstage/plugin-permission-common';
 import type { AiAssetStore } from './database/AiAssetStore';
 import type { AiAssetSyncService } from './service/AiAssetSyncService';
 import { createMcpServer } from './service/McpServerService';
 import type { ProviderConfig, AssetListFilter } from './types';
 import type { AssetType } from '@julianpedro/plugin-dev-ai-hub-common';
-import { getInstallPathsForAsset } from '@julianpedro/plugin-dev-ai-hub-common';
+import { devAiHubSyncPermission, getInstallPathsForAsset } from '@julianpedro/plugin-dev-ai-hub-common';
+
+interface UiConfig {
+  typeColors: Record<string, string>;
+  statsCards: string[];
+}
 
 interface RouterOptions {
   logger: LoggerService;
@@ -17,10 +23,13 @@ interface RouterOptions {
   providers: ProviderConfig[];
   /** Base URL of this plugin, e.g. http://backstage:7007/api/dev-ai-hub */
   baseUrl: string;
+  httpAuth: HttpAuthService;
+  permissions: PermissionsService;
+  uiConfig: UiConfig;
 }
 
 export function createRouter(options: RouterOptions): express.Router {
-  const { store, syncService, providers, baseUrl } = options;
+  const { store, syncService, providers, baseUrl, httpAuth, permissions } = options;
   const router = express.Router();
 
   /** Active MCP sessions: sessionId → transport */
@@ -144,6 +153,45 @@ export function createRouter(options: RouterOptions): express.Router {
       return res.send(asset.content);
     } catch (err) {
       options.logger.error('GET /assets/:id/raw failed', err as Error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  /**
+   * Returns a single resource file (script, config, etc.) bundled with a skill asset.
+   * The path after /resources/ matches the key in resourcesContent exactly.
+   * Used by the MCP install_command for skill resources — curl fetches this directly,
+   * so the file is written atomically without passing through the model.
+   */
+  router.get('/assets/:id/resources/*', async (req, res) => {
+    try {
+      const asset = await store.getAsset(req.params.id);
+      if (!asset) return res.status(404).json({ error: 'Asset not found' });
+
+      const resourcePath = (req.params as Record<string, string>)['0'];
+      const content = asset.resourcesContent?.[resourcePath];
+      if (content === undefined) {
+        return res.status(404).json({ error: `Resource not found: ${resourcePath}` });
+      }
+
+      // Infer content-type from extension; default to octet-stream for unknown files
+      const ext = resourcePath.split('.').pop()?.toLowerCase();
+      const contentTypes: Record<string, string> = {
+        py:   'text/x-python; charset=utf-8',
+        js:   'application/javascript; charset=utf-8',
+        ts:   'application/typescript; charset=utf-8',
+        sh:   'text/x-sh; charset=utf-8',
+        yaml: 'text/yaml; charset=utf-8',
+        yml:  'text/yaml; charset=utf-8',
+        json: 'application/json; charset=utf-8',
+        md:   'text/markdown; charset=utf-8',
+        txt:  'text/plain; charset=utf-8',
+      };
+      res.setHeader('Content-Type', contentTypes[ext ?? ''] ?? 'application/octet-stream');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      return res.send(content);
+    } catch (err) {
+      options.logger.error('GET /assets/:id/resources/* failed', err as Error);
       return res.status(500).json({ error: 'Internal server error' });
     }
   });
@@ -283,6 +331,15 @@ export function createRouter(options: RouterOptions): express.Router {
 
   router.post('/providers/:id/sync', async (req, res) => {
     try {
+      const credentials = await httpAuth.credentials(req);
+      const [decision] = await permissions.authorize(
+        [{ permission: devAiHubSyncPermission }],
+        { credentials },
+      );
+      if (decision.result !== AuthorizeResult.ALLOW) {
+        return res.status(403).json({ error: 'Insufficient permissions to trigger sync' });
+      }
+
       const provider = providers.find(p => p.id === req.params.id);
       if (!provider) return res.status(404).json({ error: 'Provider not found' });
 
@@ -294,6 +351,12 @@ export function createRouter(options: RouterOptions): express.Router {
       options.logger.error('POST /providers/:id/sync failed', err as Error);
       return res.status(500).json({ error: 'Internal server error' });
     }
+  });
+
+  // ── UI Config ─────────────────────────────────────────────────────────────
+
+  router.get('/ui-config', (_req, res) => {
+    res.json(options.uiConfig);
   });
 
   // ── Stats ─────────────────────────────────────────────────────────────────

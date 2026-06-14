@@ -7,8 +7,22 @@ jest.mock('../ToolIcon', () => ({
   ToolIcon: ({ tool }: { tool: string }) => <span data-testid={`tool-icon-${tool}`} />,
 }));
 
-jest.mock('@backstage/core-plugin-api/alpha', () => ({
-  ...jest.requireActual('@backstage/core-plugin-api/alpha'),
+jest.mock('../../context/UiConfigContext', () => ({
+  useTypeConfig: () => ({
+    typeColors: {
+      instruction: '#2563EB',
+      agent: '#7C3AED',
+      skill: '#059669',
+      workflow: '#D97706',
+      prompt: '#EC4899',
+      bundle: '#8B5CF6',
+    },
+    statsCards: ['instruction', 'agent', 'skill', 'workflow'],
+  }),
+}));
+
+jest.mock('@backstage/frontend-plugin-api', () => ({
+  ...jest.requireActual('@backstage/frontend-plugin-api'),
   useTranslationRef: () => ({
     t: (key: string, params?: Record<string, unknown>) => {
       const map: Record<string, string> = {

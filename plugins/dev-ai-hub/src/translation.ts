@@ -1,4 +1,4 @@
-import { createTranslationRef } from '@backstage/core-plugin-api/alpha';
+import { createTranslationRef, createTranslationResource } from '@backstage/frontend-plugin-api';
 
 export const devAiHubTranslationRef = createTranslationRef({
   id: 'dev-ai-hub',
@@ -13,7 +13,7 @@ export const devAiHubTranslationRef = createTranslationRef({
       detailsTooltip: 'View details',
       helpTooltip: 'Usage guide',
       mcpsRequired: 'Required MCPs',
-      bundleFooter: '{{count}} assets · {{author}}',
+      bundleFooter: '{{itemCount}} assets · {{author}}',
       versionFooter: 'v{{version}} · {{author}}',
       moreTags: '+{{count}}',
     },
@@ -22,7 +22,7 @@ export const devAiHubTranslationRef = createTranslationRef({
       tabPreview: 'Preview',
       tabMetadata: 'Metadata',
       tabRawYaml: 'Raw YAML',
-      bundlePreviewTitle: 'Bundle contents — {{count}} assets',
+      bundlePreviewTitle: 'Bundle contents — {{total}} assets',
       bundleItemNotSynced: 'Not synced — {{ref}}',
       metaAuthor: 'Author',
       metaVersion: 'Version',
@@ -32,7 +32,7 @@ export const devAiHubTranslationRef = createTranslationRef({
       metaBranch: 'Branch',
       compatibleTools: 'Compatible tools',
       tagsLabel: 'Tags',
-      bundleContents: 'Bundle contents ({{count}} assets)',
+      bundleContents: 'Bundle contents ({{total}} assets)',
       bundleItemNotSyncedYet: 'Not synced yet — {{ref}}',
       bundledFiles: 'Bundled files',
       zipDescription: 'Downloads as .zip containing all files above.',
@@ -49,7 +49,7 @@ export const devAiHubTranslationRef = createTranslationRef({
       allTools: 'All Tools',
       providerHeader: 'Provider',
       tagsHeader: 'Tags',
-      tagsShowMore: '+{{count}} more',
+      tagsShowMore: '+{{remaining}} more',
       tagsShowLess: 'Show less',
     },
     assetInstallDialog: {
@@ -112,10 +112,10 @@ export const devAiHubTranslationRef = createTranslationRef({
       statsWorkflows: '{{count}} Workflows',
       lastSync: 'Last sync: {{time}}',
       configMcp: 'MCP Servers',
-      assetCountOne: '{{count}} asset',
-      assetCountOther: '{{count}} assets',
-      providerCountOne: '{{count}} provider',
-      providerCountOther: '{{count}} providers',
+      assetCountOne: '{{n}} asset',
+      assetCountOther: '{{n}} assets',
+      providerCountOne: '{{n}} provider',
+      providerCountOther: '{{n}} providers',
       totalStats: '{{totalAssets}} assets · {{providers}}',
       noAssetsTitle: 'No assets found',
       noAssetsSubtitle: 'Try adjusting your filters or search terms.',
@@ -123,10 +123,28 @@ export const devAiHubTranslationRef = createTranslationRef({
       timeMinutesAgo: '{{count}}m ago',
       timeHoursAgo: '{{count}}h ago',
       timeDaysAgo: '{{count}}d ago',
+      providersSectionTitle: 'Providers',
+      syncAllButton: 'Sync All',
+      syncButton: 'Sync',
+      syncTriggered: 'Sync triggered',
+      providerStatusError: 'Error',
+      noProvidersConfigured: 'No providers configured.',
+      tabAssets: 'Assets',
+      tabMcp: 'MCP',
+      tabAdmin: 'Admin',
     },
   },
   translations: {
     'pt-BR': () => import('./locales/pt-BR'),
-    'es': () => import('./locales/es'),
+    'es':    () => import('./locales/es'),
+  },
+});
+
+// Exported for manual registration in legacy apps (__experimentalTranslations.resources)
+export const devAiHubTranslationResource = createTranslationResource({
+  ref: devAiHubTranslationRef,
+  translations: {
+    'pt-BR': () => import('./locales/pt-BR'),
+    'es':    () => import('./locales/es'),
   },
 });

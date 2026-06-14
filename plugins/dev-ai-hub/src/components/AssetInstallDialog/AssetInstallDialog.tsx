@@ -21,7 +21,7 @@ import Inventory2Icon from '@mui/icons-material/Inventory2';
 import type { AiAsset, AiTool, BundleItem } from '@julianpedro/plugin-dev-ai-hub-common';
 import { getInstallPathsForAsset } from '@julianpedro/plugin-dev-ai-hub-common';
 import { useApi, discoveryApiRef } from '@backstage/core-plugin-api';
-import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
+import { useTranslationRef } from '@backstage/frontend-plugin-api';
 import { devAiHubApiRef } from '../../api/DevAiHubClient';
 import { useAssetDetail } from '../../hooks';
 import { ToolIcon } from '../ToolIcon';
@@ -288,7 +288,7 @@ function BundleItemStep({ item, stepIndex, total }: BundleItemStepProps) {
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
         <Typography variant="caption" color="text.secondary">
-          {t('assetInstallDialog.stepProgress', { current: stepIndex + 1, total })}
+          {t('assetInstallDialog.stepProgress', { current: String(stepIndex + 1), total: String(total) })}
         </Typography>
         {item.type && (
           <Chip label={item.type} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.65rem' }} />
@@ -453,7 +453,7 @@ export function AssetInstallDialog({ assetId, onClose }: AssetInstallDialogProps
         <Box sx={{ px: 3, pb: 1 }}>
           <LinearProgress variant="determinate" value={progress} sx={{ borderRadius: 1, height: 6 }} />
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5, textAlign: 'right' }}>
-            {t('assetInstallDialog.bundleProgress', { current: step + 1, total: totalSteps })}
+            {t('assetInstallDialog.bundleProgress', { current: String(step + 1), total: String(totalSteps) })}
           </Typography>
         </Box>
       )}
